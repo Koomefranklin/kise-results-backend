@@ -36,6 +36,7 @@ ALLOWED_HOSTS = env('ALLOWED_HOSTS').split(' ')
 # Application definition
 
 INSTALLED_APPS = [
+    'dev.apps.DevConfig',
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
@@ -93,7 +94,7 @@ DATABASES = {
 }
 
 
-AUTH_USER_MODEL = 'results.user'
+AUTH_USER_MODEL = 'dev.user'
 
 
 # Password validation

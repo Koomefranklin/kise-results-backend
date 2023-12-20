@@ -37,5 +37,5 @@ class Lecturer(models.Model):
     LECTURER = 'LEC'
 
   user = models.ForeignKey(User, on_delete=models.CASCADE)
-  role = models.CharField(max_length=2, choices=Role.choices, default=Role.LECTURER)
+  role = models.CharField(max_length=3, choices=Role.choices, default=Role.LECTURER)
 
