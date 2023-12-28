@@ -1,0 +1,14 @@
+{% extends 'results/base_site.html' %} 
+{% block main %}
+{% if is_lecturer %}
+
+<div class="grid">
+  <div><a href="#">Add Student Results</a></div>
+  <div></div>
+  <div></div>
+  <div></div>
+</div>
+{% else %}
+<div class="grid"><a href="#">View Your Results</a></div>
+{% endif %} 
+{% endblock main %}

@@ -1,0 +1,31 @@
+{% extends 'admin/base_site.html' %} {% load i18n static %} 
+{% block extrastyle %}
+{{ block.super }}
+<link
+  rel="stylesheet"
+  href="{% static 'admin/css/login.css' %}"
+/>
+{{ form.media }} {% endblock %} 
+{% block bodyclass %} {{ block.super }}  login{% endblock %} 
+{% block main %}
+<a href="{% url 'admin:login' %}" class="grid place-self-end bg-white p-2 w-fit text-black">Admin Login</a>
+<div class="grid justify-items-center">
+  <h1 class="w-full bg-[#FFCB05] text-center text-black">Login</h1>
+  <form class="grid" method="post">
+    {% csrf_token %}
+    <div class="form-row">
+      {{ form.username.errors }} {{ form.username.label_tag }} {{ form.username }}
+    </div>
+    <div class="form-row">
+      {{ form.password.errors }} {{ form.password.label_tag }} {{ form.password }}
+      <input type="hidden" name="next" value="{{ next }}" />
+    </div>
+    <button
+      class="text-center p-2 bg-[#4caf50] place-self-center rounded-md"
+      type="submit"
+    >
+      Log In
+    </button>
+  </form>
+</div>
+{% endblock main %}
