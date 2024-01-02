@@ -1,0 +1,43 @@
+{% extends 'results/base_site.html' %}
+
+{% block main %}
+<div class="grid">
+  <div class="grid max-w-fit place-self-center">
+    <div class="uppercase text-xl py-2">Result Update for:</div>
+    <div class="grid gap-4 ">
+      {% if details %}
+      <div class="grid grid-flow-col gap-4 text-xl uppercase">
+        Name:
+        {{ details.student.user.surname }} {{ details.student.user.other_names }}
+      </div>
+      <div class="grid grid-flow-col gap-4 text-xl uppercase">
+        Admission:
+        {{ details.student.admission }}
+      </div>
+      <div class="grid grid-flow-col gap-4 text-xl uppercase">
+        Paper:
+        {{ details.paper }}
+      </div>
+      {% endif %}
+  
+    </div>
+    <form method="post" class="grid border-2 rounded">
+      {% csrf_token %}
+      {{ form.management_form }}
+      <div class="hidden">
+        {{ form.student }}
+        {{ form.paper }}
+      </div>
+      <div class="grid gap-2 text-lg uppercase p-4">
+        {{ form.cat1.name }}
+        {{ form.cat1 }}
+        {{ form.cat2.name }}
+        {{ form.cat2 }}
+        {{ form.session.name }}
+        {{ form.session }}
+        <input type="submit" value="Update">
+      </div>
+    </form>
+  </div>
+</div>
+{% endblock main %}
