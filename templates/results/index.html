@@ -2,13 +2,52 @@
 {% block main %}
 {% if is_lecturer %}
 
-<div class="grid">
-  <div><a href="#">Add Student Results</a></div>
-  <div></div>
-  <div></div>
-  <div></div>
+{% if is_tl %}
+  <div><a href="{% url 'course_results' is_tl.course.pk %}">View Course Results</a></div>
+{% endif %}
+  
+<div class="grid grid-cols-2 place-content-center gap-4">
+  
+  {% if y1 %}
+    <div class="grid w-5/6 rounded-md border-2 px-2 py-4">
+      <a class="border-b-2" href="#">Distance Learning Year One</a>
+      
+      {% for paper in y1 %}
+        <a href="{% url 'single_paper' paper.pk %}" class="my-2 hover:underline hover:text-lg " title="{{ paper.code }} {{ paper.name }} Results">{{ paper.course }}: {{ paper.name }}</a>
+      {% endfor %}
+              
+    </div>
+    <div class="grid w-5/6 rounded-md border-2 px-2 py-4">
+      <a class="border-b-2" href="#">Full Time Year One</a>
+    
+      {% for paper in y1 %}
+      <a href="{% url 'single_paper' paper.pk %}" class="my-2 hover:underline hover:text-lg" title="{{ paper.code }} {{ paper.name }} Results">{{ paper.course }}: {{ paper.name }}</a>
+      {% endfor %}
+    
+    </div>
+  {% endif %}
+  {% if dly2 %}
+    <div class="grid w-5/6 rounded-md border-2 px-2 py-4">
+      <a class="border-b-2" href="#">Distance Learning Year Two</a>
+      
+      {% for paper in dly2 %}
+        <a href="{% url 'single_paper' paper.pk %}" class="my-2 hover:underline hover:text-lg" title="{{ paper.code }} {{ paper.name }} Results">{{ paper.course }}: {{ paper.name }}</a>
+      {% endfor %}
+              
+    </div>
+  {% endif %}
+  {% if fty2 %}
+    <div class="grid w-5/6 rounded-md border-2 px-2 py-4">
+      <a class="border-b-2" href="#">Full Time Year Two</a>
+      
+      {% for paper in fty2 %}
+        <a href="{% url 'single_paper' paper.pk %}" class="my-2 hover:underline hover:text-lg" title="{{ paper.code }} {{ paper.name }} Results">{{ paper.course }}: {{ paper.name }}</a>
+      {% endfor %}
+              
+    </div>
+  {% endif %}
 </div>
 {% else %}
-<div class="grid"><a href="#">View Your Results</a></div>
+<div class="grid"><a href="{% url 'student_result' %}">View Your Results</a></div>
 {% endif %} 
 {% endblock main %}
