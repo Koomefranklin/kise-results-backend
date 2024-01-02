@@ -27,6 +27,7 @@ class Session(models.Model):
   class Mode(models.TextChoices):
     DISTANCE_LEARNING = 'DL'
     FULL_TIME = 'FT'
+    COMMON = 'CM'
 
   period = models.IntegerField(choices=Period.choices)
   mode = models.CharField(max_length=2, choices=Mode.choices)
@@ -51,9 +52,10 @@ class Lecturer(models.Model):
     return str(self.user)
 
 class Student(models.Model):
-  registration = models.CharField(max_length=20, primary_key=True)
+  admission = models.CharField(max_length=20, primary_key=True)
   user = models.ForeignKey(User, on_delete=models.CASCADE)
-  # year = models.DateField()
+  year = models.DateField()
+  session = models.CharField(max_length=50)
 
   class Meta:
     constraints = [
@@ -61,7 +63,7 @@ class Student(models.Model):
     ]
 
   def __str__(self):
-    return f'{self.registration} {self.user.surname}'
+    return f'{self.admission} {self.user.surname}'
 
 class Course(models.Model):
   code = models.IntegerField(primary_key=True)
@@ -89,7 +91,7 @@ class TeamLeader(models.Model):
     ]
 
   def __str__(self):
-    return self.lecturer
+    return str(self.lecturer)
 
 class Specialization(models.Model):
   student = models.ForeignKey(Student, on_delete=models.CASCADE)
@@ -127,8 +129,14 @@ class LecturerModule(models.Model):
 class Result(models.Model):
   student = models.ForeignKey(Student, on_delete=models.CASCADE)
   paper = models.ForeignKey(Paper, on_delete=models.CASCADE)
-  cat1 = models.IntegerField()
-  cat2 = models.IntegerField()
+  cat1 = models.IntegerField(null=True, blank=True)
+  cat2 = models.IntegerField(null=True, blank=True)
+  session = models.CharField(max_length=50)
+
+  class Meta:
+    constraints = [
+      models.UniqueConstraint(fields=['student', 'paper', 'session'], name='unique_student_session_result')
+    ]
 
   def __str__(self):
     return str(f'{self.student} {self.paper}')
