@@ -8,6 +8,7 @@
 {% block customhead %}
     {{ block.super }}
 {% endblock %}
+<script src="http://code.jquery.com/jquery-1.11.3.min.js"></script>
 <link rel="stylesheet" href="{% block stylesheet %}{% static "admin/css/base.css" %}{% endblock %}">
 {% block dark-mode-vars %}
   <link rel="stylesheet" href="{% static "admin/css/dark_mode.css" %}">
@@ -17,7 +18,8 @@
   <link rel="stylesheet" href="{% static "admin/css/nav_sidebar.css" %}">
   <script src="{% static 'admin/js/nav_sidebar.js' %}" defer></script>
 {% endif %}
-{% block extrastyle %}{% endblock %}
+{% block extrastyle %}
+{% endblock %}
 {% if LANGUAGE_BIDI %}<link rel="stylesheet" href="{% block stylesheet_rtl %}{% static "admin/css/rtl.css" %}{% endblock %}">{% endif %}
 {% block extrahead %}{% endblock %}
 {% block responsive %}
@@ -33,7 +35,7 @@
   data-admin-utc-offset="{% now "Z" %}">
 <a href="#content-start" class="skip-to-content-link">{% translate 'Skip to main content' %}</a>
 <!-- Container -->
-<div id="container" class="min-h-screen">
+<div id="container" class="min-h-screen max-w-screen">
 
     {% if not is_popup %}
     <!-- Header -->
@@ -66,7 +68,7 @@
                     {% csrf_token %}
                     <button type="submit">{% translate 'Log out' %}</button>
                 </form>
-                {% include "admin/color_theme_toggle.html" %}
+                {% include "results/color_theme_toggle.html" %}
             {% endblock %}
         </div>
         {% endif %}
@@ -78,7 +80,7 @@
     {% block nav-breadcrumbs %}
       <nav aria-label="{% translate 'Breadcrumbs' %}" class="bg-green-500">
         {% block breadcrumbs %}
-          <div class="bg-green-500">
+          <div class="bg-green-500 grid grid-flow-col px-4 py-2">
             <a href="{% url 'index' %}">{% translate 'Home' %}</a>
             
             
@@ -122,9 +124,9 @@
           <br class="clear">
         </div>
         <!-- END Content -->
-        {% block footer %}<div class="flex justify-between p-2">
+        {% block footer %}<div class="grid grid-flow-col justify-between p-2 absolute bottom-0 " style="width: -moz-available;">
           <div id="copyright">&copy; 2023 Kenya Institute of Special Education</div>
-          <div id="">By: Koome Franklin</div>
+          <div class="grid place-self-end">By: ICT Dept.</div>
         </div>{% endblock %}
       </div>
     </div>
