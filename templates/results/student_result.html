@@ -1,0 +1,63 @@
+{% extends 'results/base_site.html' %}
+
+{% block main %}
+
+{% if is_student %}
+  
+  <div class="grid gap-4">
+    <div class="">First year</div>
+    {% if y1 %}
+      <div class="grid">
+        <table>
+          <caption>{{ course1 }}</caption>
+          <thead>
+            <tr class="capitalize">
+              <th>Paper</th>
+              <th>cat 1</th>
+              <th>cat 2</th>
+              </tr>
+          </thead>
+          <tbody>
+            {% for result in y1 %}
+            <tr>
+              <td>{{ result.paper.name }}</td>
+              <td>{{ result.cat1 }}</td>
+              <td>{{ result.cat2 }}</td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    {% endif %}
+      
+    {% if y2 %}
+      <div class="grid">
+        <div class="">Year Two</div>
+        <table>
+          <caption>{{ course2.course }}</caption>
+          <thead>
+            <tr class="capitalize">
+              <th>Paper</th>
+              <th>cat 1</th>
+              <th>cat 2</th>
+              </tr>
+          </thead>
+          <tbody>
+            {% for result in y2 %}
+            <tr>
+              <td>{{ result.paper.name }}</td>
+              <td>{{ result.cat1 }}</td>
+              <td>{{ result.cat2 }}</td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    {% endif %}
+  </div>
+  {% else %}
+  <div>This is for Students only</div>
+{% endif %}
+  
+{% endblock main %}
+  
