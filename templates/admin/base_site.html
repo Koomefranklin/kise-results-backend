@@ -1,13 +1,17 @@
-{% extends "admin/base.html" %}
-{% load static %}
-
-{% block title %}{% if subtitle %}{{ subtitle }} | {% endif %}{{ title }} | {{ site_title|default:_('Cat Results') }}{% endblock %}
-
-{% block branding %}
-<div class="p-0 me-5 text-xl font-bold text-black flex flex-row"><div id="main_logo"><img src="{% static 'icons/kise_logo.svg' %}" width="50" height="50"></div><a href="{% url 'admin:index' %}" class="grid place-self-center mx-2">Results Management</a></div>
-{% if user.is_anonymous %}
-  {% include "admin/color_theme_toggle.html" %}
-{% endif %}
-{% endblock %}
-
-{% block nav-global %}{% endblock %}
+{% extends "admin/base.html" %} 
+{% load static %} {% block title %} 
+{% if subtitle %}{{ subtitle }} | {% endif %} {{ title }} | {{site_title|default:_('Cat Results') }}{% endblock %} {% block branding %}
+<div class="p-0 me-5 text-xl font-bold text-black flex flex-row">
+	<div id="main_logo">
+		<img
+			src="{% static 'icons/kise_logo.svg' %}"
+			width="50"
+			height="50" />
+	</div>
+	<a
+		href="{% url 'admin:index' %}"
+		class="grid place-self-center mx-2 text-black"
+		>Results Management</a
+	>
+</div>
+{% if user.is_anonymous %} {% include "admin/color_theme_toggle.html" %} {% endif %} {% endblock %} {% block nav-global %}{% endblock %}

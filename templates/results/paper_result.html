@@ -1,107 +1,93 @@
-{% extends 'results/base_site.html' %}
-{% block main %}
-  
-  {% if is_lecturer %}
-    <div class="grid w-full grid-flow-row-dense grid-flow-col gap-4">
-      <div class="grid grid-flow-col-dense justify-content-center p-2 w-full">
-        <form class="w-max grid h-fit" method="get" action="#">
-          <input class="justify-self-end rounded w-24 h-8 bg-transparent border-2 w-fit p-2" name="query"
-            type="search" id="search" placeholder="search"></form>
-        <table>
-          <caption class="uppercase text-l justify-center">{{ paper.course.name }}: {{ paper.name }} ({{ paper.code }}) results</caption>
-          <thead class="bg-[#4caf50]">
-            <tr class="text-left ml-2 bg-[#4caf50]">
-              <th class="pr-2">S/N</th>
-              <th>Admission Number</th>
-              <th>Name</th>
-              <th>CAT 1</th>
-              <th>CAT 2</th>
-              <th>Action</th>
-            </tr>
-          </thead>
-          <tbody>
-            {% if page_obj %}
-            {% for result in page_obj %}
-            <tr>
-              <td> {{ forloop.counter }} </td>
-              <td>{{ result.student.admission }}</td>
-              <td class="uppercase">{{ result.student.user.surname }} {{ result.student.user.other_names }} </td>
-              <td>{{ result.cat1 }}</td>
-              <td>{{ result.cat2 }}</td>
-              <td><a href="{% url 'result_update' result.pk %}">Update</a></td>
-            </tr>
-            {% endfor %}
-          </tbody>
-          <tfoot class="bg-[#4caf50]">
-            <tr class="text-left ml-2">
-              <th class="pr-2">S/N</th>
-              <th>Admission Number</th>
-              <th>Name</th>
-              <th>CAT 1</th>
-              <th>CAT 2</th>
-              <th>Action</th>
-            </tr>
-            <tr>
-              <th colspan="7" class="bg-[#4caf50]">
-                <div class="grid grid-flow-col">
-                  <span class="mx-2">
-                    {% if page_obj.has_previous %}
-                    <a class="px-2" href="?page={{ page_obj.previous_page_number }}">Previous</a>
-                    <a class="px-2" href="?page=1"> 1</a>
-                    <a class="px-2" href="?page=2"> 2</a>...
-                    {% endif %}
-    
-                    <span class="px-2 bg-yellow-400 text-black font-bold">
-                      {{ page_obj.number }}
-                    </span>
-    
-                    {% if page_obj.has_next %}
-                    <a class="px-2" href="?page={{ page_obj.paginator.num_pages }}"> {{ page_obj.paginator.num_pages }}</a>
-                    <a class="px-2" href="?page={{ page_obj.next_page_number }}">Next</a>
-                    {% endif %}
-                  </span>
-                  <div class="mx-2 justify-self-end">{{ students.count }} Students of {{ total }}</div>
-                </div>
-              </th>
-            </tr>
-            {% else %}
-            <tr>
-              <th colspan="7">No Students To Show</th>
-            </tr>
-          </tfoot>
-          {% endif %}
-        </table>
-    
-        {% if hod %}
-        {% include 'results/hod.html' with course_units=course_units %}
-        {% endif %}
-    
-      </div>
-      <div class="max-w-fit grid place-self-end border-2 rounded-md">
-        <div class="px-5">
-          <form method="post" class="grid gap-2 p-2">
-            <div class="text-xl uppercase border-b-2 text-center">New Student Marks</div>
-            {% csrf_token %}
-            {{ form.media }}
-            {{ form.non_field_errors }}
-            {{ form.name.errors }}
-            {{ form.management_form }}
-            <div class="text-lg uppercase">{{ form.student.name }}</div>
-            <div>{{ form.student }}</div>
-            <div class="text-lg uppercase">{{ form.cat1.name }}</div>
-            <div>{{ form.cat1 }}</div>
-            <div class="text-lg uppercase">{{ form.cat2.name }}</div>
-            <div class="">{{ form.cat2 }}</div>
-            <div class="text-lg uppercase">{{ form.paper.name }}</div>
-            <div>{{ form.paper }}</div>
-            <div class="text-lg uppercase">{{ form.session.name }}</div>
-            <div>{{ form.session }}</div>
-            <div class="place-self-end"><input type="submit" value="Save" class="bg-[#4caf50] rounded-md px-2 font-bold"></div>
-          </form>
-        </div>
-      </div>
-    </div>
-  {% endif %}
-    
-{% endblock main %}
-  
+{% extends 'results/base_site.html' %} {% block main %} {% if is_lecturer %}
+<div class="grid w-full grid-flow-row-dense grid-flow-col gap-4">
+	<div class="grid grid-flow-col-dense justify-content-center p-2 w-full">
+		<form class="w-max grid h-fit" method="get" action="#">
+			<input
+				class="justify-self-end rounded w-24 h-8 bg-transparent border-2 w-fit p-2"
+				name="query"
+				type="search"
+				id="search"
+				placeholder="search"
+			/>
+		</form>
+		<table>
+			<caption class="uppercase text-l justify-center">
+				{{ paper.course.name }}: {{ paper.name }} ({{ paper.code }}) results
+			</caption>
+			<thead class="bg-[#4caf50]">
+				<tr class="text-left ml-2 bg-[#4caf50]">
+					<th class="pr-2">S/N</th>
+					<th>Admission Number</th>
+					<th>Name</th>
+					<th>CAT 1</th>
+					<th>CAT 2</th>
+					<th>Action</th>
+				</tr>
+			</thead>
+			<tbody>
+				{% if page_obj %} {% for result in page_obj %}
+				<tr>
+					<td>{{ forloop.counter }}</td>
+					<td>{{ result.student.admission }}</td>
+					<td class="uppercase">
+						{{ result.student.user.surname }} {{ result.student.user.other_names }}
+					</td>
+					<td>{{ result.cat1 }}</td>
+					<td>{{ result.cat2 }}</td>
+					<td><a href="{% url 'result_update' result.pk %}">Update</a></td>
+				</tr>
+				{% endfor %}
+			</tbody>
+			<tfoot class="bg-[#4caf50]">
+				<tr class="text-left ml-2">
+					<th class="pr-2">S/N</th>
+					<th>Admission Number</th>
+					<th>Name</th>
+					<th>CAT 1</th>
+					<th>CAT 2</th>
+					<th>Action</th>
+				</tr>
+				<tr>
+					<th colspan="7" class="bg-[#4caf50]">
+						<div class="grid grid-flow-col">
+							<span class="mx-2">
+								{% if page_obj.has_previous %}
+								<a class="px-2" href="?page={{ page_obj.previous_page_number }}"
+									>Previous</a
+								>
+								<a class="px-2" href="?page=1"> 1</a>
+								<a class="px-2" href="?page=2"> 2</a>... {% endif %}
+
+								<span class="px-2 bg-yellow-400 text-black font-bold">
+									{{ page_obj.number }}
+								</span>
+
+								{% if page_obj.has_next %}
+								<a class="px-2" href="?page={{ page_obj.paginator.num_pages }}">
+									{{ page_obj.paginator.num_pages }}</a
+								>
+								<a class="px-2" href="?page={{ page_obj.next_page_number }}"
+									>Next</a
+								>
+								{% endif %}
+							</span>
+							<div class="mx-2 justify-self-end">
+								{{ students.count }} Students of {{ total }}
+							</div>
+						</div>
+					</th>
+				</tr>
+				{% else %}
+				<tr>
+					<th colspan="7">No Students To Show</th>
+				</tr>
+			</tfoot>
+			{% endif %}
+		</table>
+
+		{% if hod %} {% include 'results/hod.html' with course_units=course_units %}
+		{% endif %}
+	</div>
+	
+</div>
+{% endif %} {% endblock main %}

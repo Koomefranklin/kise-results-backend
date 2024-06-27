@@ -1,13 +1,24 @@
-from os import name
-from django.urls import path, re_path
-
+from django.urls import path, re_path, include
+from rest_framework import routers
 from . import views
 
+router = routers.DefaultRouter()
+router.register(r'score', views.ScoreViewSet)
+router.register(r'user', views.UserViewSet)
+router.register(r'student', views.StudentViewSet)
+router.register(r'result', views.ResultsViewSet)
+router.register(r'course', views.CourseViewSet)
+router.register(r'paper', views.PaperViewSet)
+router.register(r'specialization', views.SpecializationViewSet)
+router.register(r'lecturer', views.LecturerViewSet)
+router.register(r'sessions', views.SessionViewSet)
+router.register(r'results', views.ResultsListView, basename='Result_View')
+router.register(r'index', views.KnecIndexViewSet)
+
+app_name = 'dev'
+
 urlpatterns = [
-  path('', views.IndexPage.as_view(), name='index'),
-  path('paperResult/<str:paper>', views.PaperResult.as_view(), name='single_paper'),
-  path('student', views.StudentResult.as_view(), name='student_result'),
-  path('course/<int:pk>', views.CourseResults.as_view(), name='course_results'),
-  re_path(r'^student-autocomplete/$', views.StudentAutocomplete.as_view(), name='student_autocomplete'),
-  path('update/<str:pk>', views.StudentPaperUpdate.as_view(), name='result_update'),
+  path('auth/', include('dj_rest_auth.urls')),
+  path('api-auth/', include('rest_framework.urls', namespace='rest_framework')),
+  path('', include(router.urls)),
 ]

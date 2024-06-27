@@ -3,7 +3,7 @@
 {% if is_lecturer %}
 
 {% if is_tl %}
-  <div><a href="{% url 'course_results' is_tl.course.pk %}">View Course Results</a></div>
+  <div><a href="{% url 'course_results' is_tl.department.pk %}">View Course Results</a></div>
 {% endif %}
   
 <div class="grid grid-cols-2 place-content-center gap-4">

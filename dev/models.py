@@ -7,6 +7,7 @@ class User(AbstractUser):
   ROLES = [
     ('student', 'Student'),
     ('lecturer', 'Lecturer'),
+    ('admin', 'Admin'),
   ]
   surname = models.CharField(max_length=50)
   other_names = models.CharField(max_length=100)
@@ -14,6 +15,11 @@ class User(AbstractUser):
   last_name = None
   role = models.CharField(choices=ROLES, max_length=10, default='student')
   REQUIRED_FIELDS = ['surname', 'other_names', ]
+
+  def save(self, *args, **kwargs):
+    self.surname = self.surname.upper()
+    self.other_names = self.other_names.upper()
+    super().save(*args, **kwargs)
 
   def __str__(self):
     return f'{self.surname} {self.other_names}'
@@ -27,7 +33,6 @@ class Session(models.Model):
   class Mode(models.TextChoices):
     DISTANCE_LEARNING = 'DL'
     FULL_TIME = 'FT'
-    COMMON = 'CM'
 
   period = models.IntegerField(choices=Period.choices)
   mode = models.CharField(max_length=2, choices=Mode.choices)
@@ -35,35 +40,23 @@ class Session(models.Model):
   def __str__(self):
     return f'{self.mode} Year {self.period}'
 
-class Lecturer(models.Model):
-  class Role(models.TextChoices):
-    TEAM_LEADER = 'TL'
-    LECTURER = 'LEC'
-
-  user = models.ForeignKey(User, on_delete=models.CASCADE)
-  role = models.CharField(max_length=3, choices=Role.choices, default=Role.LECTURER)
-
-  class Meta:
-    constraints = [
-      models.UniqueConstraint(fields=['user',], name='unique_lecturer_user'),
-    ]
-
-  def __str__(self):
-    return str(self.user)
-
 class Student(models.Model):
   admission = models.CharField(max_length=20, primary_key=True)
   user = models.ForeignKey(User, on_delete=models.CASCADE)
   year = models.DateField()
-  session = models.CharField(max_length=50)
+  session = models.ForeignKey(Session, on_delete=models.CASCADE)
 
   class Meta:
     constraints = [
       models.UniqueConstraint(fields=['user',], name='unique_student_user'),
     ]
 
+  def save(self, *args, **kwargs):
+    self.admission = self.admission.upper()
+    super().save(*args, **kwargs)
+
   def __str__(self):
-    return f'{self.admission} {self.user.surname}'
+    return f'{self.admission} {self.user.surname} {self.user.other_names}'
 
 class Course(models.Model):
   code = models.IntegerField(primary_key=True)
@@ -72,6 +65,24 @@ class Course(models.Model):
 
   def __str__(self):
     return f'{self.code} {self.name}'
+  
+class Lecturer(models.Model):
+  class Role(models.TextChoices):
+    TEAM_LEADER = 'HoD'
+    LECTURER = 'Lecturer'
+
+
+  user = models.ForeignKey(User, on_delete=models.CASCADE)
+  role = models.CharField(max_length=10, choices=Role.choices, default=Role.LECTURER)
+  department = models.ForeignKey(Course, on_delete=models.CASCADE)
+
+  class Meta:
+    constraints = [
+      models.UniqueConstraint(fields=['user',], name='unique_lecturer_user'),
+    ]
+
+  def __str__(self):
+    return str(self.user)
 
 class Paper(models.Model):
   code = models.CharField(max_length=8, primary_key=True)
@@ -83,7 +94,7 @@ class Paper(models.Model):
 
 class TeamLeader(models.Model):
   lecturer = models.ForeignKey(Lecturer, on_delete=models.CASCADE)
-  course = models.ForeignKey(Course, on_delete=models.CASCADE)
+  department = models.ForeignKey(Course, on_delete=models.CASCADE)
 
   class Meta:
     constraints = [
@@ -131,12 +142,35 @@ class Result(models.Model):
   paper = models.ForeignKey(Paper, on_delete=models.CASCADE)
   cat1 = models.IntegerField(null=True, blank=True)
   cat2 = models.IntegerField(null=True, blank=True)
-  session = models.CharField(max_length=50)
 
   class Meta:
     constraints = [
-      models.UniqueConstraint(fields=['student', 'paper', 'session'], name='unique_student_session_result')
+      models.UniqueConstraint(fields=['student', 'paper'], name='unique_student_result')
     ]
 
   def __str__(self):
     return str(f'{self.student} {self.paper}')
+  
+class KnecIndexNumber(models.Model):
+  student = models.ForeignKey(Student, on_delete=models.CASCADE)
+  index = models.IntegerField()
+
+  def save(self, *args, **kwargs):
+    self.index = int(f'20407101{self.index}')
+    super().save(*args, **kwargs)
+
+  def __str__(self):
+    return f'{str(self.student)} : {str(self.index)}'
+  
+class ModuleScore(models.Model):
+  student = models.ForeignKey(Student, on_delete=models.CASCADE)
+  module = models.ForeignKey(Module, on_delete=models.CASCADE)
+  score = models.IntegerField()
+
+  class Meta:
+    constraints = [
+      models.UniqueConstraint(fields=['student', 'module'], name='unique_student_module')
+    ]
+  
+  def __str__(self):
+    return f'{self.student} : {self.module}'
