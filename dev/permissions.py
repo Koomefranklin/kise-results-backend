@@ -6,7 +6,7 @@ class IsLecturer(permissions.BasePermission):
 
   def has_permission(self, request, view):
     user = request.user
-    return user.role == 'lecturer'
+    return user.role == 'lecturer' or user.role == 'admin'
   
 class IsHod(permissions.BasePermission):
   message = 'user is not a Head of Department'

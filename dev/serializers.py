@@ -108,7 +108,6 @@ class SpecializationSerializer(serializers.ModelSerializer):
     fields = '__all__'
 
   def create(self, validated_data):
-    print(validated_data)
     try:
       student = validated_data.get('student')
       user = student.get('user')
@@ -125,7 +124,6 @@ class SpecializationSerializer(serializers.ModelSerializer):
       user_instance = User.objects.create(surname=surname, other_names=other_names, username=username, is_staff=is_staff, role=role, password=password)
       student_instance = Student.objects.create(admission=admission, user=user_instance, session=session, year=year)
       specialization = Specialization.objects.create(student=student_instance, course=course)
-      
       return specialization
     except IntegrityError:
       raise serializers.ValidationError()
