@@ -172,10 +172,11 @@ class StatisticsView(views.APIView):
       papers = Paper.objects.filter(Q(course__pk=course1) | Q(course__pk=course2)).count()
       students = Specialization.objects.filter(Q(course__pk = course1) | Q(course__pk = course2)).count()
       results = Result.objects.count()
+      return response.Response({'courses': courses, 'papers': papers, 'students': students, 'results': results})
     elif user.role == 'admin':
       courses = Course.objects.count()
       papers = Paper.objects.count()
       students = Specialization.objects.count()
       results = Result.objects.count()
-
-    return response.Response({'courses': courses, 'papers': papers, 'students': students, 'results': results})   
+      lecturers = Lecturer.objects.count()
+      return response.Response({'courses': courses, 'papers': papers, 'students': students, 'results': results, 'lecturers': lecturers})   
