@@ -95,12 +95,21 @@ WSGI_APPLICATION = 'results.wsgi.application'
 # Database
 # https://docs.djangoproject.com/en/3.2/ref/settings/#databases
 
+# DATABASES = {
+#     'default': {
+#         'ENGINE': 'django.db.backends.postgresql',
+#         'NAME': env('POSTGRES_DB_NAME'),
+#         'USER':  env('POSTGRES_DB_USER'),
+#         'PASSWORD': env('POSTGRES_USER_PASSWORD'),
+#     }
+# }
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.postgresql',
-        'NAME': env('POSTGRES_DB_NAME'),
-        'USER':  env('POSTGRES_DB_USER'),
-        'PASSWORD': env('POSTGRES_USER_PASSWORD'),
+        'ENGINE': 'django.db.backends.mysql',
+        'NAME': env('MySQL_DB_NAME'),
+        'USER':  env('MySQL_DB_USER'),
+        'PASSWORD': env('MySQL_USER_PASSWORD'),
+        'HOST': env('MYSQL_HOST'),
     }
 }
 
@@ -117,12 +126,6 @@ AUTH_PASSWORD_VALIDATORS = [
     },
     {
         'NAME': 'django.contrib.auth.password_validation.MinimumLengthValidator',
-    },
-    {
-        'NAME': 'django.contrib.auth.password_validation.CommonPasswordValidator',
-    },
-    {
-        'NAME': 'django.contrib.auth.password_validation.NumericPasswordValidator',
     },
 ]
 
