@@ -1,16 +1,17 @@
 from django.contrib import admin
-from .models import ModuleScore, User, Session, Lecturer, Student, Specialization, TeamLeader, Course, Paper, Module, CatCombination, LecturerModule, Result, KnecIndexNumber
+from .models import ModuleScore, User, Session, Lecturer, Student, Specialization, TeamLeader, Course, Paper, Module, CatCombination, LecturerModule, Result, AdmissionNumber
 from django.contrib.auth.admin import UserAdmin
 from .forms import CatCombinationAdminForm, StudentAdminForm, LecturerAdminForm, TeamLeaderAdminForm
 # Register your models here.
 
 class CustomUserAdmin(UserAdmin):
   model = User
-  search_fields = ['surname', 'username', 'other_names']
+  search_fields = ['full_name', 'username']
   
   list_display = [
-      'surname',
-      'other_names',
+      'id',
+      'full_name',
+      'sex',
       'username',
       'is_staff',
   ]
@@ -19,10 +20,10 @@ class CustomUserAdmin(UserAdmin):
           "Personal Info",
           {
               "fields": (
-                  "username",
+                  "full_name",
                   "password",
-                  "surname",
-                  "other_names",
+                  "username",
+                  "sex",
               )
           },
       ),
@@ -55,8 +56,8 @@ class CustomUserAdmin(UserAdmin):
           {
               "classes": ("wide",),
               "fields": (
-                  "surname",
-                  "other_names",
+                  "full_name",
+                  "sex",
                   "username",
                   "password1",
                   "password2",
@@ -108,5 +109,5 @@ admin.site.register(Module, ModuleAdmin)
 admin.site.register(CatCombination, CatCombinationAdmin)
 admin.site.register(LecturerModule)
 admin.site.register(Result)
-admin.site.register(KnecIndexNumber)
+admin.site.register(AdmissionNumber)
 admin.site.register(ModuleScore, ModuleScoreAdmin)

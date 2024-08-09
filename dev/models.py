@@ -1,28 +1,33 @@
 from django.db import models
 from django.contrib.auth.models import AbstractUser
+import uuid
+from django.utils.translation import gettext_lazy as _
 
 # Create your models here.
 
 class User(AbstractUser):
-  ROLES = [
-    ('student', 'Student'),
-    ('lecturer', 'Lecturer'),
-    ('admin', 'Admin'),
-  ]
-  surname = models.CharField(max_length=50)
-  other_names = models.CharField(max_length=100)
+  class Role(models.TextChoices):
+    STUDENT = 'student', _('Student')
+    LECTURER = 'lecturer', _('Lecturer')
+    ADMIN = 'admin', _('Admin')
+
+  class Sex(models.TextChoices):
+    MALE = 'M', _('Male')
+    FEMALE = 'F', _('Female')
+
+  id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+  full_name = models.CharField(max_length=200)
   first_name = None
   last_name = None
-  role = models.CharField(choices=ROLES, max_length=10, default='student')
-  REQUIRED_FIELDS = ['surname', 'other_names', ]
+  sex = models.CharField(max_length=2, choices=Sex.choices)
+  role = models.CharField(choices=Role.choices, max_length=10, default=Role.STUDENT)
 
   def save(self, *args, **kwargs):
-    self.surname = self.surname.upper()
-    self.other_names = self.other_names.upper()
+    self.full_name = self.full_name.capitalize()
     super().save(*args, **kwargs)
 
   def __str__(self):
-    return f'{self.surname} {self.other_names}'
+    return f'{self.full_name}'
   
 class Session(models.Model):
 
@@ -31,9 +36,11 @@ class Session(models.Model):
     Second = 2
 
   class Mode(models.TextChoices):
-    DISTANCE_LEARNING = 'DL'
-    FULL_TIME = 'FT'
+    DL = 'DL', _('Distance Learning')
+    FT = 'FT', _('Full Time')
+    CM = 'CM', _('Common')
 
+  id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
   period = models.IntegerField(choices=Period.choices)
   mode = models.CharField(max_length=2, choices=Mode.choices)
 
@@ -41,10 +48,11 @@ class Session(models.Model):
     return f'{self.mode} Year {self.period}'
 
 class Student(models.Model):
-  admission = models.CharField(max_length=20, primary_key=True)
+  id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+  index = models.CharField(max_length=100)
   user = models.ForeignKey(User, on_delete=models.CASCADE)
-  year = models.DateField()
   session = models.ForeignKey(Session, on_delete=models.CASCADE)
+  centre = models.CharField(max_length=20)
 
   class Meta:
     constraints = [
@@ -52,11 +60,12 @@ class Student(models.Model):
     ]
 
   def save(self, *args, **kwargs):
-    self.admission = self.admission.upper()
+    index = self.index
+    self.index = int(f'20407101{index:03d}')
     super().save(*args, **kwargs)
 
   def __str__(self):
-    return f'{self.admission} {self.user.surname} {self.user.other_names}'
+    return f'{self.index} {self.user.full_name}'
 
 class Course(models.Model):
   code = models.IntegerField(primary_key=True)
@@ -93,6 +102,7 @@ class Paper(models.Model):
     return f'{self.code} {self.name}'
 
 class TeamLeader(models.Model):
+  id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
   lecturer = models.ForeignKey(Lecturer, on_delete=models.CASCADE)
   department = models.ForeignKey(Course, on_delete=models.CASCADE)
 
@@ -105,6 +115,7 @@ class TeamLeader(models.Model):
     return str(self.lecturer)
 
 class Specialization(models.Model):
+  id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
   student = models.ForeignKey(Student, on_delete=models.CASCADE)
   course = models.ForeignKey(Course, on_delete=models.CASCADE)
 
@@ -125,6 +136,7 @@ class Module(models.Model):
     return str(f'{self.code} {self.name}')
 
 class CatCombination(models.Model):
+  id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
   cat1 = models.ManyToManyField(Module, related_name='cat1')
   cat2 = models.ManyToManyField(Module, related_name='cat2')
   paper = models.ForeignKey(Paper, on_delete=models.CASCADE)
@@ -138,6 +150,7 @@ class LecturerModule(models.Model):
   period = models.CharField(max_length=50)
 
 class Result(models.Model):
+  # id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
   student = models.ForeignKey(Student, on_delete=models.CASCADE)
   paper = models.ForeignKey(Paper, on_delete=models.CASCADE)
   cat1 = models.IntegerField(null=True, blank=True)
@@ -151,12 +164,12 @@ class Result(models.Model):
   def __str__(self):
     return str(f'{self.student} {self.paper}')
   
-class KnecIndexNumber(models.Model):
+class AdmissionNumber(models.Model):
   student = models.ForeignKey(Student, on_delete=models.CASCADE)
-  index = models.IntegerField()
+  admission = models.CharField(max_length=20, unique=True)
 
   def save(self, *args, **kwargs):
-    self.index = int(f'20407101{self.index}')
+    self.admission = self.admission.upper()
     super().save(*args, **kwargs)
 
   def __str__(self):

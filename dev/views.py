@@ -3,7 +3,7 @@ from django.db.models.query import QuerySet
 from django.shortcuts import render
 from django.db.models import Q
 from django.contrib.auth.mixins import LoginRequiredMixin
-from .models import ModuleScore, User, Student, Result, Session, Lecturer, Course, Paper, TeamLeader,Specialization, Module, CatCombination, LecturerModule, KnecIndexNumber
+from .models import ModuleScore, User, Student, Result, Session, Lecturer, Course, Paper, TeamLeader,Specialization, Module, CatCombination, LecturerModule, AdmissionNumber
 from django.http.response import HttpResponse
 from itertools import chain
 from rest_framework import response, viewsets, views
@@ -32,7 +32,7 @@ class UserViewSet(viewsets.ModelViewSet):
 class StudentViewSet(viewsets.ModelViewSet):
   queryset = Student.objects.all()
   serializer_class = StudentViewSerializer
-  permission_classes = [IsHod]
+  # permission_classes = [IsHod]
   def get_queryset(self):
     user = self.request.user
     if user.role == 'lecturer':
@@ -46,8 +46,8 @@ class StudentViewSet(viewsets.ModelViewSet):
 
 class ResultsViewSet(viewsets.ModelViewSet):
   queryset = Result.objects.all()
-  serializer_class = ResultCreateSerializer
-  permission_classes = [IsLecturer]
+  serializer_class = ResultSerializer
+  # permission_classes = [IsLecturer]
   def get_queryset(self):
     user = self.request.user
     if user.role == 'lecturer':
@@ -155,7 +155,7 @@ class SessionViewSet(viewsets.ModelViewSet):
       return Session.objects.filter(Q(pk=session_id) | Q(period='1'))
   
 class KnecIndexViewSet(viewsets.ModelViewSet):
-  queryset = KnecIndexNumber.objects.all()
+  queryset = AdmissionNumber.objects.all()
   serializer_class = KnecIndexNumberSerializer
   permission_classes = [IsAuthenticated]
   

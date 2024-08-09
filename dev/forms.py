@@ -1,5 +1,5 @@
 from django import forms
-from .models import CatCombination, Module, Paper, User, Lecturer, Student, TeamLeader, Result, KnecIndexNumber, ModuleScore
+from .models import CatCombination, Module, Paper, User, Lecturer, Student, TeamLeader, Result, AdmissionNumber, ModuleScore
 # from dal import autocomplete
 from django.db.models import Q
 
@@ -64,7 +64,7 @@ class StudentPaperUpdateForm(forms.ModelForm):
 		self.fields['student'].disabled = True
 		self.fields['paper'].disabled = True
 
-class KnecIndexForm(forms.ModelForm):
+class AdmissionNumberForm(forms.ModelForm):
 	class Meta:
-		model = KnecIndexNumber
-		fields = ['student', 'index']
+		model = AdmissionNumber
+		fields = ['student', 'admission']

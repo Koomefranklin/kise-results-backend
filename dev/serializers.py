@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import User, Session, Student, Course, Lecturer, Paper, TeamLeader, Specialization, Module, CatCombination, LecturerModule, Result, KnecIndexNumber, ModuleScore
+from .models import User, Session, Student, Course, Lecturer, Paper, TeamLeader, Specialization, Module, CatCombination, LecturerModule, Result, AdmissionNumber, ModuleScore
 from django.db import IntegrityError
 from django.contrib.auth.hashers import make_password
 
@@ -8,8 +8,8 @@ class UserSerializer(serializers.ModelSerializer):
         model = User
         fields = [
             'id',
-            'surname',
-            'other_names',
+            'full_name',
+            'sex',
             'role',
             'username',
             'password',
@@ -20,13 +20,13 @@ class UserSerializer(serializers.ModelSerializer):
 class SessionSerializer(serializers.ModelSerializer):
   class Meta:
     model = Session
-    fields = '__all__'
+    fields = ['id', 'period', 'mode']
 
 class StudentSerializer(serializers.ModelSerializer):
   user = UserSerializer()
   class Meta:
     model = Student
-    fields = [ 'admission', 'user', 'year', 'session']
+    fields = [ 'index', 'user', 'centre', 'session']
 
   def create(self, validated_data):
     try:
@@ -39,7 +39,7 @@ class StudentViewSerializer(serializers.ModelSerializer):
   session = SessionSerializer()
   class Meta:
     model = Student
-    fields = [ 'admission', 'user', 'year', 'session']
+    fields = [ 'index', 'user', 'centre', 'session']
 
 class CourseSerializer(serializers.ModelSerializer):
   class Meta:
@@ -63,13 +63,11 @@ class LecturerSerializer(serializers.ModelSerializer):
     user = validated_data.get('user')
     department = validated_data.get('department')
     lec_role = validated_data.get('role')
-    surname = user.get('surname').strip().capitalize()
-    other_names = user.get('other_names').strip().capitalize()
-    username = (other_names[0] + surname).lower()
+    full_name = user.get('full_name').strip().capitalize()
     role = 'lecturer'
     is_staff = False
-    password = make_password(username)
-    user_instance = User.objects.create(surname=surname, username=username, other_names=other_names, role=role, is_staff=is_staff, password=password)
+    password = make_password(full_name)
+    user_instance = User.objects.create(full_name=full_name,  role=role, is_staff=is_staff, password=password)
     lecturer = Lecturer.objects.create(user=user_instance, role=lec_role, department=department)
     return lecturer
 
@@ -114,15 +112,15 @@ class SpecializationSerializer(serializers.ModelSerializer):
       course = validated_data.get('course')
       session = student.get('session')
       year = student.get('year')
-      admission = student.get('admission').replace('/', '_').upper()
+      admission = student.get('index')
       surname = user.get('surname').strip().capitalize()
       other_names = user.get('other_names').strip().capitalize()
       username = admission
       is_staff = False
       role = 'student'
       password = make_password(admission)
-      user_instance = User.objects.create(surname=surname, other_names=other_names, username=username, is_staff=is_staff, role=role, password=password)
-      student_instance = Student.objects.create(admission=admission, user=user_instance, session=session, year=year)
+      user_instance = User.objects.create(full_name=surname, other_names=other_names, username=username, is_staff=is_staff, role=role, password=password)
+      student_instance = Student.objects.create(index=admission, user=user_instance, session=session, year=year)
       specialization = Specialization.objects.create(student=student_instance, course=course)
       return specialization
     except IntegrityError:
@@ -176,7 +174,7 @@ class ResultCreateSerializer(serializers.ModelSerializer):
   paper = serializers.PrimaryKeyRelatedField(queryset=Paper.objects.all())
   class Meta:
     model = Result
-    fields = '__all__'
+    fields = ['student', 'paper', 'cat1', 'cat2']
 
   def create(self, validated_data):
     try:
@@ -195,12 +193,12 @@ class ResultSerializer(serializers.ModelSerializer):
   paper = PaperSerializer()
   class Meta:
     model = Result
-    fields = '__all__'
+    fields = ['student', 'paper', 'cat1', 'cat2']
 
 class KnecIndexNumberSerializer(serializers.ModelSerializer):
   student = serializers.PrimaryKeyRelatedField(queryset=Student.objects.all())
   class Meta:
-    model = KnecIndexNumber
+    model = AdmissionNumber
     fields = '__all__'
 
   def create(self, validated_data):

@@ -20,6 +20,6 @@ app_name = 'dev'
 urlpatterns = [
   path('auth/', include('dj_rest_auth.urls')),
   path('api-auth/', include('rest_framework.urls', namespace='rest_framework')),
-  path('stats/', views.StatisticsView.as_view()),
+  # path('stats/', views.StatisticsView.as_view()),
   path('', include(router.urls)),
 ]
