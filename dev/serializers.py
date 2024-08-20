@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import User, Session, Student, Course, Lecturer, Paper, TeamLeader, Specialization, Module, CatCombination, LecturerModule, Result, AdmissionNumber, ModuleScore
+from .models import User, Session, Student, Course, Lecturer, Paper, TeamLeader, Specialization, Module, CatCombination, LecturerModule, Result, IndexNumber, ModuleScore
 from django.db import IntegrityError
 from django.contrib.auth.hashers import make_password
 
@@ -7,7 +7,6 @@ class UserSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
         fields = [
-            'id',
             'full_name',
             'sex',
             'role',
@@ -26,7 +25,7 @@ class StudentSerializer(serializers.ModelSerializer):
   user = UserSerializer()
   class Meta:
     model = Student
-    fields = [ 'index', 'user', 'centre', 'session']
+    fields = ['admission', 'user', 'centre', 'session']
 
   def create(self, validated_data):
     try:
@@ -39,7 +38,7 @@ class StudentViewSerializer(serializers.ModelSerializer):
   session = SessionSerializer()
   class Meta:
     model = Student
-    fields = [ 'index', 'user', 'centre', 'session']
+    fields = ['admission', 'user', 'centre', 'session']
 
 class CourseSerializer(serializers.ModelSerializer):
   class Meta:
@@ -168,6 +167,23 @@ class LecturerModuleSerializer(serializers.ModelSerializer):
       return super().create(validated_data)
     except IntegrityError:
       raise serializers.ValidationError()
+    
+class KnecIndexNumberSerializer(serializers.ModelSerializer):
+  class Meta:
+    model = IndexNumber
+    fields = ['student', 'index']
+    
+
+  def create(self, validated_data):
+    try:
+      return super().create(validated_data)
+    except IntegrityError:
+      raise serializers.ValidationError()
+    
+  def update(self, instance, validated_data):
+    instance.index = validated_data.get('index', instance.index)
+    instance.save()
+    return instance
 
 class ResultCreateSerializer(serializers.ModelSerializer):
   student = serializers.PrimaryKeyRelatedField(queryset=Student.objects.all())
@@ -188,29 +204,19 @@ class ResultCreateSerializer(serializers.ModelSerializer):
     instance.save()
     return instance
   
-class ResultSerializer(serializers.ModelSerializer):
-  student = StudentViewSerializer()
+class ResultViewSerializer(serializers.ModelSerializer):
   paper = PaperSerializer()
   class Meta:
     model = Result
-    fields = ['student', 'paper', 'cat1', 'cat2']
-
-class KnecIndexNumberSerializer(serializers.ModelSerializer):
-  student = serializers.PrimaryKeyRelatedField(queryset=Student.objects.all())
+    fields = ['paper', 'cat1', 'cat2']
+  
+class StudentResultSerializer(serializers.ModelSerializer):
+  student_results = ResultViewSerializer(many=True, read_only=True)
+  student_index = KnecIndexNumberSerializer(many=True, read_only=True)
+  user = UserSerializer()
   class Meta:
-    model = AdmissionNumber
-    fields = '__all__'
-
-  def create(self, validated_data):
-    try:
-      return super().create(validated_data)
-    except IntegrityError:
-      raise serializers.ValidationError()
-    
-  def update(self, instance, validated_data):
-    instance.index = validated_data.get('index', instance.index)
-    instance.save()
-    return instance
+    model = Student
+    fields = ['admission', 'user', 'centre', 'session', 'student_results', 'student_index']
 
 class ModuleScoreSerializer(serializers.ModelSerializer):
   class Meta:

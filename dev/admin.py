@@ -1,5 +1,5 @@
 from django.contrib import admin
-from .models import ModuleScore, User, Session, Lecturer, Student, Specialization, TeamLeader, Course, Paper, Module, CatCombination, LecturerModule, Result, AdmissionNumber
+from .models import ModuleScore, User, Session, Lecturer, Student, Specialization, TeamLeader, Course, Paper, Module, CatCombination, LecturerModule, Result, IndexNumber
 from django.contrib.auth.admin import UserAdmin
 from .forms import CatCombinationAdminForm, StudentAdminForm, LecturerAdminForm, TeamLeaderAdminForm
 # Register your models here.
@@ -86,6 +86,9 @@ class PaperAdmin(admin.ModelAdmin):
 class ModuleAdmin(admin.ModelAdmin):
   list_display = ['code', 'name', 'paper']
 
+class ResultAdmin(admin.ModelAdmin):
+  list_display = ['student', 'paper', 'cat1', 'cat2']
+
 class CatCombinationAdmin(admin.ModelAdmin):
   add_form = CatCombinationAdminForm 
 
@@ -108,6 +111,6 @@ admin.site.register(Paper, PaperAdmin)
 admin.site.register(Module, ModuleAdmin)
 admin.site.register(CatCombination, CatCombinationAdmin)
 admin.site.register(LecturerModule)
-admin.site.register(Result)
-admin.site.register(AdmissionNumber)
+admin.site.register(Result, ResultAdmin)
+admin.site.register(IndexNumber)
 admin.site.register(ModuleScore, ModuleScoreAdmin)

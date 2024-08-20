@@ -22,6 +22,8 @@ class User(AbstractUser):
   sex = models.CharField(max_length=2, choices=Sex.choices)
   role = models.CharField(choices=Role.choices, max_length=10, default=Role.STUDENT)
 
+  REQUIRED_FIELDS = ['full_name', 'sex', 'role']
+
   def save(self, *args, **kwargs):
     self.full_name = self.full_name.capitalize()
     super().save(*args, **kwargs)
@@ -49,7 +51,7 @@ class Session(models.Model):
 
 class Student(models.Model):
   id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
-  index = models.CharField(max_length=100)
+  admission = models.CharField(max_length=20, unique=True)
   user = models.ForeignKey(User, on_delete=models.CASCADE)
   session = models.ForeignKey(Session, on_delete=models.CASCADE)
   centre = models.CharField(max_length=20)
@@ -60,12 +62,11 @@ class Student(models.Model):
     ]
 
   def save(self, *args, **kwargs):
-    index = self.index
-    self.index = int(f'20407101{index:03d}')
+    self.admission = self.admission.upper()
     super().save(*args, **kwargs)
 
   def __str__(self):
-    return f'{self.index} {self.user.full_name}'
+    return f'{self.admission} {self.user.full_name}'
 
 class Course(models.Model):
   code = models.IntegerField(primary_key=True)
@@ -150,8 +151,8 @@ class LecturerModule(models.Model):
   period = models.CharField(max_length=50)
 
 class Result(models.Model):
-  # id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
-  student = models.ForeignKey(Student, on_delete=models.CASCADE)
+  id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+  student = models.ForeignKey(Student, related_name='student_results', on_delete=models.CASCADE)
   paper = models.ForeignKey(Paper, on_delete=models.CASCADE)
   cat1 = models.IntegerField(null=True, blank=True)
   cat2 = models.IntegerField(null=True, blank=True)
@@ -164,19 +165,20 @@ class Result(models.Model):
   def __str__(self):
     return str(f'{self.student} {self.paper}')
   
-class AdmissionNumber(models.Model):
+class IndexNumber(models.Model):
   student = models.ForeignKey(Student, on_delete=models.CASCADE)
-  admission = models.CharField(max_length=20, unique=True)
+  index = models.CharField(max_length=100, primary_key=True)
 
   def save(self, *args, **kwargs):
-    self.admission = self.admission.upper()
+    index = self.index
+    self.index = int(f'20407101{index:03d}')
     super().save(*args, **kwargs)
 
   def __str__(self):
     return f'{str(self.student)} : {str(self.index)}'
   
 class ModuleScore(models.Model):
-  student = models.ForeignKey(Student, on_delete=models.CASCADE)
+  student = models.ForeignKey(Student, related_name='student_index', on_delete=models.CASCADE)
   module = models.ForeignKey(Module, on_delete=models.CASCADE)
   score = models.IntegerField()
 

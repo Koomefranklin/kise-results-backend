@@ -3,11 +3,11 @@ from django.db.models.query import QuerySet
 from django.shortcuts import render
 from django.db.models import Q
 from django.contrib.auth.mixins import LoginRequiredMixin
-from .models import ModuleScore, User, Student, Result, Session, Lecturer, Course, Paper, TeamLeader,Specialization, Module, CatCombination, LecturerModule, AdmissionNumber
+from .models import ModuleScore, User, Student, Result, Session, Lecturer, Course, Paper, TeamLeader,Specialization, Module, CatCombination, LecturerModule, IndexNumber
 from django.http.response import HttpResponse
 from itertools import chain
 from rest_framework import response, viewsets, views
-from .serializers import ModuleScoreSerializer, UserSerializer, StudentSerializer, StudentViewSerializer, ResultCreateSerializer, ResultSerializer, CourseSerializer, PaperSerializer, SpecializationSerializer, LecturerSerializer, SessionSerializer, KnecIndexNumberSerializer
+from .serializers import ModuleScoreSerializer, UserSerializer, StudentSerializer, StudentViewSerializer, ResultCreateSerializer, StudentResultSerializer, CourseSerializer, PaperSerializer, SpecializationSerializer, LecturerSerializer, SessionSerializer, KnecIndexNumberSerializer
 from rest_framework.permissions import IsAuthenticated
 from .permissions import IsLecturer, IsStudent, IsHod, ReadOnly
 
@@ -37,7 +37,7 @@ class StudentViewSet(viewsets.ModelViewSet):
     user = self.request.user
     if user.role == 'lecturer':
       course = Lecturer.objects.get(user = user).department
-      students = Specialization.objects.filter(course=course).values_list('student', flat=True)
+      students = Specialization.objects.filter(Q(course=course) | Q(course__code=CommonVariables.inderdisciplinary)).values_list('student', flat=True)
       return Student.objects.filter(pk__in=students)
     elif user.role == 'admin':
       return Student.objects.all()
@@ -46,13 +46,13 @@ class StudentViewSet(viewsets.ModelViewSet):
 
 class ResultsViewSet(viewsets.ModelViewSet):
   queryset = Result.objects.all()
-  serializer_class = ResultSerializer
-  # permission_classes = [IsLecturer]
+  serializer_class = StudentResultSerializer
+  permission_classes = [IsAuthenticated]
   def get_queryset(self):
     user = self.request.user
     if user.role == 'lecturer':
       course = Lecturer.objects.get(user=user).department
-      papers = Paper.objects.filter(course=course).values_list('code', flat=True)
+      papers = Paper.objects.filter(Q(course=course) | Q(course__code=CommonVariables.inderdisciplinary)).values_list('code', flat=True)
       return Result.objects.filter(paper__code__in=papers)
     elif user.role == 'admin':
       return Result.objects.all()
@@ -60,24 +60,24 @@ class ResultsViewSet(viewsets.ModelViewSet):
       return HttpResponse('You dont have permision to view this')
   
 class ResultsListView(viewsets.ModelViewSet):
-  queryset = Result.objects.all()
-  serializer_class = ResultSerializer
+  queryset = Student.objects.all()
+  serializer_class = StudentResultSerializer
   permission_classes = [ReadOnly]
-  def get_queryset(self):
-    user = self.request.user
-    if user.role == 'lecturer':
-      course = Lecturer.objects.get(user=user).department
-      papers = Paper.objects.filter(course=course).values_list('code', flat=True)
-      return Result.objects.filter(paper__code__in=papers)
-    elif user.role == 'admin':
-      return Result.objects.all()
-    else:
-      return HttpResponse('You dont have permision to view this')
+  # def get_queryset(self):
+  #   user = self.request.user
+  #   if user.role == 'lecturer':
+  #     course = Lecturer.objects.get(user=user).department
+  #     papers = Paper.objects.filter(Q(course=course) | Q(course__code=CommonVariables.inderdisciplinary)).values_list('code', flat=True)
+  #     return Result.objects.filter(paper__code__in=papers)
+  #   elif user.role == 'admin':
+  #     return Result.objects.all()
+  #   else:
+  #     return HttpResponse('You dont have permision to view this')
 
 class CourseViewSet(viewsets.ModelViewSet):
   queryset = Course.objects.all()
   serializer_class = CourseSerializer
-  permission_classes = [IsLecturer]
+  permission_classes = [IsAuthenticated]
   def get_queryset(self):
     user = self.request.user
     if user.role == 'admin':
@@ -93,12 +93,12 @@ class CourseViewSet(viewsets.ModelViewSet):
 class PaperViewSet(viewsets.ModelViewSet):
   queryset = Paper.objects.all()
   serializer_class = PaperSerializer
-  permission_classes = [IsLecturer]
+  permission_classes = [IsAuthenticated]
   def get_queryset(self):
     user = self.request.user
     if user.role =='lecturer':
       course = Lecturer.objects.get(user=user).department
-      return Paper.objects.filter(course=course)
+      return Paper.objects.filter(Q(course=course) | Q(course__code=CommonVariables.inderdisciplinary))
     elif user.role == 'admin':
       return Paper.objects.all()
     else:
@@ -112,7 +112,7 @@ class SpecializationViewSet(viewsets.ModelViewSet):
     user = self.request.user
     if user.role =='lecturer':
       course = Lecturer.objects.get(user = user).department
-      return Specialization.objects.filter(course=course)
+      return Specialization.objects.filter(Q(course=course) | Q(course__code=CommonVariables.inderdisciplinary))
     elif user.role == 'admin':
       return Specialization.objects.all()
     else:
@@ -155,7 +155,7 @@ class SessionViewSet(viewsets.ModelViewSet):
       return Session.objects.filter(Q(pk=session_id) | Q(period='1'))
   
 class KnecIndexViewSet(viewsets.ModelViewSet):
-  queryset = AdmissionNumber.objects.all()
+  queryset = IndexNumber.objects.all()
   serializer_class = KnecIndexNumberSerializer
   permission_classes = [IsAuthenticated]
   

@@ -1,5 +1,5 @@
 from django import forms
-from .models import CatCombination, Module, Paper, User, Lecturer, Student, TeamLeader, Result, AdmissionNumber, ModuleScore
+from .models import CatCombination, Module, Paper, User, Lecturer, Student, TeamLeader, Result, IndexNumber, ModuleScore
 # from dal import autocomplete
 from django.db.models import Q
 
@@ -66,5 +66,5 @@ class StudentPaperUpdateForm(forms.ModelForm):
 
 class AdmissionNumberForm(forms.ModelForm):
 	class Meta:
-		model = AdmissionNumber
-		fields = ['student', 'admission']
+		model = IndexNumber
+		fields = ['student', 'index']
