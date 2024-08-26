@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import User, Session, Student, Course, Lecturer, Paper, TeamLeader, Specialization, Module, CatCombination, LecturerModule, Result, IndexNumber, ModuleScore
+from .models import User, Mode, Student, Course, Lecturer, Paper, TeamLeader, Module, CatCombination, Result, IndexNumber, ModuleScore, SittingCat, Centre
 from django.db import IntegrityError
 from django.contrib.auth.hashers import make_password
 
@@ -7,6 +7,7 @@ class UserSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
         fields = [
+          'id',
             'full_name',
             'sex',
             'role',
@@ -16,29 +17,15 @@ class UserSerializer(serializers.ModelSerializer):
         ]
         extra_kwargs = {'password': {'write_only': True}}
 
-class SessionSerializer(serializers.ModelSerializer):
+class ModeSerializer(serializers.ModelSerializer):
   class Meta:
-    model = Session
-    fields = ['id', 'period', 'mode']
+    model = Mode
+    fields = ['id', 'mode']
 
-class StudentSerializer(serializers.ModelSerializer):
-  user = UserSerializer()
+class CentreSerializer(serializers.ModelSerializer):
   class Meta:
-    model = Student
-    fields = ['admission', 'user', 'centre', 'session']
-
-  def create(self, validated_data):
-    try:
-      return super().create(validated_data)
-    except IntegrityError:
-      raise serializers.ValidationError()
-    
-class StudentViewSerializer(serializers.ModelSerializer):
-  user = UserSerializer()
-  session = SessionSerializer()
-  class Meta:
-    model = Student
-    fields = ['admission', 'user', 'centre', 'session']
+    model = Centre
+    fields = ['name', 'id']
 
 class CourseSerializer(serializers.ModelSerializer):
   class Meta:
@@ -50,6 +37,49 @@ class CourseSerializer(serializers.ModelSerializer):
       return super().create(validated_data)
     except IntegrityError:
       raise serializers.ValidationError()
+
+class StudentSerializer(serializers.ModelSerializer):
+  user = UserSerializer()
+  class Meta:
+    model = Student
+    fields = ['id', 'admission', 'user', 'centre', 'mode', 'course', 'year', 'added_by', 'updated_by']
+
+  def create(self, validated_data):
+    try:
+      student = validated_data
+      added_by= self.context['request'].user
+      user = student.get('user')
+      course = student.get('course')
+      mode = student.get('mode')
+      year = student.get('year')
+      admission = student.get('admission')
+      full_name = user.get('full_name').strip().capitalize()
+      centre = student.get('centre')
+      username = user.get('username')
+      is_staff = False
+      role = 'student'
+      password = make_password(admission)
+      user_instance = User.objects.create(full_name=full_name, username=username, is_staff=is_staff, role=role, password=password)
+      student_instance = Student.objects.create(admission=admission, user=user_instance, centre=centre, mode=mode, year=year, course=course, added_by=added_by)
+      return student_instance
+    except IntegrityError:
+      raise serializers.ValidationError()
+    except Exception as e:
+      print(e)
+    
+  def update(self, instance, validated_data):
+    instance.updated_by = self.context['request'].user
+    instance.save()
+    return instance
+    
+class StudentViewSerializer(serializers.ModelSerializer):
+  user = UserSerializer()
+  mode = ModeSerializer()
+  centre = CentreSerializer()
+  course = CourseSerializer()
+  class Meta:
+    model = Student
+    fields = ['id', 'admission', 'user', 'centre', 'mode', 'course', 'year']
 
 class LecturerSerializer(serializers.ModelSerializer):
   user = UserSerializer()
@@ -67,7 +97,7 @@ class LecturerSerializer(serializers.ModelSerializer):
     is_staff = False
     password = make_password(full_name)
     user_instance = User.objects.create(full_name=full_name,  role=role, is_staff=is_staff, password=password)
-    lecturer = Lecturer.objects.create(user=user_instance, role=lec_role, department=department)
+    lecturer = Lecturer.objects.create(user=user_instance, role=lec_role, courses=department)
     return lecturer
 
 class PaperSerializer(serializers.ModelSerializer):
@@ -92,43 +122,6 @@ class TeamLeaderSerializer(serializers.ModelSerializer):
       return super().create(validated_data)
     except IntegrityError:
       raise serializers.ValidationError()
-    
-  def update(self, instance, validated_data):
-    instance.score = validated_data.get('score', instance.score)
-    instance.save()
-    return instance
-
-class SpecializationSerializer(serializers.ModelSerializer):
-  student = StudentSerializer()
-  class Meta:
-    model = Specialization
-    fields = '__all__'
-
-  def create(self, validated_data):
-    try:
-      student = validated_data.get('student')
-      user = student.get('user')
-      course = validated_data.get('course')
-      session = student.get('session')
-      year = student.get('year')
-      admission = student.get('index')
-      surname = user.get('surname').strip().capitalize()
-      other_names = user.get('other_names').strip().capitalize()
-      username = admission
-      is_staff = False
-      role = 'student'
-      password = make_password(admission)
-      user_instance = User.objects.create(full_name=surname, other_names=other_names, username=username, is_staff=is_staff, role=role, password=password)
-      student_instance = Student.objects.create(index=admission, user=user_instance, session=session, year=year)
-      specialization = Specialization.objects.create(student=student_instance, course=course)
-      return specialization
-    except IntegrityError:
-      raise serializers.ValidationError()
-    
-  def update(self, instance, validated_data):
-    instance.course = validated_data.get('course', instance.course)
-    instance.save()
-    return instance
 
 class ModuleSerializer(serializers.ModelSerializer):
   class Meta:
@@ -148,7 +141,9 @@ class CatCombinationSerializer(serializers.ModelSerializer):
 
   def create(self, validated_data):
     try:
-      return super().create(validated_data)
+      instance = super().create(validated_data)
+      instance.added_by = self.context['request'].user
+      return instance
     except IntegrityError:
       raise serializers.ValidationError()
     
@@ -157,21 +152,10 @@ class CatCombinationSerializer(serializers.ModelSerializer):
     instance.save()
     return instance
 
-class LecturerModuleSerializer(serializers.ModelSerializer):
-  class Meta:
-    model = LecturerModule
-    fields = '__all__'
-
-  def create(self, validated_data):
-    try:
-      return super().create(validated_data)
-    except IntegrityError:
-      raise serializers.ValidationError()
-    
 class KnecIndexNumberSerializer(serializers.ModelSerializer):
   class Meta:
     model = IndexNumber
-    fields = ['student', 'index']
+    fields = ['id', 'student', 'index']
     
 
   def create(self, validated_data):
@@ -190,11 +174,13 @@ class ResultCreateSerializer(serializers.ModelSerializer):
   paper = serializers.PrimaryKeyRelatedField(queryset=Paper.objects.all())
   class Meta:
     model = Result
-    fields = ['student', 'paper', 'cat1', 'cat2']
+    fields = ['student', 'paper', 'cat1', 'cat2', 'added_by', 'update_by', 'created_at', 'updated_at']
 
   def create(self, validated_data):
     try:
-      return super().create(validated_data)
+      instance = super().create(validated_data)
+      instance.added_by = self.context['request'].user
+      return instance
     except IntegrityError:
       raise serializers.ValidationError()
     
@@ -208,7 +194,7 @@ class ResultViewSerializer(serializers.ModelSerializer):
   paper = PaperSerializer()
   class Meta:
     model = Result
-    fields = ['paper', 'cat1', 'cat2']
+    fields = ['paper', 'cat1', 'cat2', 'added_by', 'update_by', 'created_at', 'updated_at']
   
 class StudentResultSerializer(serializers.ModelSerializer):
   student_results = ResultViewSerializer(many=True, read_only=True)
@@ -216,20 +202,42 @@ class StudentResultSerializer(serializers.ModelSerializer):
   user = UserSerializer()
   class Meta:
     model = Student
-    fields = ['admission', 'user', 'centre', 'session', 'student_results', 'student_index']
+    fields = ['id', 'admission', 'user', 'centre', 'mode', 'student_results', 'student_index']
 
 class ModuleScoreSerializer(serializers.ModelSerializer):
   class Meta:
     model = ModuleScore
-    fields = ['student', 'module', 'score']
+    fields = ['id', 'student', 'module', 'discussion', 'take_away', 'added_by', 'updated_by', 'created_at', 'updated_at']
 
   def create(self, validated_data):
     try:
-      return super().create(validated_data)
+      instance = super().create(validated_data)
+      instance.added_by = self.context['request'].user
+      return instance
     except IntegrityError:
       raise serializers.ValidationError()
   
   def update(self, instance, validated_data):
-    instance.score = validated_data.get('score', instance.score)
+    instance.discussion = validated_data.get('discussion', instance.discussion)
+    instance.take_away = validated_data.get('take_away', instance.take_away)
+    instance.save()
+    return instance
+  
+class SittingCatSerializer(serializers.ModelSerializer):
+  class Meta:
+    model = SittingCat
+    fields = ['id', 'student', 'paper', 'cat1', 'cat2', 'added_by', 'updated_by', 'created_at', 'updated_at']
+
+  def create(self, validated_data):
+    try:
+      instance = super().create(validated_data)
+      instance.added_by = self.context['request'].user
+      return instance
+    except IntegrityError:
+      raise serializers.ValidationError()
+  
+  def update(self, instance, validated_data):
+    instance.discussion = validated_data.get('discussion', instance.discussion)
+    instance.take_away = validated_data.get('take_away', instance.take_away)
     instance.save()
     return instance
