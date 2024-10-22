@@ -1,0 +1,31 @@
+{% extends "results/base_site.html" %} {% block main %}
+{% load static %}
+<div class="grid w-full h-full">
+	<div class="h-full grid place-items-center">
+      
+		<form
+			method="post"
+			class="grid gap-2 place-self-center shadow-2xl p-4 rounded-md" enctype='multipart/form-data'> 
+      
+      {% if fields %}
+      <table class='w-5/6 border'>
+        <caption>The following is the order of the columns for the csv</caption>
+        <thead class='border'>
+        {% for field in fields %}
+          <th>{{ field }}</th>
+        {% endfor %}
+        </thead>
+      </table>
+    {% endif %}
+			{% csrf_token %} {{ form.management_form }}
+			<div class="grid gap-2 grid-cols-2">{{ form.as_div }}</div>
+			<button
+				type="submit"
+				class="border w-fit grid rounded p-4 place-self-center shadow-lg">
+				Upload
+			</button>
+		</form>
+		{{ form.media }}
+	</div>
+</div>
+{% endblock main %}

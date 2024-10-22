@@ -1,0 +1,105 @@
+{% extends 'results/base_site.html' %} 
+{% block main %}
+<div class="grid w-full h-full place-self-start gap-1">
+	<div class="grid w-full gap-2">
+		{% if user.role == 'admin' %}
+		<div class='grid grid-flow-row'><div
+			class="grid border rounded-md shadow-lg w-fit p-2 font-bold place-self-end mx-2">
+			<a href='{% url "new_cat_combination" %}'>New Cat Combination</a>
+		</div></div>
+		{% endif %}
+		
+
+		<table class="w-5/6 place-self-center border">
+			<thead class="border-b bg-gray-500 text-white p-2">
+				<tr class="">
+					<th class="border-r px-2">Paper</th>
+					<th class="border-r px-2">Cat 1</th>
+					<th class="border-r px-2">Cat 2</th>
+					<th class="border-r px-2">Added at</th>
+					<th class="border-r px-2">Updated at</th>
+					<th class="">Actions</th>
+				</tr>
+			</thead>
+
+			{% if page_obj %}
+			<tbody class="capitalize">
+				{% for combination in page_obj %}
+
+				<tr
+					class="border-b">
+					<td class="border-r px-2">{{ combination.paper }}</td>
+					<td class="border-r px-2">
+						
+            <ul class=''>
+              {% for module in combination.cat1.all %}
+                <li class='list-inside list-disc'>{{ module }}</li>
+              {% endfor %}
+            </ul>
+              
+					</td>
+          <td class="border-r px-2">
+						<ul class=''>
+              {% for module in combination.cat2.all %}
+                <li class='list-inside list-disc'>{{ module }}</li>
+              {% endfor %}
+            </ul>
+					</td>
+					<td class="border-r px-2">{{ combination.created_at }}</td>
+					<td class="border-r px-2">{{ combination.updated_at }}</td>
+					<td class="flex justify-between">
+						
+            {% if user.role == 'admin' %}
+              <a href='{% url "edit_cat_combination" combination.pk %}'>
+                edit
+                <i class="fa-regular fa-pen-to-square"></i>
+              </a>
+            {% endif %}
+              
+						
+					</td>
+				</tr>
+				{% endfor %}
+			</tbody>
+			<tfoot class="bg-gray-500 text-white">
+				<tr class="">
+					<td colspan='8' class=''>
+						<p class='w-full grid grid-flow-col'>
+							<span class='text-left'>Showing {{ page_obj.object_list|length }} of {{ page_obj.paginator.count }} Cat Combinations</span>
+							<span class='text-right'>PAGE: {{ page_obj.number }} of
+								<a
+									class="px-2"
+									href="?page={{ page_obj.paginator.num_pages }}">
+									{{ page_obj.paginator.num_pages }}
+								</a>
+								{% if page_obj.has_next %}
+								<a
+									class="px-2"
+									href="?page={{ page_obj.next_page_number }}">
+									Next
+								</a>
+								{% elif page_obj.has_previous %}
+								<a
+									class="px-2"
+									href="?page={{ page_obj.previous_page_number }}">
+									Previous
+								</a>
+								{% endif %}
+							</span>
+						</p>
+					</td>
+				</tr>
+			</tfoot>
+			{% else %}
+			<tr class="">
+				<td
+					colspan="9"
+					class="text-center">
+					No Combinations
+				</td>
+			</tr>
+			{% endif %}
+		</table>
+	</div>
+</div>
+{% endblock main %}

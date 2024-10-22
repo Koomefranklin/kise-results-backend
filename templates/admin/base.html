@@ -17,7 +17,9 @@
   <link rel="stylesheet" href="{% static "admin/css/nav_sidebar.css" %}">
   <script src="{% static 'admin/js/nav_sidebar.js' %}" defer></script>
 {% endif %}
-{% block extrastyle %}{% endblock %}
+{% block extrastyle %}
+<link rel="stylesheet" href="{% static "admin/css/custom.css" %}">
+{% endblock %}
 {% if LANGUAGE_BIDI %}<link rel="stylesheet" href="{% block stylesheet_rtl %}{% static "admin/css/rtl.css" %}{% endblock %}">{% endif %}
 {% block extrahead %}{% endblock %}
 {% block responsive %}
@@ -38,7 +40,7 @@
     {% if not is_popup %}
     <!-- Header -->
     {% block header %}
-    <div class="bg-[#FFCB05] text-black grid grid-flow-row lg:grid-flow-col justify-between py-2.5 px-10 place-items-center h-auto w-auto">
+    <div class="bg-[#FFCB05] text-black grid grid-flow-row lg:grid-flow-col justify-between py-2.5 px-10 place-items-center h-auto w-auto" id='top_header'>
         <div class="flex flex-row">
         {% block branding %}{% endblock %}
         </div>
@@ -117,7 +119,7 @@
         <!-- END Content -->
         {% block footer %}<div class="flex justify-between p-2">
           <div id="copyright">&copy; 2023 Kenya Institute of Special Education</div>
-          <div id="">By: Koome Franklin</div>
+          <div id="">Developed By: Koome Franklin</div>
         </div>{% endblock %}
       </div>
     </div>

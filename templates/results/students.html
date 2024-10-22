@@ -1,0 +1,96 @@
+{% extends 'results/base_site.html' %} 
+{% block main %}
+<div class="grid w-full h-full place-self-start gap-1">
+	<div class="grid w-full gap-2">
+		{% if user.role == 'admin' %}
+		<div class='grid grid-flow-col justify-end'><div
+			class="grid border rounded-md shadow-lg w-fit p-2 font-bold place-self-end mx-2">
+			<a href='{% url "new_student" %}'>New Student</a>
+		</div>
+    <div
+			class="grid border rounded-md shadow-lg w-fit p-2 font-bold place-self-end mx-2">
+			<a href='{% url "bulk-students" %}'>Bulk Students</a>
+		</div></div>
+		{% endif %}
+		
+		<table class="w-5/6 place-self-center border">
+			<thead class="border-b bg-gray-500 text-white p-2">
+				<tr class="">
+					<th class="border-r px-2">Admission No.</th>
+					<th class="border-r px-2">Full Name</th>
+					<th class="border-r px-2">Sex</th>
+					<th class="border-r px-2">Mode</th>
+					<th class="border-r px-2">Centre</th>
+					<th class="border-r px-2">Specialization</th>
+					<th class="border-r px-2">Year</th>
+					<th class="">Actions</th>
+				</tr>
+			</thead>
+
+			{% if page_obj %}
+			<tbody class="capitalize">
+				{% for student in page_obj %}
+
+				<tr
+					class="border-b">
+					<td class="border-r px-2">{{ student.admission }}</td>
+					<td class="border-r px-2">
+						{{ student.user.full_name }}
+					</td>
+					<td class="border-r px-2">{{ student.user.get_sex_display }}</td>
+					<td class="border-r px-2">{{ student.mode}}</td>
+					<td class="border-r px-2">{{ student.centre }}</td>
+					<td class="border-r px-2">{{ student.specialization }}</td>
+					<td class="border-r px-2">{{ student.year.year }}</td>
+					<td class="flex justify-between">
+						<a href='{% url "edit_student" student.pk %}'>
+							edit
+							<i class="fa-regular fa-pen-to-square"></i>
+						</a>
+						
+					</td>
+				</tr>
+				{% endfor %}
+			</tbody>
+			<tfoot class="bg-gray-500 text-white">
+				<tr class="">
+					<td colspan='8' class=''>
+						<p class='w-full grid grid-flow-col'>
+							<span class='text-left'>Showing {{ page_obj.object_list|length }} of {{ page_obj.paginator.count }} Students</span>
+							<span class='text-right'>PAGE: {{ page_obj.number }} of
+								<a
+									class="px-2"
+									href="?page={{ page_obj.paginator.num_pages }}">
+									{{ page_obj.paginator.num_pages }}
+								</a>
+								{% if page_obj.has_next %}
+								<a
+									class="px-2"
+									href="?page={{ page_obj.next_page_number }}">
+									Next
+								</a>
+								{% elif page_obj.has_previous %}
+								<a
+									class="px-2"
+									href="?page={{ page_obj.previous_page_number }}">
+									Previous
+								</a>
+								{% endif %}
+							</span>
+						</p>
+					</td>
+				</tr>
+			</tfoot>
+			{% else %}
+			<tr class="">
+				<td
+					colspan="9"
+					class="text-center">
+					No Students Found
+				</td>
+			</tr>
+			{% endif %}
+		</table>
+	</div>
+</div>
+{% endblock main %}

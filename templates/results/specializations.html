@@ -1,0 +1,94 @@
+{% extends 'results/base_site.html' %} 
+{% block main %}
+<div class="grid w-full h-full place-self-start gap-1">
+	<div class="grid w-full gap-2">		
+
+		<table class="w-5/6 place-self-center border">
+			<thead class="border-b bg-gray-500 text-white p-2">
+				<tr class="">
+					<th class="border-r px-2">Code</th>
+					<th class="border-r px-2">Name</th>
+					<!-- <th class="border-r px-2">Specialization</th> -->
+					<!-- <th class="border-r px-2">Mode</th>
+					<th class="border-r px-2">Centre</th>
+					<th class="border-r px-2">Specialization</th>
+					<th class="border-r px-2">Year</th> -->
+					<th class="">Actions</th>
+				</tr>
+			</thead>
+
+			{% if page_obj %}
+			<tbody class="capitalize">
+				{% for specialization in page_obj %}
+
+				<tr
+					class="border-b">
+					<td class="border-r px-2">{{ specialization.code }}</td>
+					<td class="border-r px-2">
+						{{ specialization.name }}
+					</td>
+					<!-- <td class="border-r px-2">{{ specialization.specialization }}</td> -->
+					<!-- <td class="border-r px-2">{{ specialization.mode}}</td>
+					<td class="border-r px-2">{{ specialization.centre }}</td>
+					<td class="border-r px-2">{{ specialization.specialization }}</td>
+					<td class="border-r px-2">{{ specialization.year.year }}</td> -->
+					<td class="flex justify-between">
+						
+						{% if user.role == 'admin' %}
+							<a href='{% url "edit_specialization" specialization.pk %}'>
+							edit
+							<i class="fa-regular fa-pen-to-square"></i>
+						</a>
+						{% endif %}
+							
+						<a href='{% url "papers" %}?sp={{ specialization.pk }}'>
+							View Papers
+							<i class="fa-regular fa-eye"></i>
+						</a>
+						
+					</td>
+				</tr>
+				{% endfor %}
+			</tbody>
+			<tfoot class="bg-gray-500 text-white">
+				<tr class="">
+					<td colspan='8' class=''>
+						<p class='w-full grid grid-flow-col'>
+							<span class='text-left'>Showing {{ page_obj.object_list|length }} of {{ page_obj.paginator.count }} Specializations</span>
+							<span class='text-right'>PAGE: {{ page_obj.number }} of
+								<a
+									class="px-2"
+									href="?page={{ page_obj.paginator.num_pages }}">
+									{{ page_obj.paginator.num_pages }}
+								</a>
+								{% if page_obj.has_next %}
+								<a
+									class="px-2"
+									href="?page={{ page_obj.next_page_number }}">
+									Next
+								</a>
+								{% elif page_obj.has_previous %}
+								<a
+									class="px-2"
+									href="?page={{ page_obj.previous_page_number }}">
+									Previous
+								</a>
+								{% endif %}
+							</span>
+						</p>
+					</td>
+				</tr>
+			</tfoot>
+			{% else %}
+			<tr class="">
+				<td
+					colspan="9"
+					class="text-center">
+					No Specializations Found
+				</td>
+			</tr>
+			{% endif %}
+		</table>
+	</div>
+</div>
+{% endblock main %}

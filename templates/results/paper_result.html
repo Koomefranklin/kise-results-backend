@@ -1,9 +1,9 @@
 {% extends 'results/base_site.html' %} {% block main %} {% if is_lecturer %}
-<div class="grid w-full grid-flow-row-dense grid-flow-col gap-4">
+<div class="grid w-full grid-flow-row-dense  gap-4">
 	<div class="grid grid-flow-col-dense justify-content-center p-2 w-full">
 		<form class="w-max grid h-fit" method="get" action="#">
 			<input
-				class="justify-self-end rounded w-24 h-8 bg-transparent border-2 w-fit p-2"
+				class="justify-self-end rounded w-24 h-8 bg-transparent border-2 p-2"
 				name="query"
 				type="search"
 				id="search"
@@ -12,7 +12,7 @@
 		</form>
 		<table>
 			<caption class="uppercase text-l justify-center">
-				{{ paper.course.name }}: {{ paper.name }} ({{ paper.code }}) results
+				{{ paper.specialization.name }}: {{ paper.name }} ({{ paper.code }}) results
 			</caption>
 			<thead class="bg-[#4caf50]">
 				<tr class="text-left ml-2 bg-[#4caf50]">
@@ -85,7 +85,7 @@
 			{% endif %}
 		</table>
 
-		{% if hod %} {% include 'results/hod.html' with course_units=course_units %}
+		{% if hod %} {% include 'results/hod.html' with specialization_units=specialization_units %}
 		{% endif %}
 	</div>
 	

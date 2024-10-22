@@ -1,28 +1,45 @@
-from django.urls import path, re_path, include
-from rest_framework import routers
+from django.urls import path
 from . import views
 
-router = routers.DefaultRouter()
-router.register(r'user', views.UserViewSet)
-router.register(r'modes', views.ModeViewSet)
-router.register(r'course', views.CourseViewSet)
-router.register(r'student', views.StudentViewSet)
-router.register(r'students', views.StudentListViewSet, basename='student_read_only')
-router.register(r'paper', views.PaperViewSet)
-router.register(r'module', views.ModuleViewSet)
-router.register(r'lecturer', views.LecturerViewSet)
-router.register(r'index', views.KnecIndexViewSet)
-router.register(r'score', views.ModuleScoreViewSet)
-router.register(r'sitting-cat', views.SittingCatViewSet)
-router.register(r'result', views.ResultsViewSet)
-router.register(r'results', views.ResultsListView, basename='Result_View')
-router.register(r'centres', views.CentreViewSet)
-
-app_name = 'dev'
-
 urlpatterns = [
-  path('auth/', include('dj_rest_auth.urls')),
-  path('api-auth/', include('rest_framework.urls', namespace='rest_framework')),
-  path('stats/', views.StatisticsView.as_view()),
-  path('', include(router.urls)),
+  path('student-autocomplete/', views.StudentAutocomplete.as_view(), name='student-autocomplete'),
+  path('', views.Index.as_view(), name='dashboard'),
+  path('students/', views.StudentsViewList.as_view(), name='students'),
+  path('students/new/', views.StudentCreateView.as_view(), name='new_student'),
+  path('students/<uuid:pk>/', views.StudentUpdateView.as_view(), name='edit_student'),
+  path('lecturers/', views.LecturersViewList.as_view(), name='lecturers'),
+  path('lecturers/new/', views.LecturerCreateView.as_view(), name='new_lecturer'),
+  path('lecturers/<uuid:pk>/', views.LecturerUpdateView.as_view(), name='edit_lecturer'),
+  path('specializations/', views.SpecializationsViewList.as_view(), name='specializations'),
+  path('specializations/new/', views.SpecializationCreateView.as_view(), name='new_specialization'),
+  path('specializations/<uuid:pk>/', views.SpecializationUpdateView.as_view(), name='edit_specialization'),
+  path('papers/', views.PapersViewList.as_view(), name='papers'),
+  path('papers/new/', views.PaperCreateView.as_view(), name='new_paper'),
+  path('papers/<uuid:pk>/', views.PaperUpdateView.as_view(), name='edit_paper'),
+  path('modules/', views.ModulesViewList.as_view(), name='modules'),
+  path('modules/new/', views.ModuleCreateView.as_view(), name='new_module'),
+  path('modules/<uuid:pk>/', views.ModuleUpdateView.as_view(), name='edit_module'),
+  path('papers/<uuid:paper>/modulescores/', views.ModuleScoresViewList.as_view(), name='modulescores'),
+  path('papers/<uuid:paper>/modulescores/new/', views.ModuleScoreCreateView.as_view(), name='new_modulescore'),
+  path('papers/<uuid:paper>/modulescores/<uuid:pk>/', views.ModuleScoreUpdateView.as_view(), name='edit_modulescore'),
+  path('papers/<uuid:paper>/sitincats/', views.SitinsViewList.as_view(), name='sitincats'),
+  path('papers/<uuid:paper>/sitincats/new/', views.SitinCreateView.as_view(), name='new_sitincat'),
+  path('papers/<uuid:paper>/sitincats/<uuid:pk>/', views.SitinUpdateView.as_view(), name='edit_sitincat'),
+  path('results/', views.ResultViewList.as_view(), name='results'),
+  path('teamleaders/', views.TeamLeaderViewList.as_view(), name='teamleaders'),
+  path('teamleaders/new/', views.TeamLeaderCreateView.as_view(), name='new_teamleader'),
+  path('teamleaders/<uuid:pk>/', views.TeamLeaderUpdateView.as_view(), name='edit_teamleader'),
+  path('hods/', views.HodViewList.as_view(), name='hods'),
+  path('hods/new/', views.HodCreateView.as_view(), name='new_hod'),
+  path('hods/<uuid:pk>/', views.HodUpdateView.as_view(), name='edit_hod'),
+  path('bulk-students/', views.BulkStudentCreation.as_view(), name='bulk-students'),
+  path('deadlines/', views.DeadlineViewList.as_view(), name='deadlines'),
+  path('deadlines/new/', views.DeadlineCreateView.as_view(), name='new_deadline'),
+  path('deadlines/<uuid:pk>/update/', views.DeadlineUpdateView.as_view(), name='edit_deadline'),
+  path('user/<uuid:pk>/change-password/', views.UpdateUserPassword.as_view(), name='password-change'),
+  path('cat-combinations/', views.CatCombinationsViewList.as_view(), name='cat_combinations'),
+  path('cat-combinations/new/', views.CatCombinationCreateView.as_view(), name='new_cat_combination'),
+  path('cat-combinations/<uuid:pk>/update/', views.CatCombinationUpdateView.as_view(), name='edit_cat_combination'),
+  path('deactivate-user/<uuid:user_id>/', views.DeactivateUser.as_view(), name='deactivate_user'),
+  path('activate-user/<uuid:user_id>/', views.ActivateUser.as_view(), name='activate_user'),
 ]

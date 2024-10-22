@@ -1,0 +1,18 @@
+{% extends "results/base_site.html" %} {% block main %}
+<div class="grid w-full h-full">
+	<div class="h-full grid place-items-center">
+		<form
+			method="post"
+			class="grid gap-2 place-self-center shadow-2xl p-4 rounded-md text-lg">
+			{% csrf_token %} {{ form.management_form }}
+			<div class="grid gap-2 grid-cols-2">{{ form.as_div }} {{ student_form.as_div }}</div>
+      <div class="grid gap-2 grid-cols-2"></div>
+			<button
+				type="submit"
+				class="border w-fit grid rounded p-4 place-self-center shadow-lg">
+				{{ title }}
+			</button>
+		</form>
+	</div>
+</div>
+{% endblock main %}

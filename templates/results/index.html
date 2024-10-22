@@ -1,51 +1,78 @@
 {% extends 'results/base_site.html' %} 
 {% block main %}
-{% if is_lecturer %}
-
-{% if is_tl %}
-  <div><a href="{% url 'course_results' is_tl.department.pk %}">View Course Results</a></div>
-{% endif %}
+{% if user.role == 'admin' or user.role == 'lecturer' %}
   
-<div class="grid grid-cols-2 place-content-center gap-4">
-  
-  {% if y1 %}
-    <div class="grid w-5/6 rounded-md border-2 px-2 py-4">
-      <a class="border-b-2" href="#">Distance Learning Year One</a>
-      
-      {% for paper in y1 %}
-        <a href="{% url 'single_paper' paper.pk %}" class="my-2 hover:underline hover:text-lg " title="{{ paper.code }} {{ paper.name }} Results">{{ paper.course }}: {{ paper.name }}</a>
-      {% endfor %}
-              
-    </div>
-    <div class="grid w-5/6 rounded-md border-2 px-2 py-4">
-      <a class="border-b-2" href="#">Full Time Year One</a>
-    
-      {% for paper in y1 %}
-      <a href="{% url 'single_paper' paper.pk %}" class="my-2 hover:underline hover:text-lg" title="{{ paper.code }} {{ paper.name }} Results">{{ paper.course }}: {{ paper.name }}</a>
-      {% endfor %}
-    
-    </div>
-  {% endif %}
-  {% if dly2 %}
-    <div class="grid w-5/6 rounded-md border-2 px-2 py-4">
-      <a class="border-b-2" href="#">Distance Learning Year Two</a>
-      
-      {% for paper in dly2 %}
-        <a href="{% url 'single_paper' paper.pk %}" class="my-2 hover:underline hover:text-lg" title="{{ paper.code }} {{ paper.name }} Results">{{ paper.course }}: {{ paper.name }}</a>
-      {% endfor %}
-              
-    </div>
-  {% endif %}
-  {% if fty2 %}
-    <div class="grid w-5/6 rounded-md border-2 px-2 py-4">
-      <a class="border-b-2" href="#">Full Time Year Two</a>
-      
-      {% for paper in fty2 %}
-        <a href="{% url 'single_paper' paper.pk %}" class="my-2 hover:underline hover:text-lg" title="{{ paper.code }} {{ paper.name }} Results">{{ paper.course }}: {{ paper.name }}</a>
-      {% endfor %}
-              
-    </div>
-  {% endif %}
+<div class="grid w-full place-content-center gap-4">
+  <div
+		class="w-full grid lg:grid-cols-2 md:grid-cols-2 gap-6 place-items-center font-bold">
+		<a
+			href='{% url "students" %}'
+			id="students"
+			class="grid rounded-lg bg-white text-black drop-shadow-lg h-64 w-full place-content-center">
+			<div class="grid w-full justify-center p-2">
+				<img
+					src="{{ MEDIA_URL }}icons/all.png"
+					width="100"
+					height="50" />
+			</div>
+			<div class="font-bold text-xl lg:text-lg uppercase text-center">
+				students
+			</div>
+			<div class="font-bold text-xl lg:text-lg text-center">
+				{{ students }}
+			</div>
+		</a>
+		<a
+			href='{% url "specializations" %}'
+			id="specializations"
+			class="grid rounded-lg bg-white text-black drop-shadow-lg h-64 w-full place-content-center">
+			<div class="grid w-full justify-center p-2">
+				<img
+					src="{{ MEDIA_URL }}icons/all.png"
+					width="100"
+					height="50" />
+			</div>
+			<div class="font-bold text-xl lg:text-lg uppercase text-center">
+				specializations
+			</div>
+			<div class="font-bold text-xl lg:text-lg text-center">
+				{{ specializations }}
+			</div>
+		</a>
+    <a
+			href='{% url "papers" %}'
+			id="papers"
+			class="grid rounded-lg bg-white text-black drop-shadow-lg h-64 w-full place-content-center">
+			<div class="grid w-full justify-center p-2">
+				<img
+					src="{{ MEDIA_URL }}icons/all.png"
+					width="100"
+					height="50" />
+			</div>
+			<div class="font-bold text-xl lg:text-lg uppercase text-center">
+				papers
+			</div>
+			<div class="font-bold text-xl lg:text-lg text-center">
+				{{ papers }}
+			</div>
+		</a>
+<a
+			href='{% url "modules" %}'
+			id="modules"
+			class="grid rounded-lg bg-white text-black drop-shadow-lg h-64 w-full place-content-center">
+			<div class="grid w-full justify-center p-2">
+				<img
+					src="{{ MEDIA_URL }}icons/all.png"
+					width="100"
+					height="50" />
+			</div>
+			<div class="font-bold text-xl lg:text-lg uppercase text-center">
+				modules
+			</div>
+			<div class="font-bold text-xl lg:text-lg text-center">
+				{{ modules }}
+			</div>
+		</a>
 </div>
 {% else %}
 <div class="grid"><a href="{% url 'student_result' %}">View Your Results</a></div>

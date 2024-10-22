@@ -36,6 +36,8 @@ ALLOWED_HOSTS = env('ALLOWED_HOSTS').split(' ')
 # Application definition
 
 INSTALLED_APPS = [
+    'dal',
+    'dal_select2',
     'dev.apps.DevConfig',
     'django.contrib.admin',
     'django.contrib.auth',
@@ -50,6 +52,7 @@ INSTALLED_APPS = [
     'tailwind',
     'theme',
     'django_browser_reload',
+    'fontawesomefree',
 ]
     
 
@@ -69,9 +72,11 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    "django_browser_reload.middleware.BrowserReloadMiddleware",
 ]
 
 ROOT_URLCONF = 'results.urls'
+AUTH_USER_MODEL = 'dev.user'
 
 TEMPLATES = [
     {
@@ -84,6 +89,7 @@ TEMPLATES = [
                 'django.template.context_processors.request',
                 'django.contrib.auth.context_processors.auth',
                 'django.contrib.messages.context_processors.messages',
+                'django.template.context_processors.media',
             ],
         },
     },
@@ -121,11 +127,20 @@ AUTH_USER_MODEL = 'dev.user'
 # https://docs.djangoproject.com/en/3.2/ref/settings/#auth-password-validators
 
 AUTH_PASSWORD_VALIDATORS = [
-    {
-        'NAME': 'django.contrib.auth.password_validation.UserAttributeSimilarityValidator',
+   {
+        "NAME": "django.contrib.auth.password_validation.UserAttributeSimilarityValidator",
     },
     {
-        'NAME': 'django.contrib.auth.password_validation.MinimumLengthValidator',
+        "NAME": "django.contrib.auth.password_validation.MinimumLengthValidator",
+        "OPTIONS": {
+            "min_length": 6,
+        },
+    },
+    {
+        "NAME": "django.contrib.auth.password_validation.CommonPasswordValidator",
+    },
+    {
+        "NAME": "django.contrib.auth.password_validation.NumericPasswordValidator",
     },
 ]
 
@@ -147,9 +162,11 @@ USE_TZ = True
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/3.2/howto/static-files/
 
-# STATIC_ROOT = os.path.join(BASE_DIR, 'static')
-# STATICFILES_DIRS = [os.path.join(BASE_DIR, 'static'),]
-STATIC_URL = 'static/'
+STATIC_ROOT = os.path.join(BASE_DIR, 'static')
+STATIC_URL = '/static/'
+
+MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
+MEDIA_URL = '/media/'
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/3.2/ref/settings/#default-auto-field
@@ -160,4 +177,24 @@ TAILWIND_APP_NAME = 'theme'
 
 INTERNAL_IPS = env('ALLOWED_HOSTS').split(' ')
 
-CORS_ALLOWED_ORIGINS = env('CORS_ALLOWED_ORIGINS').split(' ')
+
+LOGIN_URL = 'login'
+LOGIN_REDIRECT_URL = '/'
+LOGOUT_REDIRECT_URL = 'login'
+
+# Session Settings
+
+# Lifetime of the session cookie in seconds
+SESSION_COOKIE_AGE = 600
+
+# Whether to expire session when the browser is closed
+SESSION_EXPIRE_AT_BROWSER_CLOSE = True
+
+# Whether to save session data on every request
+SESSION_SAVE_EVERY_REQUEST = False
+
+# Whether the session cookie should be secure (HTTPS only)
+SESSION_COOKIE_SECURE = False
+
+# HttpOnly flag for session cookie
+SESSION_COOKIE_HTTPONLY = True  # Ensures session cookie is not accessible via JavaScript

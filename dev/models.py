@@ -24,6 +24,9 @@ class User(AbstractUser):
 
   REQUIRED_FIELDS = ['full_name', 'sex', 'role']
 
+  class Meta:
+    ordering = ['full_name']
+
   def save(self, *args, **kwargs):
     self.full_name = self.full_name.upper()
     super().save(*args, **kwargs)
@@ -58,17 +61,29 @@ class Centre(models.Model):
 
   def __str__(self):
     return f'{self.name}'
-
+  
 class Course(models.Model):
   id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+  code = models.CharField(max_length=10)
+  name = models.CharField(max_length=200)
+  created_at = models.DateTimeField(auto_now_add=True)
+  updated_at = models.DateTimeField(auto_now=True)
+
+  def __str__(self):
+    return self.name
+
+class Specialization(models.Model):
+  id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+  course = models.ForeignKey(Course, on_delete=models.CASCADE, related_name='course_specialization')
   code = models.IntegerField()
   name = models.CharField(max_length=50)
-  mode = models.ForeignKey(Mode, on_delete=models.CASCADE, related_name='course_mode')
+  mode = models.ForeignKey(Mode, on_delete=models.CASCADE, related_name='specialization_mode')
   created_at = models.DateTimeField(auto_now_add=True)
   updated_at = models.DateTimeField(auto_now=True)
 
   def __str__(self):
     return f'{self.code} {self.name}'
+  
   def save(self, *args, **kwargs):
     self.name = self.name.upper()
     super().save(*args, **kwargs)
@@ -77,9 +92,12 @@ class Paper(models.Model):
   id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
   code = models.CharField(max_length=8)
   name = models.CharField(max_length=100)
-  course = models.ForeignKey(Course, on_delete=models.CASCADE, related_name='course')
+  specialization = models.ForeignKey(Specialization, on_delete=models.CASCADE, related_name='specialization')
   created_at = models.DateTimeField(auto_now_add=True)
   updated_at = models.DateTimeField(auto_now=True)
+
+  class Meta:
+    ordering = ['code']
 
   def __str__(self):
     return f'{self.code} {self.name}'
@@ -96,10 +114,13 @@ class Student(models.Model):
   centre = models.ForeignKey(Centre, on_delete=models.CASCADE, related_name='student_centre')
   added_by = models.ForeignKey(User, on_delete=models.CASCADE, related_name='added_by')
   updated_by = models.ForeignKey(User, on_delete=models.CASCADE, related_name='student_change', null=True, blank=True)
-  course = models.ForeignKey(Course, on_delete=models.CASCADE, related_name='student_course')
+  specialization = models.ForeignKey(Specialization, on_delete=models.CASCADE, related_name='student_specialization')
   year = models.DateField()
   created_at = models.DateTimeField(auto_now_add=True)
   updated_at = models.DateTimeField(auto_now=True)
+
+  class Meta:
+    ordering = ['admission']
 
   def save(self, *args, **kwargs):
     self.admission = self.admission.upper()
@@ -125,11 +146,12 @@ class IndexNumber(models.Model):
 class Lecturer(models.Model):
   id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
   user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='lecturer_details')
-  courses = models.ManyToManyField(Course, related_name='lecturer_courses')
+  specializations = models.ManyToManyField(Specialization, related_name='lecturer_specializations')
   created_at = models.DateTimeField(auto_now_add=True)
   updated_at = models.DateTimeField(auto_now=True)
 
   class Meta:
+    order_with_respect_to = 'user'
     constraints = [
       models.UniqueConstraint(fields=['user',], name='unique_lecturer_user'),
     ]
@@ -140,7 +162,7 @@ class Lecturer(models.Model):
 class Hod(models.Model):
   id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
   lecturer = models.ForeignKey(Lecturer, on_delete=models.CASCADE, related_name='hod_lecturer')
-  department = models.ForeignKey(Course, on_delete=models.CASCADE, related_name='hod_department')
+  department = models.ForeignKey(Specialization, on_delete=models.CASCADE, related_name='hod_department')
   created_at = models.DateTimeField(auto_now_add=True)
   updated_at = models.DateTimeField(auto_now=True)
 
@@ -186,6 +208,12 @@ class CatCombination(models.Model):
   created_at = models.DateTimeField(auto_now_add=True)
   updated_at = models.DateTimeField(auto_now=True)
 
+  class Meta:
+    order_with_respect_to = 'paper'
+    constraints = [
+      models.UniqueConstraint(fields=['paper',], name='unique_paper_combination')
+    ]
+
   def __str__(self):
     return str(self.paper)
   
@@ -193,8 +221,8 @@ class ModuleScore(models.Model):
   id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
   student = models.ForeignKey(Student, related_name='student_score', on_delete=models.CASCADE)
   module = models.ForeignKey(Module, on_delete=models.CASCADE, related_name='score_module')
-  discussion = models.IntegerField()
-  take_away = models.IntegerField()
+  discussion = models.IntegerField(null=True, blank=True)
+  take_away = models.IntegerField(null=True, blank=True)
   added_by = models.ForeignKey(User, on_delete=models.CASCADE, related_name='score_add')
   created_at = models.DateTimeField(auto_now_add=True)
   updated_by = models.ForeignKey(User, on_delete=models.CASCADE, related_name='score_change', null=True, blank=True)
@@ -208,16 +236,21 @@ class ModuleScore(models.Model):
   def __str__(self):
     return f'{self.student} : {self.module}'
   
-class SittingCat(models.Model):
+class SitinCat(models.Model):
   id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
   student = models.ForeignKey(Student, related_name='student_scat', on_delete=models.CASCADE)
-  paper = models.ForeignKey(Paper, on_delete=models.CASCADE, related_name='sitting_paper')
-  cat1 = models.IntegerField()
-  cat2 = models.IntegerField()
+  paper = models.ForeignKey(Paper, on_delete=models.CASCADE, related_name='sitin_paper')
+  cat1 = models.IntegerField(null=True, blank=True)
+  cat2 = models.IntegerField(null=True, blank=True)
   added_by = models.ForeignKey(User, on_delete=models.CASCADE, related_name='cat_add')
   created_at = models.DateTimeField(auto_now_add=True)
-  updated_by = models.ForeignKey(User, on_delete=models.CASCADE, related_name='sitting_change', null=True, blank=True)
+  updated_by = models.ForeignKey(User, on_delete=models.CASCADE, related_name='sitin_change', null=True, blank=True)
   updated_at = models.DateTimeField(auto_now=True)
+
+  class Meta:
+    constraints = [
+      models.UniqueConstraint(fields=['student', 'paper'], name='unique_student_paper')
+    ]
 
   def __str__(self):
     return self.student
@@ -240,3 +273,27 @@ class Result(models.Model):
 
   def __str__(self):
     return str(f'{self.student} {self.paper}')
+  
+class Deadline(models.Model):
+  class NAMES(models.TextChoices):
+    TAKEAWAY = 'takeaway', _('Takeaway')
+    DISSCUSSION = 'discussion', _('Discussion')
+    CAT1 = 'cat1', _('Sit-in Cat 1')
+    CAT2 = 'cat2', _('Sit-in Cat 2')
+
+  id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+  name = models.CharField(max_length=15, choices=NAMES.choices, default=NAMES.TAKEAWAY, unique=True)
+  deadline = models.DateTimeField()
+  created_at = models.DateTimeField(auto_now_add=True)
+  added_by = models.ForeignKey(User, on_delete=models.CASCADE, related_name='deadline_add')
+  updated_at = models.DateTimeField(auto_now=True)
+  updated_by = models.ForeignKey(User, on_delete=models.CASCADE, related_name='deadline_edit', null=True, blank=True)
+
+  class Meta:
+    constraints = [
+      models.UniqueConstraint(fields=['name'], name='unique_deadline')
+    ]
+  
+  def __str__(self):
+      return f'{self.name} {self.deadline}'
+    

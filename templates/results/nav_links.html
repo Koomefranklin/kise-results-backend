@@ -1,0 +1,119 @@
+{% load i18n %}
+
+<div class="grid text-left p-px w-full">
+	<table class="w-full">
+		<caption>
+			<a
+				href="#"
+				class="">
+				Actions
+			</a>
+		</caption>
+		<tbody class="w-full uppercase">
+			{% if user.is_staff %}
+			<tr class="h-10 w-full">
+				<th
+					scope="row"
+					class="">
+					<a href='{% url "bulk-students" %}'>
+						Add Bulk Students
+						<i class="fa-solid fa-plus"></i>
+					</a>
+				</th>
+			</tr>
+			{% endif %}
+
+			<tr class="h-10">
+				<th scope="row"><a href="{% url 'students' %}">Students</a></th>
+			</tr>
+			
+			
+			<tr class="h-10">
+				<th scope="row">
+					<a href="{% url 'lecturers' %}">Lecturers</a>
+				</th>
+			</tr>
+			<tr class="h-10">
+				<th
+					scope="row"
+					id="tasks_total"
+					class="">
+					<a
+						href='{% url "specializations" %}'
+						class="font-bold uppercase text-center w-full">
+						Specializations
+					</a>
+				</th>
+			</tr>
+			
+			<tr class="h-10">
+				<th scope="row"><a href="{% url 'papers' %}">Papers</a></th>
+			</tr>
+			<tr class="h-10">
+				<th
+					scope="row"
+					id="deadlines"
+					class="">
+					<a
+						href='{% url "deadlines" %}'
+						class="font-bold uppercase text-center w-full">
+						Deadlines
+					</a>
+				</th>
+			</tr>
+			
+			{% if user.role == 'admin' %}
+			<tr class="h-10">
+					<th
+						scope="row"
+						id="cat_combinations"
+						class="">
+						<a
+							href='{% url "cat_combinations" %}'
+							class="font-bold uppercase text-center w-full">
+							Cat Combinations
+						</a>
+					</th>
+				</tr>
+				<tr class="h-10">
+					<th
+						scope="row"
+						id="hods"
+						class="">
+						<a
+							href='{% url "hods" %}'
+							class="font-bold uppercase text-center w-full">
+							HoDs
+						</a>
+					</th>
+				</tr>
+				<tr class="h-10">
+					<th
+						scope="row"
+						id="tls"
+						class="">
+						<a
+							href='{% url "teamleaders" %}'
+							class="font-bold uppercase text-center w-full">
+							Team Leaders
+						</a>
+					</th>
+				</tr>
+				<tr class="h-10">
+					<th
+						scope="row"
+						id="adddeadline"
+						class="">
+						<a
+							href='{% url "new_deadline" %}'
+							class="font-bold uppercase text-center w-full">
+							Add Deadlines
+						</a>
+					</th>
+				</tr>
+			{% endif %}
+				
+			
+		</tbody>
+	</table>
+</div>

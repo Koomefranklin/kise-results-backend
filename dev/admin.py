@@ -1,5 +1,5 @@
 from django.contrib import admin
-from .models import ModuleScore, User, Mode, Lecturer, Student, TeamLeader, Course, Paper, Module, CatCombination, Result, IndexNumber
+from .models import Deadline, Hod, ModuleScore, SitinCat, User, Mode, Lecturer, Student, TeamLeader, Specialization, Paper, Module, CatCombination, Result, IndexNumber, Centre, Course
 from django.contrib.auth.admin import UserAdmin
 from .forms import CatCombinationAdminForm, StudentAdminForm, LecturerAdminForm, TeamLeaderAdminForm
 # Register your models here.
@@ -24,6 +24,7 @@ class CustomUserAdmin(UserAdmin):
                   "password",
                   "username",
                   "sex",
+                  "email",
               )
           },
       ),
@@ -81,7 +82,7 @@ class TeamLeaderAdmin(admin.ModelAdmin):
   form = TeamLeaderAdminForm
 
 class PaperAdmin(admin.ModelAdmin):
-  list_display = ['code', 'name', 'course']
+  list_display = ['code', 'name', 'specialization']
 
 class ModuleAdmin(admin.ModelAdmin):
   list_display = ['code', 'name', 'paper']
@@ -92,8 +93,10 @@ class ResultAdmin(admin.ModelAdmin):
 class CatCombinationAdmin(admin.ModelAdmin):
   add_form = CatCombinationAdminForm 
 
-# class ModuleScoreAdmin(admin.ModelAdmin):
-#   list_display = ['student', 'module', 'score', 'paper']
+
+
+class ModuleScoreAdmin(admin.ModelAdmin):
+  list_display = ['student', 'module', 'take_away', 'discussion', 'paper']
   
   def paper(self, obj):
     module = ModuleScore.objects.get(pk=obj.pk).module
@@ -105,10 +108,15 @@ admin.site.register(Mode)
 admin.site.register(Lecturer, LecturerAdmin)
 admin.site.register(Student, StudentAdmin)
 admin.site.register(TeamLeader, TeamLeaderAdmin)
-admin.site.register(Course)
+admin.site.register(Specialization)
 admin.site.register(Paper, PaperAdmin)
 admin.site.register(Module, ModuleAdmin)
 admin.site.register(CatCombination, CatCombinationAdmin)
 admin.site.register(Result, ResultAdmin)
 admin.site.register(IndexNumber)
-# admin.site.register(ModuleScore, ModuleScoreAdmin)
+admin.site.register(Centre)
+admin.site.register(Course)
+admin.site.register(ModuleScore, ModuleScoreAdmin)
+admin.site.register(SitinCat)
+admin.site.register(Deadline)
+admin.site.register(Hod)

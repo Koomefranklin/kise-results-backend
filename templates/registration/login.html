@@ -1,31 +1,42 @@
-{% extends 'admin/base_site.html' %} {% load i18n static %} 
-{% block extrastyle %}
-{{ block.super }}
-<link
-  rel="stylesheet"
-  href="{% static 'admin/css/login.css' %}"
-/>
-{{ form.media }} {% endblock %} 
-{% block bodyclass %} {{ block.super }}  login{% endblock %} 
-{% block main %}
-<a href="{% url 'admin:login' %}" class="grid place-self-end bg-white p-2 w-fit text-black">Admin Login</a>
-<div class="grid justify-items-center">
-  <h1 class="w-full bg-[#FFCB05] text-center text-black">Login</h1>
-  <form class="grid" method="post">
+{% extends 'registration/base.html' %}
+{% load i18n static %}
+
+
+{% block title %}
+  Login
+{% endblock title %}
+
+{% block head %}
+  login
+{% endblock head %}
+  
+{% block main %} 
+{% if form.errors and not form.non_field_errors %}
+<p class="text-sm text-red-500">
+  {% blocktranslate count counter=form.errors.items|length %}Please correct the error below.{% plural %}Please correct
+  the errors below.{% endblocktranslate %}
+</p>
+{% endif %}
+
+{% if form.non_field_errors %}
+{% for error in form.non_field_errors %}
+<p class="text-sm text-red-500">
+  {{ error }}
+</p>
+{% endfor %}
+{% endif %}
+  <form class="grid gap-4" method="post">
     {% csrf_token %}
-    <div class="form-row">
-      {{ form.username.errors }} {{ form.username.label_tag }} {{ form.username }}
+    <div class="grid gap-4 grid-flow-col p-2">
+      <p class='text-sm text-red-500'>{{ form.username.errors }}</p>
+      {{ form.username.label_tag }} {{ form.username }}
     </div>
-    <div class="form-row">
-      {{ form.password.errors }} {{ form.password.label_tag }} {{ form.password }}
-      <input type="hidden" name="next" value="{{ next }}" />
+    <div class="grid gap-4 grid-flow-col p-2">
+      <p class='text-sm text-red-500'>{{ form.password.errors }}</p>
+      {{ form.password.label_tag }} {{ form.password }}
+      <input type="hidden" name="next" value="{{ next }}">
     </div>
-    <button
-      class="text-center p-2 bg-[#4caf50] place-self-center rounded-md"
-      type="submit"
-    >
-      Log In
-    </button>
+    <button class="text-center border drop-shadow-lg p-2 bg-green-400 place-self-center rounded-md" type="submit">Login</button>
   </form>
 </div>
 {% endblock main %}

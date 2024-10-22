@@ -2,143 +2,120 @@
 {% load static tailwind_tags %}
 <!DOCTYPE html>
 {% get_current_language as LANGUAGE_CODE %}{% get_current_language_bidi as LANGUAGE_BIDI %}
-<html lang="{{ LANGUAGE_CODE|default:"en-us" }}" dir="{{ LANGUAGE_BIDI|yesno:'rtl,ltr,auto' }}">
+<html lang="{{ LANGUAGE_CODE|default:'en-us' }}" dir="{{ LANGUAGE_BIDI|yesno:'rtl,ltr,auto' }}">
 <head>
 <title>{% block title %}{% endblock %}</title>
-{% block customhead %}
-    {{ block.super }}
-{% endblock %}
-<script src="http://code.jquery.com/jquery-1.11.3.min.js"></script>
-<link rel="stylesheet" href="{% block stylesheet %}{% static "admin/css/base.css" %}{% endblock %}">
-{% block dark-mode-vars %}
-  <link rel="stylesheet" href="{% static "admin/css/dark_mode.css" %}">
-  <script src="{% static "admin/js/theme.js" %}" defer></script>
-{% endblock %}
-{% if not is_popup and is_nav_sidebar_enabled %}
-  <link rel="stylesheet" href="{% static "admin/css/nav_sidebar.css" %}">
-  <script src="{% static 'admin/js/nav_sidebar.js' %}" defer></script>
-{% endif %}
-{% block extrastyle %}
-{% endblock %}
-{% if LANGUAGE_BIDI %}<link rel="stylesheet" href="{% block stylesheet_rtl %}{% static "admin/css/rtl.css" %}{% endblock %}">{% endif %}
 {% block extrahead %}{% endblock %}
-{% block responsive %}
-    <meta name="viewport" content="user-scalable=no, width=device-width, initial-scale=1.0, maximum-scale=1.0">
-    <link rel="stylesheet" href="{% static "admin/css/responsive.css" %}">
-    {% if LANGUAGE_BIDI %}<link rel="stylesheet" href="{% static "admin/css/responsive_rtl.css" %}">{% endif %}
-{% endblock %}
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<meta name="author" content="Koome Franklin"/>
+<meta name="color-scheme" content="dark light">
+<link rel="icon" type="image/x-icon" href="{{ MEDIA_URL }}icons/favicon.ico"/>
 {% block blockbots %}<meta name="robots" content="NONE,NOARCHIVE">{% endblock %}
+{% tailwind_preload_css %}
 {% tailwind_css %}
+<link href="{% static 'fontawesomefree/css/all.min.css' %}" rel="stylesheet" type="text/css">
 </head>
 
-<body class="{% if is_popup %}popup {% endif %}{% block bodyclass %}{% endblock %}"
-  data-admin-utc-offset="{% now "Z" %}">
-<a href="#content-start" class="skip-to-content-link">{% translate 'Skip to main content' %}</a>
-<!-- Container -->
-<div id="container" class="min-h-screen max-w-screen">
+<body class='w-screen h-screen overflow-auto dark:bg-slate-900'
+  data-admin-utc-offset="{% now 'Z' %}">
 
-    {% if not is_popup %}
-    <!-- Header -->
+   <div class='sticky top-0 z-50 w-screen'>
+     <!-- Header -->
     {% block header %}
-    <div class="bg-[#FFCB05] text-black grid grid-flow-row lg:grid-flow-col justify-between py-2.5 px-10 place-items-center h-auto w-auto">
-        <div class="flex flex-row">
+      <header id="header" class='w-full h-fit grid grid-flow-col p-2 bg-[#ffcb05]'>
+        <div id="branding" class='grid'>
         {% block branding %}{% endblock %}
         </div>
         {% block usertools %}
-        {% if has_permission %}
-        <div class="p-0 text-black">
-            {% block welcome-msg %}
-                {% translate 'Welcome,' %}
-                <strong>{% firstof user.get_short_name user.get_username %}</strong>.
-            {% endblock %}
-            {% block userlinks %}
-                {% if site_url %}
-                    <a href="{{ site_url }}">{% translate 'View site' %}</a> /
-                {% endif %}
-                {% if user.is_active and user.is_staff %}
-                    {% url 'django-admindocs-docroot' as docsroot %}
-                    {% if docsroot %}
-                        <a href="{{ docsroot }}">{% translate 'Documentation' %}</a> /
-                    {% endif %}
-                {% endif %}
-                {% if user.has_usable_password %}
-                <a href="{% url 'password_change' %}">{% translate 'Change password' %}</a> /
-                {% endif %}
-                <form id="logout-form" method="post" action="{% url 'logout' %}">
-                    {% csrf_token %}
-                    <button type="submit">{% translate 'Log out' %}</button>
-                </form>
-                {% include "results/color_theme_toggle.html" %}
-            {% endblock %}
-        </div>
-        {% endif %}
+          
+          {% if user.is_authenticated %}
+            
+            <div id="user-tools" class='grid grid-flow-col justify-end gap-px'>
+              {% block welcome-msg %}
+                  {% translate 'Welcome,' %}
+                  <strong class='uppercase'>{% firstof user.full_name user.get_username %}, {{ user.role }}</strong>.
+              {% endblock %}
+              {% block userlinks %}
+                  {% if site_url %}
+                      <a href="{{ site_url }}">{% translate 'View <i class="fa-solid fa-eye"></i> site' %}</a> /
+                  {% endif %}
+                  {% if user.has_usable_password %}
+                    <a href="{% url 'password-change' user.pk %}">{% translate 'Change password' %}</a> /
+                  {% endif %}
+                  <form id="logout-form" method="post" action="{% url 'logout' %}">
+                      {% csrf_token %}
+                      <button type="submit">{% translate 'Log out' %}</button>
+                  </form>
+              {% endblock %}
+            </div>
+
+          {% endif %}
         {% endblock %}
         {% block nav-global %}{% endblock %}
-    </div>
+      </header>
     {% endblock %}
     <!-- END Header -->
+
     {% block nav-breadcrumbs %}
-      <nav aria-label="{% translate 'Breadcrumbs' %}" class="bg-green-500">
+      <nav aria-label="{% translate 'Breadcrumbs' %}" class='w-full border-b bg-green-400'>
         {% block breadcrumbs %}
-          <div class="bg-green-500 grid grid-flow-col px-4 py-2">
-            <a href="{% url 'index' %}">{% translate 'Home' %}</a>
-            
-            
-            {% if is_lecturer %}
-              <a href="{% url 'admin:index' %}" class="grid place-self-end">Admin Site</a>
-            {% endif %}
-                           
-              
+          <div class="w-full">
+            <a href="{% url 'dashboard' %}">{% translate 'Home' %}</a>
             {% if title %} &rsaquo; {{ title }}{% endif %}
           </div>
         {% endblock %}
       </nav>
     {% endblock %}
-    {% endif %}
+   </div>
 
-    <div class="main" id="main" class="">
-      {% if not is_popup and is_nav_sidebar_enabled %}
-        {% block nav-sidebar %}
-          {% include "admin/nav_sidebar.html" %}
-        {% endblock %}
-      {% endif %}
-      <div id="content-start" class="content" tabindex="-1">
+    <div class="flex w-full overflow-y-auto h-full" id="main">
+       
+       {% if is_nav_enabled %}
+         <div class='w-80 flex sticky left-0 top-0 bottom-0 shadow-2xl p-2 overflow-y-hidden'>
+          {% block nav-sidebar %}
+            {% include "results/nav_sidebar.html" %}
+          {% endblock %}
+        </div>
+       {% endif %}
+        
+      <main id="content-start" class="h-full w-full p-4 overflow-y-auto" tabindex="-1">
+        
+        {% block deadline %}
+        
+        {% if deadlines %}
+          <ul class='w-full bg-red-500 text-white'>
+            <li class=''><a href='{% url "deadlines" %}'>View Updated Deadlines</a></li>              
+          </ul>            
+        {% endif %}
+          
+          
+        {% endblock deadline %}
+          
         {% block messages %}
           {% if messages %}
-            <ul class="messagelist">{% for message in messages %}
+            <ul class="grid w-full h-fit bg-[#4caf50] text-white">
+              {% for message in messages %}
               <li{% if message.tags %} class="{{ message.tags }}"{% endif %}>{{ message|capfirst }}</li>
             {% endfor %}</ul>
           {% endif %}
         {% endblock messages %}
+
         <!-- Content -->
-        <div id="content" class="{% block coltype %}colM{% endblock %}">
+        <div id="content" class="w-full h-full grid">
           {% block pretitle %}{% endblock %}
-          {% block content_title %}{% if title %}<h1>{{ title }}</h1>{% endif %}{% endblock %}
+          {% block content_title %}{% if title %}{% endif %}{% endblock %}
           {% block content_subtitle %}{% if subtitle %}<h2>{{ subtitle }}</h2>{% endif %}{% endblock %}
-          {% block content %}
+          {% block main %}
             {% block object-tools %}{% endblock %}
-            {{ content }}
+            {{ main }}
           {% endblock %}
-          {% block main %}{% endblock main %}
           {% block sidebar %}{% endblock %}
           <br class="clear">
         </div>
         <!-- END Content -->
-        {% block footer %}<div class="grid grid-flow-col justify-between p-2 sticky bottom-0 " style="width: -moz-available;">
-          <div id="copyright">&copy; 2023 Kenya Institute of Special Education</div>
-          <div class="grid place-self-end">By: ICT Dept.</div>
-        </div>{% endblock %}
-      </div>
+      </main>
     </div>
-</div>
-<!-- END Container -->
+    {% block footer %}<footer id="footer" class='sticky bottom-0 justify-center h-fit w-screen p-3 bg-black text-white hidden'>Developed by: Koome Franklin</footer>{% endblock %}
 
-<!-- SVGs -->
-<svg xmlns="http://www.w3.org/2000/svg" class="base-svgs">
-  <symbol viewBox="0 0 24 24" width="1rem" height="1rem" id="icon-auto"><path d="M0 0h24v24H0z" fill="currentColor"/><path d="M12 22C6.477 22 2 17.523 2 12S6.477 2 12 2s10 4.477 10 10-4.477 10-10 10zm0-2V4a8 8 0 1 0 0 16z"/></symbol>
-  <symbol viewBox="0 0 24 24" width="1rem" height="1rem" id="icon-moon"><path d="M0 0h24v24H0z" fill="currentColor"/><path d="M10 7a7 7 0 0 0 12 4.9v.1c0 5.523-4.477 10-10 10S2 17.523 2 12 6.477 2 12 2h.1A6.979 6.979 0 0 0 10 7zm-6 5a8 8 0 0 0 15.062 3.762A9 9 0 0 1 8.238 4.938 7.999 7.999 0 0 0 4 12z"/></symbol>
-  <symbol viewBox="0 0 24 24" width="1rem" height="1rem" id="icon-sun"><path d="M0 0h24v24H0z" fill="currentColor"/><path d="M12 18a6 6 0 1 1 0-12 6 6 0 0 1 0 12zm0-2a4 4 0 1 0 0-8 4 4 0 0 0 0 8zM11 1h2v3h-2V1zm0 19h2v3h-2v-3zM3.515 4.929l1.414-1.414L7.05 5.636 5.636 7.05 3.515 4.93zM16.95 18.364l1.414-1.414 2.121 2.121-1.414 1.414-2.121-2.121zm2.121-14.85l1.414 1.415-2.121 2.121-1.414-1.414 2.121-2.121zM5.636 16.95l1.414 1.414-2.121 2.121-1.414-1.414 2.121-2.121zM23 11v2h-3v-2h3zM4 11v2H1v-2h3z"/></symbol>
-</svg>
-<!-- END SVGs -->
 </body>
 </html>

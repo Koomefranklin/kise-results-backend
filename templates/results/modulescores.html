@@ -1,0 +1,94 @@
+{% extends 'results/base_site.html' %} 
+{% block main %}
+<div class="grid w-full h-full place-self-start gap-1">
+	<div class="grid w-full gap-2">
+		{% if user.role == 'admin' or user.role == 'lecturer' %}
+		<div class='grid grid-flow-row'><div
+			class="grid border rounded-md shadow-lg w-fit p-2 font-bold place-self-end mx-2">
+			<a href='{% url "new_modulescore" paper.id %}'>New Student Score</a>
+		</div></div>
+		{% endif %}
+		
+
+		<table class="w-5/6 place-self-center border">
+			<caption class=''>Module Scores for {{ paper }}</caption>
+			<thead class="border-b bg-gray-500 text-white p-2">
+				<tr class="">
+					<th class="border-r px-2">Admission No.</th>
+					<th class="border-r px-2">Full Name</th>
+					<th class="border-r px-2">Module</th>
+					<th class="border-r px-2">Take Away</th>
+					<th class="border-r px-2">Discussion</th>
+					<th class="border-r px-2">Added by</th>
+					<th class="border-r px-2">Added at</th>
+					<th class="">Actions</th>
+				</tr>
+			</thead>
+
+			{% if page_obj %}
+			<tbody class="capitalize">
+				{% for student in page_obj %}
+
+				<tr
+					class="border-b">
+					<td class="border-r px-2">{{ student.student.admission }}</td>
+					<td class="border-r px-2">
+						{{ student.student.user.full_name }}
+					</td>
+					<td class="border-r px-2">{{ student.module }}</td>
+					<td class="border-r px-2">{{ student.take_away }}</td>
+					<td class="border-r px-2">{{ student.discussion}}</td>
+					<td class="border-r px-2">{{ student.added_by }}</td>
+					<td class="border-r px-2">{{ student.created_at }}</td>
+					<td class="flex justify-between">
+						<a href='{% url "edit_modulescore" paper.pk student.pk %}'>
+							edit
+							<i class="fa-regular fa-pen-to-square"></i>
+						</a>
+						
+					</td>
+				</tr>
+				{% endfor %}
+			</tbody>
+			<tfoot class="bg-gray-500 text-white">
+				<tr class="">
+					<td colspan='8' class=''>
+						<p class='w-full grid grid-flow-col'>
+							<span class='text-left'>Showing {{ page_obj.object_list|length }} of {{ page_obj.paginator.count }} Student Module scores</span>
+							<span class='text-right'>PAGE: {{ page_obj.number }} of
+								<a
+									class="px-2"
+									href="?page={{ page_obj.paginator.num_pages }}">
+									{{ page_obj.paginator.num_pages }}
+								</a>
+								{% if page_obj.has_next %}
+								<a
+									class="px-2"
+									href="?page={{ page_obj.next_page_number }}">
+									Next
+								</a>
+								{% elif page_obj.has_previous %}
+								<a
+									class="px-2"
+									href="?page={{ page_obj.previous_page_number }}">
+									Previous
+								</a>
+								{% endif %}
+							</span>
+						</p>
+					</td>
+				</tr>
+			</tfoot>
+			{% else %}
+			<tr class="">
+				<td
+					colspan="9"
+					class="text-center">
+					No Student scores Found
+				</td>
+			</tr>
+			{% endif %}
+		</table>
+	</div>
+</div>
+{% endblock main %}
