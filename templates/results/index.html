@@ -2,17 +2,17 @@
 {% block main %}
 {% if user.role == 'admin' or user.role == 'lecturer' %}
   
-<div class="grid w-full place-content-center gap-4">
+<div class="grid w-full place-items-center gap-4">
   <div
-		class="w-full grid lg:grid-cols-2 md:grid-cols-2 gap-6 place-items-center font-bold">
+		class="w-full grid lg:grid-cols-2 md:grid-cols-2 gap-6 place-self-center font-bold px-4 lg:px-48">
 		<a
 			href='{% url "students" %}'
 			id="students"
-			class="grid rounded-lg bg-white text-black drop-shadow-lg h-64 w-full place-content-center">
+			class="grid rounded-lg bg-green-400 text-black drop-shadow-lg h-64 w-full place-content-center">
 			<div class="grid w-full justify-center p-2">
 				<img
-					src="{{ MEDIA_URL }}icons/all.png"
-					width="100"
+					src="{{ MEDIA_URL }}icons/people-line-solid.svg"
+					width="80"
 					height="50" />
 			</div>
 			<div class="font-bold text-xl lg:text-lg uppercase text-center">
@@ -25,11 +25,11 @@
 		<a
 			href='{% url "specializations" %}'
 			id="specializations"
-			class="grid rounded-lg bg-white text-black drop-shadow-lg h-64 w-full place-content-center">
+			class="grid rounded-lg bg-blue-400 text-black drop-shadow-lg h-64 w-full place-content-center">
 			<div class="grid w-full justify-center p-2">
 				<img
-					src="{{ MEDIA_URL }}icons/all.png"
-					width="100"
+					src="{{ MEDIA_URL }}icons/book-solid.svg"
+					width="80"
 					height="50" />
 			</div>
 			<div class="font-bold text-xl lg:text-lg uppercase text-center">
@@ -42,11 +42,11 @@
     <a
 			href='{% url "papers" %}'
 			id="papers"
-			class="grid rounded-lg bg-white text-black drop-shadow-lg h-64 w-full place-content-center">
+			class="grid rounded-lg bg-yellow-500 text-black drop-shadow-lg h-64 w-full place-content-center">
 			<div class="grid w-full justify-center p-2">
 				<img
-					src="{{ MEDIA_URL }}icons/all.png"
-					width="100"
+					src="{{ MEDIA_URL }}icons/file-solid.svg"
+					width="80"
 					height="50" />
 			</div>
 			<div class="font-bold text-xl lg:text-lg uppercase text-center">
@@ -62,8 +62,8 @@
 			class="grid rounded-lg bg-white text-black drop-shadow-lg h-64 w-full place-content-center">
 			<div class="grid w-full justify-center p-2">
 				<img
-					src="{{ MEDIA_URL }}icons/all.png"
-					width="100"
+					src="{{ MEDIA_URL }}icons/list-solid.svg"
+					width="80"
 					height="50" />
 			</div>
 			<div class="font-bold text-xl lg:text-lg uppercase text-center">
