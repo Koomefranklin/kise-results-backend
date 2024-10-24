@@ -227,7 +227,7 @@ class StudentUpdateView(LoginRequiredMixin, AdminMixin, UpdateView):
 		return context
 	pass
 
-class LecturersViewList(LoginRequiredMixin, ListView):
+class LecturersListView(LoginRequiredMixin, ListView):
 	model = Lecturer
 	template_name = 'results/lecturers.html'
 	context_object_name = 'lecturers'
@@ -235,6 +235,7 @@ class LecturersViewList(LoginRequiredMixin, ListView):
 
 	def get_queryset(self):
 		user = self.request.user
+		query = self.request.GET.get('query')
 		if user.role == 'admin':
 			qs = Lecturer.objects.all()
 		elif user.role == 'lecturer':
@@ -245,6 +246,8 @@ class LecturersViewList(LoginRequiredMixin, ListView):
 				qs = Lecturer.objects.filter(specializations__id=department)
 			else:
 				qs = Lecturer.objects.filter(user=user)
+		if query:
+			qs = qs.filter(user__full_name__icontains=query)
 		return qs
 
 	def get_context_data(self, **kwargs):
