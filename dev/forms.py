@@ -273,9 +273,11 @@ class NewModuleScore(forms.ModelForm):
 		fields = ['student', 'module', 'discussion', 'take_away']
 		widgets = {
 					'student': autocomplete.ModelSelect2(url='student-autocomplete',attrs={
-        'data-placeholder': 'Search ...'
-    },)
+        'data-placeholder': 'Search ...',
+				'data-forward': 'paper'
+    })
         }
+		
 	def __init__(self, *args, **kwargs):
 		user = kwargs.pop('user', None)
 		paper = kwargs.pop('paper', None)

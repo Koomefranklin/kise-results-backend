@@ -21,13 +21,18 @@ import csv
 class StudentAutocomplete(autocomplete.Select2QuerySetView):
 	def get_queryset(self):
 		user = self.request.user
-		if user.role == 'admin':
-			qs = Student.objects.all()
-		elif user.role == 'lecturer':
-			specializations = Lecturer.objects.get(user=user).specializations.values_list('id', flat=True)
-			qs = Student.objects.filter(specialization__in=specializations)
+		paper = self.forwarded.get('paper', None)
+		print(self.forwarded)
+		# if user.role == 'admin':
+		# 	qs = None
+		# elif user.role == 'lecturer':
+		specializations = Lecturer.objects.get(user=user).specializations.values_list('id', flat=True)
+		qs = Student.objects.filter(specialization__in=specializations)
 		if self.q:
 			qs = qs.filter(Q(user__full_name__icontains=self.q) | Q(admission__icontains=self.q))
+		if paper:
+			specialization = Paper.objects.get(pk=paper).specialization
+			qs = qs.filter(specialization=specialization)
 		return qs
 
 class ModuleAutocomplete(autocomplete.Select2QuerySetView):
@@ -578,7 +583,7 @@ class ModuleScoresViewList(LoginRequiredMixin, ListView):
 class ModuleScoreCreateView(LoginRequiredMixin, AdminOrLecturerMixin, CreateView):
 	model = ModuleScore
 	form_class = NewModuleScore
-	template_name = 'results/base_form.html'
+	template_name = 'results/module_score.html'
 
 	def get_success_url(self):
 		return reverse_lazy('modulescores', kwargs={'paper': self.kwargs.get('paper')})
@@ -591,9 +596,11 @@ class ModuleScoreCreateView(LoginRequiredMixin, AdminOrLecturerMixin, CreateView
 
 	def get_context_data(self, **kwargs):
 		user = self.request.user
+		paper = self.kwargs.get('paper')
 		context = super().get_context_data(**kwargs)
 		context['is_nav_enabled'] = True
 		context['title'] = 'New Module Score'
+		context['paper'] = Paper.objects.get(pk=paper)
 		return context
 
 	def post(self, request, *args, **kwargs):

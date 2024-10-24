@@ -16,7 +16,7 @@
 <link href="{% static 'fontawesomefree/css/all.min.css' %}" rel="stylesheet" type="text/css">
 </head>
 
-<body class='w-screen h-screen overflow-auto dark:bg-slate-900'
+<body class='w-screen h-screen overflow-hidden dark:bg-slate-900'
   data-admin-utc-offset="{% now 'Z' %}">
 
    <div class='sticky top-0 z-50 w-screen'>
@@ -30,15 +30,12 @@
           
           {% if user.is_authenticated %}
             
-            <div id="user-tools" class='grid grid-flow-col justify-end gap-px'>
+            <div id="user-tools" class='grid grid-flow-col justify-end gap-px text-black'>
               {% block welcome-msg %}
                   {% translate 'Welcome,' %}
                   <strong class='uppercase'>{% firstof user.full_name user.get_username %}, {{ user.role }}</strong>.
               {% endblock %}
               {% block userlinks %}
-                  {% if site_url %}
-                      <a href="{{ site_url }}">{% translate 'View <i class="fa-solid fa-eye"></i> site' %}</a> /
-                  {% endif %}
                   {% if user.has_usable_password %}
                     <a href="{% url 'password-change' user.pk %}">{% translate 'Change password' %}</a> /
                   {% endif %}
@@ -68,17 +65,17 @@
     {% endblock %}
    </div>
 
-    <div class="flex w-full overflow-y-auto h-full" id="main">
+    <div class="flex w-full overflow-hidden h-full pb-12" id="main">
        
        {% if is_nav_enabled %}
-         <div class='w-80 flex sticky left-0 top-0 bottom-0 shadow-2xl p-2 overflow-y-hidden'>
+         <div class='w-80 flex sticky left-0 top-0 bottom-0 shadow-2xl p-2 overflow-y-auto'>
           {% block nav-sidebar %}
             {% include "results/nav_sidebar.html" %}
           {% endblock %}
         </div>
        {% endif %}
         
-      <main id="content-start" class="h-full w-full p-4 overflow-y-auto" tabindex="-1">
+      <main id="content-start" class="h-full w-full p-4 overflow-y-auto mb-10" tabindex="-1">
         
         {% block deadline %}
         
@@ -101,7 +98,7 @@
         {% endblock messages %}
 
         <!-- Content -->
-        <div id="content" class="w-full h-full grid">
+        <div id="content" class="w-full h-full grid ">
           {% block pretitle %}{% endblock %}
           {% block content_title %}{% if title %}{% endif %}{% endblock %}
           {% block content_subtitle %}{% if subtitle %}<h2>{{ subtitle }}</h2>{% endif %}{% endblock %}

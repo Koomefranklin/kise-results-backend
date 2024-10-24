@@ -1,0 +1,24 @@
+{% extends "results/base_site.html" %} {% block main %}
+{% load static %}
+<div class="grid w-full h-full">
+	<div class="h-full grid place-items-center w-full">
+		<form
+			method="post"
+			class="grid gap-4 place-self-center shadow-2xl p-4 rounded-md w-5/6">
+      <h2 class='text-xl text-center'>{{ title }} for {{ paper }}</h2>
+			{% csrf_token %} {{ form.management_form }}
+			<div class="grid gap-4 grid-cols-2">{{ form.as_div }}</div>
+			<button
+				type="submit"
+				class="border w-fit grid rounded p-4 place-self-center shadow-lg">
+				Submit {{ title }}
+			</button>
+		</form>
+		<script type="text/javascript" src="{% static 'admin/js/vendor/jquery/jquery.js' %}"></script>
+		{{ form.media }}
+	</div>
+</div>
+<script>
+    $('#id_student').attr('data-forward', 'paper');
+</script>
+{% endblock main %}
