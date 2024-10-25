@@ -25,7 +25,7 @@
 					class="border-b">
 					<td class="border-r px-2">{{ paper.code }}</td>
 					<td class="border-r px-2">
-						{{ paper.name }}
+						<a href='{% url "modules" %}?query={{ paper.pk }}' title='View {{ paper.name }} Modules' class='underline p-2'>{{ paper.name }}</a>
 					</td>
 					<!-- <td class="border-r px-2">{{ paper.specialization }}</td> -->
 					<!-- <td class="border-r px-2">{{ paper.mode}}</td>
@@ -67,7 +67,15 @@
 					<td colspan='8' class=''>
 						<p class='w-full grid grid-flow-col'>
 							<span class='text-left'>Showing {{ page_obj.object_list|length }} of {{ page_obj.paginator.count }} Papers</span>
-							<span class='text-right'>PAGE: {{ page_obj.number }} of
+							<span class='text-right'>
+								{% if page_obj.has_previous %}
+								<a
+									class="px-2"
+									href="?page={{ page_obj.previous_page_number }}">
+									Previous
+								</a>
+								{% endif %}
+								PAGE: {{ page_obj.number }} of
 								<a
 									class="px-2"
 									href="?page={{ page_obj.paginator.num_pages }}">
@@ -78,12 +86,6 @@
 									class="px-2"
 									href="?page={{ page_obj.next_page_number }}">
 									Next
-								</a>
-								{% elif page_obj.has_previous %}
-								<a
-									class="px-2"
-									href="?page={{ page_obj.previous_page_number }}">
-									Previous
 								</a>
 								{% endif %}
 							</span>

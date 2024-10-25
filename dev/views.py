@@ -436,7 +436,6 @@ class PapersViewList(LoginRequiredMixin, ListView):
 	def get_queryset(self):
 		user = self.request.user
 		specialization = self.request.GET.get('sp')
-		print(specialization)
 		if user.role == 'admin':
 			qs = Paper.objects.all().order_by('code')
 		elif user.role == 'lecturer':
@@ -507,12 +506,15 @@ class ModulesViewList(LoginRequiredMixin, AdminOrLecturerMixin, ListView):
 
 	def get_queryset(self):
 		user = self.request.user
+		query = self.request.GET.get('query')
 		if user.role == 'admin':
 			qs = Module.objects.all()
 		elif user.role == 'lecturer':
 			specializations = Lecturer.objects.get(user=user).specializations.values_list('id', flat=True)
 			papers = Paper.objects.filter(specialization__in=specializations).values_list('id', flat=True)
 			qs = Module.objects.filter(paper__in=papers)
+		if query:
+			qs = qs.filter(paper=query)
 		return qs
 
 	def get_context_data(self, **kwargs):

@@ -25,7 +25,7 @@
 					class="border-b">
 					<td class="border-r px-2">{{ specialization.code }}</td>
 					<td class="border-r px-2">
-						{{ specialization.name }}
+						<a href='{% url "papers" %}?sp={{ specialization.pk }}' title='view {{ specialization.name }} papers' class='underline p-2'>{{ specialization.name }}</a>
 					</td>
 					<!-- <td class="border-r px-2">{{ specialization.specialization }}</td> -->
 					<!-- <td class="border-r px-2">{{ specialization.mode}}</td>
