@@ -1021,6 +1021,12 @@ class CatCombinationUpdateView(LoginRequiredMixin, AdminMixin, UpdateView):
 	template_name = 'results/base_form.html'
 	form_class = UpdateCatCombination
 	success_url = reverse_lazy('cat_combinations')
+
+	def get_form_kwargs(self):
+		kwargs = super(CatCombinationUpdateView, self).get_form_kwargs()
+		kwargs['user'] = self.request.user
+		kwargs['combination'] = self.kwargs.get('pk')
+		return kwargs
 	
 	def get_context_data(self, **kwargs):
 		user = self.request.user

@@ -1,5 +1,6 @@
 from dataclasses import fields
 import datetime
+from itertools import combinations
 from django import forms
 from .models import CatCombination, Deadline, Hod, Specialization, Module, Paper, User, Lecturer, Student, TeamLeader, Result, IndexNumber, ModuleScore, SitinCat
 from dal import autocomplete
@@ -411,7 +412,12 @@ class NewCatCombination(forms.ModelForm):
 		}
 	
 	def __init__(self, *args, **kwargs):
+		combinations = CatCombination.objects.all()
 		super(NewCatCombination, self).__init__(*args, **kwargs)
+		added_papers = combinations.values_list('paper', flat=True)
+		self.fields['paper'].queryset = Paper.objects.exclude(Q(pk__in=added_papers) | Q(specialization__mode__mode='FT'))
+		self.fields['cat1'].queryset = Module.objects.filter((Q(cat1__isnull=True) & Q(cat2__isnull=True)) & Q(paper__specialization__mode__mode='DL'))
+		self.fields['cat2'].queryset = Module.objects.filter((Q(cat1__isnull=True) & Q(cat2__isnull=True)) & Q(paper__specialization__mode__mode='DL'))
 		for fieldname, field in self.fields.items():
 			self.fields[fieldname].widget.attrs['class'] = 'rounded border-2 w-5/6 grid'
 
@@ -425,8 +431,13 @@ class UpdateCatCombination(forms.ModelForm):
 		}
 	
 	def __init__(self, *args, **kwargs):
+		combination = kwargs.pop('combination', None)
+		user = kwargs.pop('user', None)
+		paper = CatCombination.objects.get(pk=combination).paper
 		super(UpdateCatCombination, self).__init__(*args, **kwargs)
 		self.fields['paper'].disabled = True
+		self.fields['cat1'].queryset = Module.objects.filter(paper=paper)
+		self.fields['cat2'].queryset = Module.objects.filter(paper=paper)
 		for fieldname, field in self.fields.items():
 			self.fields[fieldname].widget.attrs['class'] = 'rounded border-2 w-5/6 grid'
 	
