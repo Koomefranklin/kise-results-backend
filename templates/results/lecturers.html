@@ -10,8 +10,13 @@
 		{% endif %}
 		
 		
-
 		<table class="w-5/6 place-self-center border">
+			<form method="GET" action="{% url 'lecturers' %}" class='w-full'>  
+				<div class='flex w-5/6 h-fit place-self-center'>
+					{{ search_query.search_query }}
+					<button type="submit" class='rounded-md border p-2'>Search</button>
+				</div>
+			</form>
 			<thead class="border-b bg-gray-500 text-white p-2">
 				<tr class="">
 					<th class="border-r px-2">Full Name</th>

@@ -9,7 +9,7 @@ from django.contrib.auth.mixins import LoginRequiredMixin
 from .mixins import AdminMixin, AdminOrHeadMixin, AdminOrLecturerMixin
 from .models import Deadline, Hod, ModuleScore, User, Student, Result, Mode, Lecturer, Specialization, Paper, TeamLeader, Module, CatCombination, IndexNumber, SitinCat, Centre
 from django.http.response import HttpResponse
-from .forms import CSVUploadForm, CustomPasswordChangeForm, CustomUserCreationForm, CustomUserChangeForm, NewCatCombination, NewDeadline, NewHoD, NewStudent, NewTeamLeader, UpdateCatCombination, UpdateDeadline, UpdateHoD, UpdateStudent, NewLecturer, UpdateLecturer, NewSpecialization, UpdateSpecialization, NewPaper, UpdatePaper, NewModule, UpdateModule, NewModuleScore, UpdateModuleScore, NewSitinCat, UpdateSitinCat, UpdateTeamLeader
+from .forms import CSVUploadForm, CustomPasswordChangeForm, CustomUserCreationForm, CustomUserChangeForm, NewCatCombination, NewDeadline, NewHoD, NewStudent, NewTeamLeader, UpdateCatCombination, UpdateDeadline, UpdateHoD, UpdateStudent, NewLecturer, UpdateLecturer, NewSpecialization, UpdateSpecialization, NewPaper, UpdatePaper, NewModule, UpdateModule, NewModuleScore, UpdateModuleScore, NewSitinCat, UpdateSitinCat, UpdateTeamLeader, SearchForm
 from itertools import chain
 from dal import autocomplete
 from django.urls import reverse_lazy
@@ -137,18 +137,22 @@ class StudentsViewList(LoginRequiredMixin, ListView):
 
 	def get_queryset(self):
 		user = self.request.user
+		search_query = self.request.GET.get('search_query')
 		if user.role == 'admin':
 			qs = Student.objects.all()
 		elif user.role == 'lecturer':
 			specializations = Lecturer.objects.get(user=user).specializations.values_list('id', flat=True)
 			qs = Student.objects.filter(specialization__in=specializations)
-		return qs
+		if search_query:
+			qs = qs.filter(Q(user__full_name__icontains=search_query) | Q(admission__icontains=search_query))
+		return qs.order_by('admission')
 
 	def get_context_data(self, **kwargs):
 		user = self.request.user
 		context = super().get_context_data(**kwargs)
 		context['is_nav_enabled'] = True
 		context['title'] = 'Students'
+		context['search_query'] = SearchForm(self.request.GET)
 		return context
 	pass
 
@@ -236,6 +240,7 @@ class LecturersListView(LoginRequiredMixin, ListView):
 	def get_queryset(self):
 		user = self.request.user
 		query = self.request.GET.get('query')
+		search_query = self.request.GET.get('search_query')
 		if user.role == 'admin':
 			qs = Lecturer.objects.all()
 		elif user.role == 'lecturer':
@@ -248,6 +253,8 @@ class LecturersListView(LoginRequiredMixin, ListView):
 				qs = Lecturer.objects.filter(user=user)
 		if query:
 			qs = qs.filter(user__full_name__icontains=query)
+		if search_query:
+			qs = qs.filter(user__full_name__icontains=search_query)
 		return qs
 
 	def get_context_data(self, **kwargs):
@@ -255,6 +262,7 @@ class LecturersListView(LoginRequiredMixin, ListView):
 		context = super().get_context_data(**kwargs)
 		context['is_nav_enabled'] = True
 		context['title'] = 'Lecturers'
+		context['search_query'] = SearchForm(self.request.GET)
 		return context
 	pass
 
@@ -367,11 +375,14 @@ class SpecializationsViewList(LoginRequiredMixin, ListView):
 
 	def get_queryset(self):
 		user = self.request.user
+		search_query = self.request.GET.get('search_query')
 		if user.role == 'admin':
 			qs = Specialization.objects.all()
 		elif user.role == 'lecturer':
 			specializations = Lecturer.objects.get(user=user).specializations.values_list('id', flat=True)
 			qs = Specialization.objects.filter(pk__in=specializations)
+		if search_query:
+			qs = qs.filter(Q(name__icontains=search_query) | Q(code__icontains=search_query))
 		return qs.order_by('code')
 
 	def get_context_data(self, **kwargs):
@@ -379,6 +390,7 @@ class SpecializationsViewList(LoginRequiredMixin, ListView):
 		context = super().get_context_data(**kwargs)
 		context['is_nav_enabled'] = True
 		context['title'] = 'Specializations'
+		context['search_query'] = SearchForm(self.request.GET)
 		return context
 
 class SpecializationCreateView(LoginRequiredMixin, AdminMixin, CreateView):
@@ -435,6 +447,7 @@ class PapersViewList(LoginRequiredMixin, ListView):
 
 	def get_queryset(self):
 		user = self.request.user
+		search_query = self.request.GET.get('search_query')
 		specialization = self.request.GET.get('sp')
 		if user.role == 'admin':
 			qs = Paper.objects.all().order_by('code')
@@ -443,6 +456,8 @@ class PapersViewList(LoginRequiredMixin, ListView):
 			qs = Paper.objects.filter(specialization__in=specializations)
 		if specialization:
 			qs = qs.filter(specialization=specialization)
+		if search_query:
+			qs = qs.filter(Q(code__icontains=search_query) | Q(name__icontains=search_query) | Q(specialization__name__icontains=search_query))
 		return qs.order_by('code')
 
 	def get_context_data(self, **kwargs):
@@ -450,6 +465,7 @@ class PapersViewList(LoginRequiredMixin, ListView):
 		context = super().get_context_data(**kwargs)
 		context['is_nav_enabled'] = True
 		context['title'] = 'Papers'
+		context['search_query'] = SearchForm(self.request.GET)
 		return context
 
 class PaperCreateView(LoginRequiredMixin, AdminMixin, CreateView):
@@ -502,10 +518,11 @@ class ModulesViewList(LoginRequiredMixin, AdminOrLecturerMixin, ListView):
 	model = Module
 	template_name = 'results/modules.html'
 	context_object_name = 'modules'
-	paginate_by = 20
+	paginate_by = 50
 
 	def get_queryset(self):
 		user = self.request.user
+		search_query = self.request.GET.get('search_query')
 		query = self.request.GET.get('query')
 		if user.role == 'admin':
 			qs = Module.objects.all()
@@ -515,6 +532,8 @@ class ModulesViewList(LoginRequiredMixin, AdminOrLecturerMixin, ListView):
 			qs = Module.objects.filter(paper__in=papers)
 		if query:
 			qs = qs.filter(paper=query)
+		if search_query:
+			qs = qs.filter(Q(code__icontains=search_query) | Q(name__icontains=search_query) | Q(paper__code__icontains=search_query) | Q(paper__name__icontains=search_query))
 		return qs
 
 	def get_context_data(self, **kwargs):
@@ -522,6 +541,7 @@ class ModulesViewList(LoginRequiredMixin, AdminOrLecturerMixin, ListView):
 		context = super().get_context_data(**kwargs)
 		context['is_nav_enabled'] = True
 		context['title'] = 'Modules'
+		context['search_query'] = SearchForm(self.request.GET)
 		return context
 	pass
 
@@ -570,9 +590,12 @@ class ModuleScoresViewList(LoginRequiredMixin, ListView):
 
 	def get_queryset(self):
 		user = self.request.user
+		search_query = self.request.GET.get('search_query')
 		paper = self.kwargs.get('paper')
 		modules = Module.objects.filter(paper=paper).values_list('id', flat=True)
 		qs = ModuleScore.objects.filter(module__in=modules)
+		if search_query:
+			qs = qs.filter(Q(student__admission__icontains=search_query) | Q(student__user__full_name__icontains=search_query) | Q(module__name__icontains=search_query) | Q(module__paper__name__icontains=search_query))
 		return qs
 
 	def get_context_data(self, **kwargs):
@@ -583,6 +606,7 @@ class ModuleScoresViewList(LoginRequiredMixin, ListView):
 		context['is_nav_enabled'] = True
 		context['title'] = 'Module Scores'
 		context['paper'] = paper
+		context['search_query'] = SearchForm(self.request.GET)
 		return context
 
 class ModuleScoreCreateView(LoginRequiredMixin, AdminOrLecturerMixin, CreateView):
@@ -646,8 +670,11 @@ class SitinsViewList(LoginRequiredMixin, ListView):
 
 	def get_queryset(self):
 		user = self.request.user
+		search_query = self.request.GET.get('search_query')
 		paper = self.kwargs.get('paper')
 		qs = SitinCat.objects.filter(paper=paper)
+		if search_query:
+			qs = qs.filter(Q(student__admission__icontains=search_query) | Q(student__user__full_name__icontains=search_query))
 		return qs
 
 	def get_context_data(self, **kwargs):
@@ -658,6 +685,7 @@ class SitinsViewList(LoginRequiredMixin, ListView):
 		context['is_nav_enabled'] = True
 		context['paper'] = paper
 		context['title'] = 'Sit-in Cats'
+		context['search_query'] = SearchForm(self.request.GET)
 		return context
 
 class SitinCreateView(LoginRequiredMixin, AdminOrLecturerMixin, CreateView):
@@ -728,6 +756,7 @@ class ResultViewList(LoginRequiredMixin, ListView):
 		context = super().get_context_data(**kwargs)
 		context['is_nav_enabled'] = True
 		context['title'] = 'Results'
+		context['search_query'] = SearchForm(self.request.GET)
 		return context
 	
 class GenerateResults(LoginRequiredMixin, AdminOrLecturerMixin, FormView):
@@ -788,6 +817,7 @@ class TeamLeaderViewList(LoginRequiredMixin, AdminMixin, ListView):
 		context = super().get_context_data(**kwargs)
 		context['is_nav_enabled'] = True
 		context['title'] = 'Team Leaders'
+		context['search_query'] = SearchForm(self.request.GET)
 		return context
 
 class TeamLeaderCreateView(LoginRequiredMixin, AdminMixin, CreateView):
@@ -828,6 +858,7 @@ class HodViewList(LoginRequiredMixin, ListView):
 		context = super().get_context_data(**kwargs)
 		context['is_nav_enabled'] = True
 		context['title'] = 'HoDs'
+		context['search_query'] = SearchForm(self.request.GET)
 		return context
 
 class HodCreateView(LoginRequiredMixin, AdminMixin, CreateView):
@@ -980,12 +1011,15 @@ class CatCombinationsViewList(LoginRequiredMixin, AdminOrLecturerMixin, ListView
 
 	def get_queryset(self):
 		user = self.request.user
+		search_query = self.request.GET.get('search_query')
 		if user.role == 'admin':
-			qs = CatCombination.objects.all()
+			qs = CatCombination.objects.all().order_by('paper')
 		elif user.role == 'lecturer':
 			specializations = Lecturer.objects.get(user=user).specializations.values_list('id', flat=True)
 			papers = Paper.objects.filter(specialization__in=specializations).values_list('id', flat=True)
 			qs = CatCombination.objects.filter(paper__in=papers)
+		if search_query:
+			qs = qs.filter(Q(paper__name__icontains=search_query) | Q(paper__code__icontains=search_query))
 		return qs
 	
 	def get_context_data(self, **kwargs):
@@ -993,6 +1027,7 @@ class CatCombinationsViewList(LoginRequiredMixin, AdminOrLecturerMixin, ListView
 		context = super().get_context_data(**kwargs)
 		context['is_nav_enabled'] = True
 		context['title'] = 'Cat Combinations'
+		context['search_query'] = SearchForm(self.request.GET)
 		return context
 	
 class CatCombinationCreateView(LoginRequiredMixin, AdminMixin, CreateView):
@@ -1032,7 +1067,7 @@ class CatCombinationUpdateView(LoginRequiredMixin, AdminMixin, UpdateView):
 		user = self.request.user
 		context = super().get_context_data(**kwargs)
 		context['is_nav_enabled'] = True
-		context['title'] = 'Update Deadline'
+		context['title'] = 'Update Cat Combination'
 		return context
 	
 class DeactivateUser(LoginRequiredMixin, AdminMixin, View):

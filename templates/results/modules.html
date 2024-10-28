@@ -4,6 +4,12 @@
 	<div class="grid w-full gap-2">		
 
 		<table class="w-5/6 place-self-center border">
+			<form method="GET" action="{% url 'modules' %}" class=''> 
+				<div class='flex w-5/6 h-fit place-self-center justify-center'>
+					{{ search_query.search_query }}
+					<button type="submit" class='rounded-md border p-2 px-4'>Search</button>
+				</div>
+			</form>
       <!-- <h2 class='text-xl text-center'>{{ paper }} Modules</h2> -->
 			<thead class="border-b bg-gray-500 text-white p-2">
 				<tr class="">

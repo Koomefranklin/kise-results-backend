@@ -33,7 +33,7 @@ class TeamLeaderAdminForm(forms.ModelForm):
 
 	def __init__(self, *args, **kwargs):
 		super().__init__(*args, **kwargs)
-		self.fields['lecturer'].queryset = Lecturer.objects.filter(role='TL')
+		self.fields['lecturer'].queryset = Lecturer.objects.filter()
 
 class CatCombinationAdminForm(forms.ModelForm):
 	class Meta:
@@ -415,9 +415,9 @@ class NewCatCombination(forms.ModelForm):
 		combinations = CatCombination.objects.all()
 		super(NewCatCombination, self).__init__(*args, **kwargs)
 		added_papers = combinations.values_list('paper', flat=True)
-		self.fields['paper'].queryset = Paper.objects.exclude(Q(pk__in=added_papers) | Q(specialization__mode__mode='FT'))
-		self.fields['cat1'].queryset = Module.objects.filter((Q(cat1__isnull=True) & Q(cat2__isnull=True)) & Q(paper__specialization__mode__mode='DL'))
-		self.fields['cat2'].queryset = Module.objects.filter((Q(cat1__isnull=True) & Q(cat2__isnull=True)) & Q(paper__specialization__mode__mode='DL'))
+		self.fields['paper'].queryset = Paper.objects.exclude(Q(pk__in=added_papers)).filter(Q(code__icontains='104'))
+		self.fields['cat1'].queryset = Module.objects.filter((Q(cat1__isnull=True) & Q(cat2__isnull=True)) & Q(paper__code__icontains='104'))
+		self.fields['cat2'].queryset = Module.objects.filter((Q(cat1__isnull=True) & Q(cat2__isnull=True)) & Q(paper__code__icontains='104'))
 		for fieldname, field in self.fields.items():
 			self.fields[fieldname].widget.attrs['class'] = 'rounded border-2 w-5/6 grid'
 
@@ -440,6 +440,13 @@ class UpdateCatCombination(forms.ModelForm):
 		self.fields['cat2'].queryset = Module.objects.filter(paper=paper)
 		for fieldname, field in self.fields.items():
 			self.fields[fieldname].widget.attrs['class'] = 'rounded border-2 w-5/6 grid'
+
+class SearchForm(forms.Form):
+	search_query = forms.CharField(label='Search', widget=forms.TextInput(attrs={'placeholder': 'Input Search Query'}))
+	
+	def __init__(self, *args, **kwargs):
+		super(SearchForm, self).__init__(*args, **kwargs)
+		self.fields['search_query'].widget.attrs['class'] = 'w-full h-fit p-2'
 	
 class CSVUploadForm(forms.Form):
 	csv_file = forms.FileField(label='Select a CSV file containing the details')

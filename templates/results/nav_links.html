@@ -2,7 +2,7 @@
 
 <div class="grid text-left p-px w-full">
 	<table class="w-full">
-		<caption>
+		<caption class='border-b'>
 			<a
 				href="#"
 				class="">
@@ -11,7 +11,7 @@
 		</caption>
 		<tbody class="w-full uppercase">
 			{% if user.is_staff %}
-			<tr class="h-10 w-full">
+			<tr class="py-6 border-b h-10 w-full">
 				<th
 					scope="row"
 					class="">
@@ -23,20 +23,20 @@
 			</tr>
 			{% endif %}
 
-			<tr class="h-10">
+			<tr class="py-6 border-b h-10">
 				<th scope="row"><a href="{% url 'students' %}">Students</a></th>
 			</tr>
 			
 			
-			<tr class="h-10">
+			<tr class="py-6 border-b h-10">
 				<th scope="row">
 					<a href="{% url 'lecturers' %}">Lecturers</a>
 				</th>
 			</tr>
-			<tr class="h-10">
+			<tr class="py-6 border-b h-10">
 				<th
 					scope="row"
-					id="tasks_total"
+					id="specializations"
 					class="">
 					<a
 						href='{% url "specializations" %}'
@@ -46,10 +46,22 @@
 				</th>
 			</tr>
 			
-			<tr class="h-10">
-				<th scope="row"><a href="{% url 'papers' %}">Papers</a></th>
+			<tr class="py-6 border-b h-10">
+				<th scope="row" id='papers' class=''><a href="{% url 'papers' %}">Papers</a></th>
 			</tr>
-			<tr class="h-10">
+			<tr class="py-6 border-b h-10">
+				<th
+					scope="row"
+					id="modules"
+					class="">
+					<a
+						href='{% url "modules" %}'
+						class="font-bold uppercase text-center w-full">
+						Modules
+					</a>
+				</th>
+			</tr>
+			<tr class="py-6 border-b h-10">
 				<th
 					scope="row"
 					id="deadlines"
@@ -63,7 +75,7 @@
 			</tr>
 			
 			{% if user.role == 'admin' %}
-			<tr class="h-10">
+			<tr class="py-6 border-b h-10">
 					<th
 						scope="row"
 						id="cat_combinations"
@@ -75,7 +87,7 @@
 						</a>
 					</th>
 				</tr>
-				<tr class="h-10">
+				<tr class="py-6 border-b h-10">
 					<th
 						scope="row"
 						id="hods"
@@ -87,7 +99,7 @@
 						</a>
 					</th>
 				</tr>
-				<tr class="h-10">
+				<tr class="py-6 border-b h-10">
 					<th
 						scope="row"
 						id="tls"
@@ -99,7 +111,7 @@
 						</a>
 					</th>
 				</tr>
-				<tr class="h-10">
+				<tr class="py-6 border-b h-10">
 					<th
 						scope="row"
 						id="adddeadline"

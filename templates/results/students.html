@@ -3,17 +3,24 @@
 <div class="grid w-full h-full place-self-start gap-1">
 	<div class="grid w-full gap-2">
 		{% if user.role == 'admin' %}
-		<div class='grid grid-flow-col justify-end'><div
-			class="grid border rounded-md shadow-lg w-fit p-2 font-bold place-self-end mx-2">
-			<a href='{% url "new_student" %}'>New Student</a>
+		<div class='grid grid-flow-col justify-end'>
+			<div class="grid border rounded-md shadow-lg w-fit p-2 font-bold place-self-end mx-2">
+				<a href='{% url "new_student" %}'>New Student</a>
+			</div>
+			<div class="grid border rounded-md shadow-lg w-fit p-2 font-bold place-self-end mx-2">
+				<a href='{% url "bulk-students" %}'>Bulk Students</a>
+			</div>
 		</div>
-    <div
-			class="grid border rounded-md shadow-lg w-fit p-2 font-bold place-self-end mx-2">
-			<a href='{% url "bulk-students" %}'>Bulk Students</a>
-		</div></div>
 		{% endif %}
 		
+		
 		<table class="w-5/6 place-self-center border">
+			<form method="GET" action="{% url 'students' %}" class='w-full'>  
+				<div class='flex w-5/6 h-fit place-self-center'>
+					{{ search_query.search_query }}
+					<button type="submit" class='rounded-md border p-2'>Search</button>
+				</div>
+			</form>
 			<thead class="border-b bg-gray-500 text-white p-2">
 				<tr class="">
 					<th class="border-r px-2">Admission No.</th>
