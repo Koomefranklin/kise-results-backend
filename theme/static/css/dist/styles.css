@@ -860,10 +860,6 @@ video {
   place-self: center;
 }
 
-.self-center {
-  align-self: center;
-}
-
 .justify-self-end {
   justify-self: end;
 }
@@ -1090,6 +1086,10 @@ video {
   font-weight: 700;
 }
 
+.font-extrabold {
+  font-weight: 800;
+}
+
 .uppercase {
   text-transform: uppercase;
 }
@@ -1124,6 +1124,16 @@ video {
 .text-white {
   --tw-text-opacity: 1;
   color: rgb(255 255 255 / var(--tw-text-opacity));
+}
+
+.text-amber-400 {
+  --tw-text-opacity: 1;
+  color: rgb(251 191 36 / var(--tw-text-opacity));
+}
+
+.text-\[\#4caf50\] {
+  --tw-text-opacity: 1;
+  color: rgb(76 175 80 / var(--tw-text-opacity));
 }
 
 .underline {

@@ -11,7 +11,7 @@
 		
 
 		<table class="w-5/6 place-self-center border">
-			<form method="GET" action="{% url 'sitincats' %}" class='w-full'>  
+			<form method="GET" action="{% url 'sitincats' paper.pk %}" class='w-full'>  
 				<div class='flex w-5/6 h-fit place-self-center'>
 					{{ search_query.search_query }}
 					<button type="submit" class='rounded-md border p-2'>Search</button>
@@ -49,19 +49,27 @@
 					<td class="flex justify-between">
 						<a href='{% url "edit_sitincat" paper.pk student.pk %}'>
 							edit
-							<i class="fa-regular fa-pen-to-square"></i>
+							<i class="fa-regular fa-pen-to-square text-[#4caf50]"></i>
 						</a>
 						
 					</td>
 				</tr>
 				{% endfor %}
 			</tbody>
-			<tfoot class="bg-gray-500 text-white">
+			<tfoot class="bg-gray-500 text-white font-bold">
 				<tr class="">
 					<td colspan='8' class=''>
 						<p class='w-full grid grid-flow-col'>
 							<span class='text-left'>Showing {{ page_obj.object_list|length }} of {{ page_obj.paginator.count }} Student Sit-in cat scores</span>
-							<span class='text-right'>PAGE: {{ page_obj.number }} of
+							<span class='text-right'>
+								{% if page_obj.has_previous %}
+								<a
+									class="px-2"
+									href="?page={{ page_obj.previous_page_number }}">
+									Previous
+								</a>
+								{% endif %}
+								PAGE: {{ page_obj.number }} of
 								<a
 									class="px-2"
 									href="?page={{ page_obj.paginator.num_pages }}">
@@ -69,15 +77,9 @@
 								</a>
 								{% if page_obj.has_next %}
 								<a
-									class="px-2"
+									class="px-2 bg-[#4caf50] rounded"
 									href="?page={{ page_obj.next_page_number }}">
 									Next
-								</a>
-								{% elif page_obj.has_previous %}
-								<a
-									class="px-2"
-									href="?page={{ page_obj.previous_page_number }}">
-									Previous
 								</a>
 								{% endif %}
 							</span>

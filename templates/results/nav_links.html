@@ -17,32 +17,43 @@
 					class="">
 					<a href='{% url "bulk-students" %}'>
 						Add Bulk Students
-						<i class="fa-solid fa-plus"></i>
 					</a>
 				</th>
 			</tr>
 			{% endif %}
 
 			<tr class="py-6 border-b h-10">
-				<th scope="row"><a href="{% url 'students' %}">Students</a></th>
+				<th scope="row" class='justify-between flex'><a href="{% url 'students' %}">Students</a> 
+					
+					{% if user.role == 'admin' %}
+						<a href='{% url "new_student" %}'><i class="fa-solid fa-plus text-[#4caf50] font-extrabold"></i> Add</a>
+					{% endif %}
+						
+				</th>
 			</tr>
 			
 			
 			<tr class="py-6 border-b h-10">
-				<th scope="row">
+				<th scope="row" class='flex justify-between'>
 					<a href="{% url 'lecturers' %}">Lecturers</a>
+					{% if user.role == 'admin' %}
+						<a href='{% url "new_lecturer" %}'><i class="fa-solid fa-plus text-[#4caf50] font-extrabold"></i> Add</a>
+					{% endif %}
 				</th>
 			</tr>
 			<tr class="py-6 border-b h-10">
 				<th
 					scope="row"
 					id="specializations"
-					class="">
+					class="flex justify-between">
 					<a
 						href='{% url "specializations" %}'
 						class="font-bold uppercase text-center w-full">
 						Specializations
 					</a>
+					{% if user.role == 'admin' %}
+						<a href='{% url new_specialization %}'><i class="fa-solid fa-plus text-[#4caf50] font-extrabold"></i> Add</a>
+					{% endif %}
 				</th>
 			</tr>
 			
@@ -124,6 +135,30 @@
 					</th>
 				</tr>
 			{% endif %}
+			<tr class="py-6 border-b h-10">
+					<th
+						scope="row"
+						id="results"
+						class="">
+						<a
+							href='{% url "results" %}'
+							class="font-bold uppercase text-center w-full">
+							Results
+						</a>
+					</th>
+				</tr>
+			<tr class="py-6 border-b h-10">
+					<th
+						scope="row"
+						id="generate_results"
+						class="">
+						<a
+							href='{% url "generate_results" %}'
+							class="font-bold uppercase text-center w-full">
+							Generate Results
+						</a>
+					</th>
+				</tr>
 				
 			
 		</tbody>

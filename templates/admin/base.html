@@ -76,11 +76,11 @@
         {% block nav-global %}{% endblock %}
     </div>
     {% endblock %}
-    <!-- END Header -->
+    <!-- END Header --> 
     {% block nav-breadcrumbs %}
-      <nav aria-label="{% translate 'Breadcrumbs' %}" class="bg-green-500">
+      <nav aria-label="{% translate 'Breadcrumbs' %}" class="bg-[#4caf50]">
         {% block breadcrumbs %}
-          <div class="bg-green-500">
+          <div class="bg-[#4caf50]">
             <a href="{% url 'admin:index' %}">{% translate 'Home' %}</a>
             {% if title %} &rsaquo; {{ title }}{% endif %}
           </div>

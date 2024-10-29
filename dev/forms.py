@@ -163,49 +163,58 @@ class NewHoD(forms.ModelForm):
 	class Meta:
 		model = Hod
 		fields = ['lecturer', 'department']
+		widgets = {
+			'lecturer': autocomplete.ModelSelect2(url='lecturer-autocomplete',attrs={
+        'data-placeholder': 'Search by name or department ...'
+				})
+			}
 
-		def __init__(self, *args, **kwargs):
-			user = kwargs.pop('user', None)
-			super(NewHoD, self).__init__(*args, **kwargs)
-			# Adding extra class in the html tags
-			for fieldname, field in self.fields.items():
-				self.fields[fieldname].widget.attrs['class'] = 'rounded border-2 w-5/6 grid'
+	def __init__(self, *args, **kwargs):
+		user = kwargs.pop('user', None)
+		super(NewHoD, self).__init__(*args, **kwargs)
+		for fieldname, field in self.fields.items():
+			self.fields[fieldname].widget.attrs['class'] = 'rounded border-2 w-5/6 grid dark:bg-black'
 
 class UpdateHoD(forms.ModelForm):
 	class Meta:
 		model = Hod
 		fields = ['lecturer', 'department']
 
-		def __init__(self, *args, **kwargs):
-			user = kwargs.pop('user', None)
-			super(UpdateHoD, self).__init__(*args, **kwargs)
-			# Adding extra class in the html tags
-			for fieldname, field in self.fields.items():
-				self.fields[fieldname].widget.attrs['class'] = 'rounded border-2 w-5/6 grid'
+	def __init__(self, *args, **kwargs):
+		user = kwargs.pop('user', None)
+		super(UpdateHoD, self).__init__(*args, **kwargs)
+		# Adding extra class in the html tags
+		for fieldname, field in self.fields.items():
+			self.fields[fieldname].widget.attrs['class'] = 'rounded border-2 w-5/6 grid'
 
 class NewTeamLeader(forms.ModelForm):
 	class Meta:
 		model = TeamLeader
 		fields = ['centre', 'lecturer']
+		widgets = {
+					'student': autocomplete.ModelSelect2(url='student-autocomplete',attrs={
+        'data-placeholder': 'Search ...',
+				'data-forward': 'paper'
+    })}
 
-		def __init__(self, *args, **kwargs):
-			user = kwargs.pop('user', None)
-			super(NewTeamLeader, self).__init__(*args, **kwargs)
-			# Adding extra class in the html tags
-			for fieldname, field in self.fields.items():
-				self.fields[fieldname].widget.attrs['class'] = 'rounded border-2 w-5/6 grid'
+	def __init__(self, *args, **kwargs):
+		user = kwargs.pop('user', None)
+		super(NewTeamLeader, self).__init__(*args, **kwargs)
+		# Adding extra class in the html tags
+		for fieldname, field in self.fields.items():
+			self.fields[fieldname].widget.attrs['class'] = 'rounded border-2 w-5/6 grid'
 
 class UpdateTeamLeader(forms.ModelForm):
 	class Meta:
 		model = TeamLeader
 		fields = ['centre', 'lecturer']
 
-		def __init__(self, *args, **kwargs):
-			user = kwargs.pop('user', None)
-			super(UpdateTeamLeader, self).__init__(*args, **kwargs)
-			# Adding extra class in the html tags
-			for fieldname, field in self.fields.items():
-				self.fields[fieldname].widget.attrs['class'] = 'rounded border-2 w-5/6 grid'
+	def __init__(self, *args, **kwargs):
+		user = kwargs.pop('user', None)
+		super(UpdateTeamLeader, self).__init__(*args, **kwargs)
+		# Adding extra class in the html tags
+		for fieldname, field in self.fields.items():
+			self.fields[fieldname].widget.attrs['class'] = 'rounded border-2 w-5/6 grid'
 
 class NewSpecialization(forms.ModelForm):
 	class Meta:
@@ -415,9 +424,9 @@ class NewCatCombination(forms.ModelForm):
 		combinations = CatCombination.objects.all()
 		super(NewCatCombination, self).__init__(*args, **kwargs)
 		added_papers = combinations.values_list('paper', flat=True)
-		self.fields['paper'].queryset = Paper.objects.exclude(Q(pk__in=added_papers)).filter(Q(code__icontains='104'))
-		self.fields['cat1'].queryset = Module.objects.filter((Q(cat1__isnull=True) & Q(cat2__isnull=True)) & Q(paper__code__icontains='104'))
-		self.fields['cat2'].queryset = Module.objects.filter((Q(cat1__isnull=True) & Q(cat2__isnull=True)) & Q(paper__code__icontains='104'))
+		self.fields['paper'].queryset = Paper.objects.exclude(Q(pk__in=added_papers))
+		self.fields['cat1'].queryset = Module.objects.filter((Q(cat1__isnull=True) & Q(cat2__isnull=True)) )
+		self.fields['cat2'].queryset = Module.objects.filter((Q(cat1__isnull=True) & Q(cat2__isnull=True)))
 		for fieldname, field in self.fields.items():
 			self.fields[fieldname].widget.attrs['class'] = 'rounded border-2 w-5/6 grid'
 
@@ -440,6 +449,21 @@ class UpdateCatCombination(forms.ModelForm):
 		self.fields['cat2'].queryset = Module.objects.filter(paper=paper)
 		for fieldname, field in self.fields.items():
 			self.fields[fieldname].widget.attrs['class'] = 'rounded border-2 w-5/6 grid'
+
+class GenerateResultsForm(forms.Form):
+	CAT_CHOICES = [
+		('cat1', 'CAT 1'),
+		('cat2', 'CAT 2')
+	]
+	paper = forms.ModelChoiceField(queryset=Paper.objects.none(), required=True,  empty_label="Select a Paper", widget=forms.Select(attrs={'class': 'grid w-5/6 border-2 rounded'}),)
+	cat = forms.ChoiceField(required=True, choices=CAT_CHOICES, widget=forms.RadioSelect(attrs={'class': 'grid w-5/6 border-2 rounded'}))
+
+	def __init__(self, *args, **kwargs):
+		user = kwargs.pop('user', None)
+		specialization = Hod.objects.get(lecturer__user=user).department
+
+		super(GenerateResultsForm, self).__init__(*args, **kwargs)
+		self.fields['paper'].queryset = Paper.objects.filter(specialization=specialization)
 
 class SearchForm(forms.Form):
 	search_query = forms.CharField(label='Search', widget=forms.TextInput(attrs={'placeholder': 'Input Search Query'}))

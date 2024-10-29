@@ -3,6 +3,7 @@ from . import views
 
 urlpatterns = [
   path('student-autocomplete/', views.StudentAutocomplete.as_view(), name='student-autocomplete'),
+  path('lecturer-autocomplete/', views.LecturerAutocomplete.as_view(), name='lecturer-autocomplete'),
   path('', views.Index.as_view(), name='dashboard'),
   path('students/', views.StudentsViewList.as_view(), name='students'),
   path('students/new/', views.StudentCreateView.as_view(), name='new_student'),
@@ -42,4 +43,5 @@ urlpatterns = [
   path('cat-combinations/<uuid:pk>/update/', views.CatCombinationUpdateView.as_view(), name='edit_cat_combination'),
   path('deactivate-user/<uuid:user_id>/', views.DeactivateUser.as_view(), name='deactivate_user'),
   path('activate-user/<uuid:user_id>/', views.ActivateUser.as_view(), name='activate_user'),
+  path('results/generate/', views.GenerateResults.as_view(), name='generate_results'),
 ]

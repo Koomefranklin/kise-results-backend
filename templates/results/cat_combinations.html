@@ -58,7 +58,7 @@
             {% if user.role == 'admin' %}
               <a href='{% url "edit_cat_combination" combination.pk %}'>
                 edit
-                <i class="fa-regular fa-pen-to-square"></i>
+                <i class="fa-regular fa-pen-to-square text-[#4caf50]"></i>
               </a>
             {% endif %}
               
@@ -67,12 +67,20 @@
 				</tr>
 				{% endfor %}
 			</tbody>
-			<tfoot class="bg-gray-500 text-white">
+			<tfoot class="bg-gray-500 text-white font-bold">
 				<tr class="">
 					<td colspan='8' class=''>
 						<p class='w-full grid grid-flow-col'>
 							<span class='text-left'>Showing {{ page_obj.object_list|length }} of {{ page_obj.paginator.count }} Cat Combinations</span>
-							<span class='text-right'>PAGE: {{ page_obj.number }} of
+							<span class='text-right'>
+								{% if page_obj.has_previous %}
+								<a
+									class="px-2"
+									href="?page={{ page_obj.previous_page_number }}">
+									Previous
+								</a>
+								{% endif %}
+								PAGE: {{ page_obj.number }} of
 								<a
 									class="px-2"
 									href="?page={{ page_obj.paginator.num_pages }}">
@@ -80,15 +88,9 @@
 								</a>
 								{% if page_obj.has_next %}
 								<a
-									class="px-2"
+									class="px-2 bg-[#4caf50] rounded"
 									href="?page={{ page_obj.next_page_number }}">
 									Next
-								</a>
-								{% elif page_obj.has_previous %}
-								<a
-									class="px-2"
-									href="?page={{ page_obj.previous_page_number }}">
-									Previous
 								</a>
 								{% endif %}
 							</span>

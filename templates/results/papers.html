@@ -43,7 +43,7 @@
 						{% if user.role == 'admin' %}
 							<a href='{% url "edit_paper" paper.pk %}'>
 							edit
-							<i class="fa-regular fa-pen-to-square"></i>
+							<i class="fa-regular fa-pen-to-square text-[#4caf50]"></i>
 						</a>
 						{% endif %}
 							
@@ -53,11 +53,11 @@
 						</a>
             <a href='{% url "new_modulescore" paper.pk %}'>
 							add scores
-							<i class="fa-regular fa-pen-to-square"></i>
+							<i class="fa-regular fa-pen-to-square text-[#4caf50]"></i>
 						</a>
             <a href='{% url "new_sitincat" paper.pk %}'>
 							add sit-in cat
-							<i class="fa-regular fa-pen-to-square"></i>
+							<i class="fa-regular fa-pen-to-square text-[#4caf50]"></i>
 						</a>
 						<a href='{% url "sitincats" paper.pk %}'>
 							View Sit-ins
@@ -68,7 +68,7 @@
 				</tr>
 				{% endfor %}
 			</tbody>
-			<tfoot class="bg-gray-500 text-white">
+			<tfoot class="bg-gray-500 text-white font-bold">
 				<tr class="">
 					<td colspan='8' class=''>
 						<p class='w-full grid grid-flow-col'>
@@ -89,7 +89,7 @@
 								</a>
 								{% if page_obj.has_next %}
 								<a
-									class="px-2"
+									class="px-2 bg-[#4caf50] rounded"
 									href="?page={{ page_obj.next_page_number }}">
 									Next
 								</a>

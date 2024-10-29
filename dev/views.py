@@ -3,13 +3,13 @@ from django.db.models.query import QuerySet
 from django.shortcuts import get_object_or_404, render, redirect
 from django.views import View
 from django.views.generic import ListView, CreateView, FormView, UpdateView
-from django.db.models import Q
+from django.db.models import Q, Avg, F
 from django.contrib.auth.mixins import LoginRequiredMixin
 
-from .mixins import AdminMixin, AdminOrHeadMixin, AdminOrLecturerMixin
+from .mixins import AdminMixin, AdminOrHeadMixin, AdminOrLecturerMixin, HoDMixin
 from .models import Deadline, Hod, ModuleScore, User, Student, Result, Mode, Lecturer, Specialization, Paper, TeamLeader, Module, CatCombination, IndexNumber, SitinCat, Centre
 from django.http.response import HttpResponse
-from .forms import CSVUploadForm, CustomPasswordChangeForm, CustomUserCreationForm, CustomUserChangeForm, NewCatCombination, NewDeadline, NewHoD, NewStudent, NewTeamLeader, UpdateCatCombination, UpdateDeadline, UpdateHoD, UpdateStudent, NewLecturer, UpdateLecturer, NewSpecialization, UpdateSpecialization, NewPaper, UpdatePaper, NewModule, UpdateModule, NewModuleScore, UpdateModuleScore, NewSitinCat, UpdateSitinCat, UpdateTeamLeader, SearchForm
+from .forms import CSVUploadForm, CustomPasswordChangeForm, CustomUserCreationForm, CustomUserChangeForm, GenerateResultsForm, NewCatCombination, NewDeadline, NewHoD, NewStudent, NewTeamLeader, UpdateCatCombination, UpdateDeadline, UpdateHoD, UpdateStudent, NewLecturer, UpdateLecturer, NewSpecialization, UpdateSpecialization, NewPaper, UpdatePaper, NewModule, UpdateModule, NewModuleScore, UpdateModuleScore, NewSitinCat, UpdateSitinCat, UpdateTeamLeader, SearchForm
 from itertools import chain
 from dal import autocomplete
 from django.urls import reverse_lazy
@@ -22,10 +22,6 @@ class StudentAutocomplete(autocomplete.Select2QuerySetView):
 	def get_queryset(self):
 		user = self.request.user
 		paper = self.forwarded.get('paper', None)
-		print(self.forwarded)
-		# if user.role == 'admin':
-		# 	qs = None
-		# elif user.role == 'lecturer':
 		specializations = Lecturer.objects.get(user=user).specializations.values_list('id', flat=True)
 		qs = Student.objects.filter(specialization__in=specializations)
 		if self.q:
@@ -33,6 +29,13 @@ class StudentAutocomplete(autocomplete.Select2QuerySetView):
 		if paper:
 			specialization = Paper.objects.get(pk=paper).specialization
 			qs = qs.filter(specialization=specialization)
+		return qs
+
+class LecturerAutocomplete(autocomplete.Select2QuerySetView):
+	def get_queryset(self):
+		qs = Lecturer.objects.all()
+		if self.q:
+			qs = qs.filter(Q(user__full_name__icontains=self.q) | Q(specializations__name__icontains=self.q))
 		return qs
 
 class ModuleAutocomplete(autocomplete.Select2QuerySetView):
@@ -518,7 +521,7 @@ class ModulesViewList(LoginRequiredMixin, AdminOrLecturerMixin, ListView):
 	model = Module
 	template_name = 'results/modules.html'
 	context_object_name = 'modules'
-	paginate_by = 50
+	paginate_by = 20
 
 	def get_queryset(self):
 		user = self.request.user
@@ -534,7 +537,7 @@ class ModulesViewList(LoginRequiredMixin, AdminOrLecturerMixin, ListView):
 			qs = qs.filter(paper=query)
 		if search_query:
 			qs = qs.filter(Q(code__icontains=search_query) | Q(name__icontains=search_query) | Q(paper__code__icontains=search_query) | Q(paper__name__icontains=search_query))
-		return qs
+		return qs.order_by('paper')
 
 	def get_context_data(self, **kwargs):
 		user = self.request.user
@@ -740,16 +743,19 @@ class ResultViewList(LoginRequiredMixin, ListView):
 	model = Result
 	template_name = 'results/results.html'
 	context_object_name = 'results'
-	paginate_by = 20
+	paginate_by = 50
 
 	def get_queryset(self):
 		user = self.request.user
+		search_query = self.request.GET.get('search_query')
 		if user.role == 'admin':
 			qs = Result.objects.all()
 		elif user.role == 'lecturer':
 			specializations = Lecturer.objects.get(user=user).specializations.values_list('id', flat=True)
-			qs = Result.objects.filter(specialization__=specializations)
-		return specializations.order_by('student')
+			qs = Result.objects.filter(paper__specialization__in=specializations)
+		if search_query:
+			qs = qs.filter(Q(student__admission__icontains=search_query) | Q(student__user__full_name__icontains=search_query)| Q(paper__code__icontains=search_query) | Q(paper__name__icontains=search_query) | Q(paper__specialization__name__icontains=search_query))
+		return qs.order_by('student')
 
 	def get_context_data(self, **kwargs):
 		user = self.request.user
@@ -759,11 +765,11 @@ class ResultViewList(LoginRequiredMixin, ListView):
 		context['search_query'] = SearchForm(self.request.GET)
 		return context
 	
-class GenerateResults(LoginRequiredMixin, AdminOrLecturerMixin, FormView):
+class GenerateResults(LoginRequiredMixin, HoDMixin, FormView):
 	model = Result
-	template_name = 'results/generate_results.html'
+	template_name = 'results/base_form.html'
 	context_object_name = 'results'
-	# form_class = 
+	form_class = GenerateResultsForm
 	success_url = reverse_lazy('results')
 
 	def get_context_data(self, **kwargs):
@@ -773,33 +779,54 @@ class GenerateResults(LoginRequiredMixin, AdminOrLecturerMixin, FormView):
 		context['title'] = 'Generate Results'
 		return context
 	
+	def get_form_kwargs(self):
+		kwargs = super(GenerateResults, self).get_form_kwargs()
+		kwargs['user'] = self.request.user
+		return kwargs
+	
 	def form_valid(self, form):
 		user = self.request.user
-		paper = form.paper
-		generating_cat = form.cat
-		combinations = CatCombination.objects.get(paper=paper)
-		cat1_combinations = combinations.cat1.values_list('id', flat=True)
-		cat2_combinations = combinations.cat2.values_list('id', flat=True)
-		cat1_module_scores = ModuleScore.objects.filter(module__in=cat1_combinations)
-		sitins = SitinCat.objects.filter(paper=paper)
-		cat2_module_scores = ModuleScore.objects.filter(module__in=cat2_combinations)
+		paper = form.cleaned_data['paper']
+		cat = form.cleaned_data['cat']
+		specialization = Paper.objects.get(pk=paper.pk).specialization
+		students = Student.objects.filter(specialization=specialization)
+		all_modules = CatCombination.objects.get(paper=paper)
 
-		for score in cat1_module_scores:
-			student = score.student
-			cat = score.take_away + score.discussion
-			obj, created = Result.objects.get_or_create(student=student, defaults={'paper':paper,'cat1':cat, 'added_by':user})
-			if not created:
-				initial = obj.cat1
-				final = initial + cat
-				obj.cat1 = final
-				obj.save()
+		if cat == 'cat1':
+			modules = all_modules.cat1.all()
+			module_scores = ModuleScore.objects.filter(pk__in=modules)
 
-		for record in Result.objects.all():
-			student = record.student
-			discussion_takeaway = student.cat1
-			final = discussion_takeaway + sitins.get(student=student).cat1
-			student.cat1 = final
-			student.save()
+			for student in students:
+				try:
+					sitin = SitinCat.objects.get(Q(student=student) & Q(paper=paper)).cat1
+				except SitinCat.DoesNotExist:
+					sitin = 0
+				student_score = module_scores.filter(student=student).aggregate(total=Avg(F('discussion') + F('take_away')))['total'] or 0
+				final_score = student_score + sitin
+				
+				obj, created = Result.objects.update_or_create(
+					student = student,
+					paper = paper,
+					defaults={'cat1': final_score, 'added_by': user}
+				)
+
+		elif cat == 'cat2':
+			modules = all_modules.cat2.all()
+			module_scores = ModuleScore.objects.filter(pk__in=modules)
+
+			for student in students:
+				try:
+					sitin = SitinCat.objects.get(Q(student=student) & Q(paper=paper)).cat2
+				except SitinCat.DoesNotExist:
+					sitin = 0
+				student_score = module_scores.filter(student=student).aggregate(total=Avg(F('discussion') + F('take_away')))['total'] or 0
+				final_score = student_score + sitin
+
+				obj, created = Result.objects.update_or_create(
+					student = student,
+					paper = paper,
+					defaults={'cat2': final_score, 'added_by': user}
+				)
 
 		return super().form_valid(form)
 

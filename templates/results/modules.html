@@ -15,7 +15,7 @@
 				<tr class="">
 					<th class="border-r px-2">Code</th>
 					<th class="border-r px-2">Name</th>
-					<!-- <th class="border-r px-2">Specialization</th> -->
+					<th class="border-r px-2">Paper</th>
 					<!-- <th class="border-r px-2">Mode</th>
 					<th class="border-r px-2">Centre</th>
 					<th class="border-r px-2">Specialization</th>
@@ -34,7 +34,7 @@
 					<td class="border-r px-2">
 						{{ module.name }}
 					</td>
-					<!-- <td class="border-r px-2">{{ module.specialization }}</td> -->
+					<td class="border-r px-2">{{ module.paper }}</td>
 					<!-- <td class="border-r px-2">{{ module.mode}}</td>
 					<td class="border-r px-2">{{ module.centre }}</td>
 					<td class="border-r px-2">{{ module.specialization }}</td>
@@ -44,7 +44,7 @@
 						{% if user.role == 'admin' %}
 							<a href='{% url "edit_module" module.pk %}'>
 							edit
-							<i class="fa-regular fa-pen-to-square"></i>
+							<i class="fa-regular fa-pen-to-square text-[#4caf50]"></i>
 						</a>
 						{% endif %}
 							
@@ -54,11 +54,11 @@
 						</a>
             <a href='{% url "new_modulescore" module.pk %}'>
 							add scores
-							<i class="fa-regular fa-pen-to-square"></i>
+							<i class="fa-regular fa-pen-to-square text-[#4caf50]"></i>
 						</a>
             <a href='{% url "new_sitincat" module.pk %}'>
 							add sit-in cat
-							<i class="fa-regular fa-pen-to-square"></i>
+							<i class="fa-regular fa-pen-to-square text-[#4caf50]"></i>
 						</a>
 						<a href='{% url "sitincats" module.pk %}'>
 							View Sit-ins
@@ -69,7 +69,7 @@
 				</tr>
 				{% endfor %}
 			</tbody>
-			<tfoot class="bg-gray-500 text-white">
+			<tfoot class="bg-gray-500 text-white font-bold">
 				<tr class="">
 					<td colspan='8' class=''>
 						<p class='w-full grid grid-flow-col'>
@@ -90,7 +90,7 @@
 								</a>
 								{% if page_obj.has_next %}
 								<a
-									class="px-2"
+									class="px-2 bg-[#4caf50] rounded"
 									href="?page={{ page_obj.next_page_number }}">
 									Next
 								</a>
