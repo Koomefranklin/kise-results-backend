@@ -2,6 +2,7 @@ from django.db import models
 from django.contrib.auth.models import AbstractUser
 import uuid
 from django.utils.translation import gettext_lazy as _
+from django.core.validators import MinValueValidator, MaxValueValidator
 
 # Create your models here.
 
@@ -221,8 +222,8 @@ class ModuleScore(models.Model):
   id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
   student = models.ForeignKey(Student, related_name='student_score', on_delete=models.CASCADE)
   module = models.ForeignKey(Module, on_delete=models.CASCADE, related_name='score_module')
-  discussion = models.IntegerField(null=True, blank=True)
-  take_away = models.IntegerField(null=True, blank=True)
+  discussion = models.IntegerField(null=True, blank=True, validators=[MinValueValidator(0), MaxValueValidator(10)])
+  take_away = models.IntegerField(null=True, blank=True, validators=[MinValueValidator(0), MaxValueValidator(10)])
   added_by = models.ForeignKey(User, on_delete=models.CASCADE, related_name='score_add')
   created_at = models.DateTimeField(auto_now_add=True)
   updated_by = models.ForeignKey(User, on_delete=models.CASCADE, related_name='score_change', null=True, blank=True)
@@ -240,8 +241,8 @@ class SitinCat(models.Model):
   id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
   student = models.ForeignKey(Student, related_name='student_scat', on_delete=models.CASCADE)
   paper = models.ForeignKey(Paper, on_delete=models.CASCADE, related_name='sitin_paper')
-  cat1 = models.IntegerField(null=True, blank=True)
-  cat2 = models.IntegerField(null=True, blank=True)
+  cat1 = models.IntegerField(null=True, blank=True, validators=[MinValueValidator(0), MaxValueValidator(60)])
+  cat2 = models.IntegerField(null=True, blank=True, validators=[MinValueValidator(0), MaxValueValidator(60)])
   added_by = models.ForeignKey(User, on_delete=models.CASCADE, related_name='cat_add')
   created_at = models.DateTimeField(auto_now_add=True)
   updated_by = models.ForeignKey(User, on_delete=models.CASCADE, related_name='sitin_change', null=True, blank=True)
