@@ -521,7 +521,7 @@ class ModulesViewList(LoginRequiredMixin, AdminOrLecturerMixin, ListView):
 	model = Module
 	template_name = 'results/modules.html'
 	context_object_name = 'modules'
-	paginate_by = 20
+	paginate_by = 40
 
 	def get_queryset(self):
 		user = self.request.user
@@ -1034,7 +1034,7 @@ class CatCombinationsViewList(LoginRequiredMixin, AdminOrLecturerMixin, ListView
 	model = CatCombination
 	template_name = 'results/cat_combinations.html'
 	context_object_name = 'cat_combinations'
-	paginate_by = 50
+	paginate_by = 20
 
 	def get_queryset(self):
 		user = self.request.user
