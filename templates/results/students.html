@@ -54,7 +54,22 @@
 							edit
 							<i class="fa-regular fa-pen-to-square text-[#4caf50]"></i>
 						</a>
-						
+						{% if user.role == 'admin' %}
+							
+							{% if student.user.is_active %}
+								<form action="{% url 'deactivate_user' student.user.id %}" method="post">
+									{% csrf_token %}
+									<button type="submit" class="bg-red-500 rounded p-2">Deactivate</button>
+								</form>
+							{% else %}
+									
+								<form action="{% url 'activate_user' student.user.id %}" method="post">
+									{% csrf_token %}
+									<button type="submit" class="bg-green-500 rounded p-2">Activate</button>
+								</form>
+							{% endif %}
+								
+						{% endif %}
 					</td>
 				</tr>
 				{% endfor %}

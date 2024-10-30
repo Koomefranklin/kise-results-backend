@@ -2,7 +2,7 @@
 {% block main %}
 <div class="grid w-full h-full place-self-start gap-1">
 	<div class="grid w-full gap-2">
-		{% if user.role == 'admin' or user.role == 'lecturer' %}
+		{% if hod %}
 		<div class='grid grid-flow-row'><div
 			class="grid border rounded-md shadow-lg w-fit p-2 font-bold place-self-end mx-2">
 			<a href='{% url "generate_results" %}'>Generate Results</a>

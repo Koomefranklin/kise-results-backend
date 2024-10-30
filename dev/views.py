@@ -1,11 +1,12 @@
 from typing import Any
 from django.db.models.query import QuerySet
+from django.http import HttpResponseRedirect
 from django.shortcuts import get_object_or_404, render, redirect
 from django.views import View
 from django.views.generic import ListView, CreateView, FormView, UpdateView
-from django.db.models import Q, Avg, F
+from django.db.models import Q, Avg, F, ExpressionWrapper, FloatField, Value
 from django.contrib.auth.mixins import LoginRequiredMixin
-
+from django.db.models.functions import Coalesce
 from .mixins import AdminMixin, AdminOrHeadMixin, AdminOrLecturerMixin, HoDMixin
 from .models import Deadline, Hod, ModuleScore, User, Student, Result, Mode, Lecturer, Specialization, Paper, TeamLeader, Module, CatCombination, IndexNumber, SitinCat, Centre
 from django.http.response import HttpResponse
@@ -23,7 +24,7 @@ class StudentAutocomplete(autocomplete.Select2QuerySetView):
 		user = self.request.user
 		paper = self.forwarded.get('paper', None)
 		specializations = Lecturer.objects.get(user=user).specializations.values_list('id', flat=True)
-		qs = Student.objects.filter(specialization__in=specializations)
+		qs = Student.objects.filter(Q(specialization__in=specializations) & Q(user__is_active=True))
 		if self.q:
 			qs = qs.filter(Q(user__full_name__icontains=self.q) | Q(admission__icontains=self.q))
 		if paper:
@@ -33,7 +34,7 @@ class StudentAutocomplete(autocomplete.Select2QuerySetView):
 
 class LecturerAutocomplete(autocomplete.Select2QuerySetView):
 	def get_queryset(self):
-		qs = Lecturer.objects.all()
+		qs = Lecturer.objects.filter(user__is_active=True)
 		if self.q:
 			qs = qs.filter(Q(user__full_name__icontains=self.q) | Q(specializations__name__icontains=self.q))
 		return qs
@@ -44,7 +45,7 @@ class ModuleAutocomplete(autocomplete.Select2QuerySetView):
 		if user.role == 'admin':
 			qs = Module.objects.all()
 		elif user.role == 'lecturer':
-			specializations = Lecturer.objects.filter(user=user).values_list('id', flat=True)
+			specializations = Lecturer.objects.filter(Q(user=user) & Q(user__is_active=True)).values_list('id', flat=True)
 			papers = Paper.objects.filter(specialization__in=specializations)
 			qs = Module.objects.filter(paper__in= papers)
 		if self.q:
@@ -63,8 +64,8 @@ class Index(LoginRequiredMixin, ListView):
 		user = self.request.user
 		deadlines = Deadline.objects.all()
 		if user.role == 'admin':
-			students = Student.objects.all().count()
-			lecturers = Lecturer.objects.all().count()
+			students = Student.objects.filter(user__is_active=True).count()
+			lecturers = Lecturer.objects.filter(user__is_active=True).count()
 			specializations = Specialization.objects.all().count()
 			papers = Paper.objects.all().count()
 			modules = Module.objects.all().count()
@@ -77,8 +78,8 @@ class Index(LoginRequiredMixin, ListView):
 			tls = TeamLeader.objects.all().values_list('lecturer', flat=True)
 			if lecturer in tls:
 				tl = TeamLeader.objects.get(lecturer=lecturer)
-				students = Student.objects.filter(center=tl.center).count()
-				lecturers = Lecturer.objects.filter().count()
+				students = Student.objects.filter(Q(center=tl.center) & Q(user__is_active=True)).count()
+				lecturers = Lecturer.objects.filter(user__is_active=True).count()
 				all_specializations = Specialization.objects.filter(mode__in=dl).values_list('id', flat=True)
 				all_papers = Paper.objects.filter(specialization__in=all_specializations).values_list('id')
 				modules = Module.objects.filter(paper__in=all_papers).count()
@@ -86,8 +87,8 @@ class Index(LoginRequiredMixin, ListView):
 				papers = all_papers.count()
 			elif lecturer in hods:
 				hod = Hod.objects.get(lecturer=lecturer)
-				students = Student.objects.filter(specialization=hod.specialization).count()
-				lecturers = Lecturer.objects.filter().count()
+				students = Student.objects.filter(Q(specialization=hod.specialization) & Q(user__is_active=True)).count()
+				lecturers = Lecturer.objects.filter(user__is_active=True).count()
 				all_specializations = lecturer.specializations
 				all_papers = Paper.objects.filter(specialization__in=all_specializations).values_list('id')
 				modules = Module.objects.filter(paper__in=all_papers).count()
@@ -95,8 +96,8 @@ class Index(LoginRequiredMixin, ListView):
 				papers = all_papers.count()
 			else:
 				all_specializations = lecturer.specializations.values_list('id', flat=True)
-				students = Student.objects.filter(specialization__in=all_specializations).count()
-				lecturers = Lecturer.objects.filter().count()
+				students = Student.objects.filter(Q(specialization__in=all_specializations) & Q(user__is_active=True)).count()
+				lecturers = Lecturer.objects.filter(user__is_active=True).count()
 				papers = Paper.objects.filter(specialization__in=all_specializations).values_list('id', flat=True)
 				modules = Module.objects.filter(paper__in=papers).count()
 				specializations = all_specializations.count()
@@ -182,7 +183,7 @@ class StudentCreateView(LoginRequiredMixin, AdminMixin, FormView):
 		context['is_nav_enabled'] = True
 		if 'student_form' not in context:
 			context['student_form'] = NewStudent()
-		context['title'] = 'New Student'
+		context['title'] = 'Add Student'
 		return context
 
 	def post(self, request, *args, **kwargs):
@@ -290,7 +291,7 @@ class LecturerCreateView(LoginRequiredMixin, AdminMixin, FormView):
 			pass
 		context = super().get_context_data(**kwargs)
 		context['is_nav_enabled'] = True
-		context['title'] = 'New Lecturer'
+		context['title'] = 'Add Lecturer'
 		if 'lecturer_form' not in context:
 			context['lecturer_form'] = NewLecturer()
 		return context
@@ -558,7 +559,7 @@ class ModuleCreateView(LoginRequiredMixin, AdminMixin, CreateView):
 		user = self.request.user
 		context = super().get_context_data(**kwargs)
 		context['is_nav_enabled'] = True
-		context['title'] = 'New Module'
+		context['title'] = 'Add Module'
 		return context
 	pass
 
@@ -631,7 +632,7 @@ class ModuleScoreCreateView(LoginRequiredMixin, AdminOrLecturerMixin, CreateView
 		paper = self.kwargs.get('paper')
 		context = super().get_context_data(**kwargs)
 		context['is_nav_enabled'] = True
-		context['title'] = 'New Module Score'
+		context['title'] = 'Add Module Score'
 		context['paper'] = Paper.objects.get(pk=paper)
 		return context
 
@@ -708,7 +709,7 @@ class SitinCreateView(LoginRequiredMixin, AdminOrLecturerMixin, CreateView):
 	def get_context_data(self, **kwargs):
 		context = super().get_context_data(**kwargs)
 		context['is_nav_enabled'] = True
-		context['title'] = 'New Sit-in Cat Score'
+		context['title'] = 'Add Sit-in Cat Score'
 		return context
 
 	def post(self, request, *args, **kwargs):
@@ -759,10 +760,12 @@ class ResultViewList(LoginRequiredMixin, ListView):
 
 	def get_context_data(self, **kwargs):
 		user = self.request.user
+		hod = Hod.objects.filter(lecturer__user=user).first()
 		context = super().get_context_data(**kwargs)
 		context['is_nav_enabled'] = True
 		context['title'] = 'Results'
 		context['search_query'] = SearchForm(self.request.GET)
+		context['hod'] = hod
 		return context
 	
 class GenerateResults(LoginRequiredMixin, HoDMixin, FormView):
@@ -789,19 +792,22 @@ class GenerateResults(LoginRequiredMixin, HoDMixin, FormView):
 		paper = form.cleaned_data['paper']
 		cat = form.cleaned_data['cat']
 		specialization = Paper.objects.get(pk=paper.pk).specialization
-		students = Student.objects.filter(specialization=specialization)
+		students = Student.objects.filter(Q(specialization=specialization) & Q(user__is_active=True))
 		all_modules = CatCombination.objects.get(paper=paper)
 
 		if cat == 'cat1':
 			modules = all_modules.cat1.all()
-			module_scores = ModuleScore.objects.filter(pk__in=modules)
+			module_scores = ModuleScore.objects.filter(module__in=modules)
 
 			for student in students:
 				try:
 					sitin = SitinCat.objects.get(Q(student=student) & Q(paper=paper)).cat1
 				except SitinCat.DoesNotExist:
 					sitin = 0
-				student_score = module_scores.filter(student=student).aggregate(total=Avg(F('discussion') + F('take_away')))['total'] or 0
+				student_score = module_scores.filter(student=student).annotate(avg_discussion_takeaway=ExpressionWrapper(
+					(Coalesce(F('discussion'), Value(0)) + Coalesce(F('take_away'), Value(0))) / 2.0,
+        	output_field=FloatField())).aggregate(total=Avg('avg_discussion_takeaway', default=0))['total']
+				
 				final_score = student_score + sitin
 				
 				obj, created = Result.objects.update_or_create(
@@ -819,7 +825,10 @@ class GenerateResults(LoginRequiredMixin, HoDMixin, FormView):
 					sitin = SitinCat.objects.get(Q(student=student) & Q(paper=paper)).cat2
 				except SitinCat.DoesNotExist:
 					sitin = 0
-				student_score = module_scores.filter(student=student).aggregate(total=Avg(F('discussion') + F('take_away')))['total'] or 0
+				student_score = module_scores.filter(student=student).annotate(avg_discussion_takeaway=ExpressionWrapper(
+					(Coalesce(F('discussion'), Value(0)) + Coalesce(F('take_away'), Value(0))) / 2.0,
+        	output_field=FloatField())).aggregate(total=Avg('avg_discussion_takeaway', default=0))['total']
+				
 				final_score = student_score + sitin
 
 				obj, created = Result.objects.update_or_create(
@@ -856,7 +865,7 @@ class TeamLeaderCreateView(LoginRequiredMixin, AdminMixin, CreateView):
 	def get_context_data(self, **kwargs):
 		context = super().get_context_data(**kwargs)
 		context['is_nav_enabled'] = True
-		context['title'] = 'New Team Leader'
+		context['title'] = 'Add Team Leader'
 		return context
 
 class TeamLeaderUpdateView(LoginRequiredMixin, AdminMixin, UpdateView):
@@ -898,7 +907,7 @@ class HodCreateView(LoginRequiredMixin, AdminMixin, CreateView):
 	def get_context_data(self, **kwargs):
 		context = super().get_context_data(**kwargs)
 		context['is_nav_enabled'] = True
-		context['title'] = 'New HoD'
+		context['title'] = 'Add HoD'
 		return context
 
 class HodUpdateView(LoginRequiredMixin, AdminMixin, UpdateView):
@@ -922,7 +931,7 @@ class BulkStudentCreation(LoginRequiredMixin, AdminMixin, FormView):
 		user = self.request.user
 		context = super().get_context_data(**kwargs)
 		context['is_nav_enabled'] = True
-		context['title'] = 'New bulk students'
+		context['title'] = 'Add bulk students'
 		context['fields'] = ['admission', 'full_name', 'sex', 'mode', 'centre', 'specialization', 'date']
 		return context
 
@@ -1107,7 +1116,7 @@ class DeactivateUser(LoginRequiredMixin, AdminMixin, View):
 
 		messages.success(request, f'User {user.full_name} has been deactivated.')
 
-		return redirect('lecturers')
+		return HttpResponseRedirect(self.request.get_full_path())
 	
 class ActivateUser(LoginRequiredMixin, AdminMixin, View):
 	def post(self, request, user_id, *args, **kwargs):
@@ -1119,7 +1128,7 @@ class ActivateUser(LoginRequiredMixin, AdminMixin, View):
 
 		messages.success(request, f'User {user.full_name} has been Activated.')
 
-		return redirect('lecturers')
+		return HttpResponseRedirect(self.request.get_full_path())
 
 def custom_403_view(request, exception):
 	return render(request, 'errors/403.html', status=403, context={'title': 403})

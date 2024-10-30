@@ -16,7 +16,7 @@
 <link href="{% static 'fontawesomefree/css/all.min.css' %}" rel="stylesheet" type="text/css">
 </head>
 
-<body class='w-screen max-h-screen dark:bg-slate-900 grid overflow-hidden'
+<body class='w-screen h-full dark:bg-slate-900 grid '
   data-admin-utc-offset="{% now 'Z' %}">
 
    <div class='sticky top-0 z-50 w-screen'>
@@ -65,10 +65,10 @@
     {% endblock %}
    </div>
 
-    <div class="flex w-full overflow-hidden h-full pb-12" id="main">
+    <div class="flex w-full h-full pb-12" id="main">
        
        {% if is_nav_enabled %}
-         <div class='w-80 flex sticky left-0 top-0 bottom-0 shadow-2xl p-2 overflow-y-auto'>
+         <div class='w-80 flex sticky left-0 top-0 bottom-0 shadow-2xl overflow-y-auto border-r-2'>
           {% block nav-sidebar %}
             {% include "results/nav_sidebar.html" %}
           {% endblock %}
@@ -98,7 +98,7 @@
         {% endblock messages %}
 
         <!-- Content -->
-        <div id="content" class="w-full h-full grid ">
+        <div id="content" class="w-full h-full grid">
           {% block pretitle %}{% endblock %}
           {% block content_title %}{% if title %}{% endif %}{% endblock %}
           {% block content_subtitle %}{% if subtitle %}<h2>{{ subtitle }}</h2>{% endif %}{% endblock %}
