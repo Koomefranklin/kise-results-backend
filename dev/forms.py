@@ -190,17 +190,17 @@ class UpdateHoD(forms.ModelForm):
 class NewTeamLeader(forms.ModelForm):
 	class Meta:
 		model = TeamLeader
-		fields = ['centre', 'lecturer']
+		fields = ['lecturer', 'centre']
 		widgets = {
-					'student': autocomplete.ModelSelect2(url='student-autocomplete',attrs={
-        'data-placeholder': 'Search ...',
-				'data-forward': 'paper'
+					'lecturer': autocomplete.ModelSelect2(url='lecturer-autocomplete',attrs={
+        'data-placeholder': 'Search by name or department ...'
     })}
 
 	def __init__(self, *args, **kwargs):
 		user = kwargs.pop('user', None)
 		super(NewTeamLeader, self).__init__(*args, **kwargs)
 		# Adding extra class in the html tags
+		self.fields['lecturer'].widget.attrs['class'] = 'dark: bg-black text-black'
 		for fieldname, field in self.fields.items():
 			self.fields[fieldname].widget.attrs['class'] = 'rounded border-2 w-5/6 grid'
 
@@ -297,7 +297,7 @@ class NewModuleScore(forms.ModelForm):
 
 		specialization = Paper.objects.get(pk=paper).specialization
 
-		self.fields['student'].queryset = Student.objects.filter(specialization=specialization)
+		self.fields['student'].queryset = Student.objects.filter(Q(specialization=specialization) & Q(user__is_active=True))
 		self.fields['module'].queryset = Module.objects.filter(paper=paper)
 
 		if timezone.now() < takeaway_deadline:
@@ -351,7 +351,7 @@ class NewSitinCat(forms.ModelForm):
 		super(NewSitinCat, self).__init__(*args, **kwargs)
 		specialization = Paper.objects.get(pk=paper).specialization
 
-		self.fields['student'].queryset = Student.objects.filter(specialization=specialization)
+		self.fields['student'].queryset = Student.objects.filter(Q(specialization=specialization) & Q(user__is_active=True))
 		
 		self.fields['paper'].initial = Paper.objects.get(pk=paper)
 		self.fields['paper'].queryset = Paper.objects.filter(pk=paper)
