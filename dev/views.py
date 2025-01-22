@@ -963,20 +963,23 @@ class BulkStudentCreation(LoginRequiredMixin, AdminMixin, FormView):
 		for row in csv_reader:
 			if len(row) >= 7:  
 				admission = row[0]
-				full_name = row[1]
-				sex = row[2]
-				mode = row[3]
-				centre = row[4]
-				specialization = row[5]
-				year = row[6]
+				try:
+					User.objects.get(username=admission)
+				except:
+					full_name = row[1]
+					sex = row[2]
+					mode = row[3]
+					centre = row[4]
+					specialization = row[5]
+					year = row[6]
 
-				mode_id = Mode.objects.get(mode=mode)
-				centre_id = Centre.objects.get(name=centre)
-				specialization_id = Specialization.objects.get(code=specialization)
-				user_instance = User.objects.create_user(username=admission, password=password, full_name=full_name, sex=sex, role=role)
+					mode_id = Mode.objects.get(mode=mode)
+					centre_id = Centre.objects.get(name=centre)
+					specialization_id = Specialization.objects.get(code=specialization)
+					user_instance = User.objects.create_user(username=admission, password=password, full_name=full_name, sex=sex, role=role)
 
-				student = Student.objects.create(user=user_instance, admission=admission, mode=mode_id, centre=centre_id, added_by=user, year=year, specialization=specialization_id)
-				count += 1
+					student = Student.objects.create(user=user_instance, admission=admission, mode=mode_id, centre=centre_id, added_by=user, year=year, specialization=specialization_id)
+					count += 1
 
 		messages.success(self.request, f'Added {count} Students Successfully')
 		return super().form_valid(form)
@@ -1129,6 +1132,9 @@ class ActivateUser(LoginRequiredMixin, AdminMixin, View):
 		messages.success(request, f'User {user.full_name} has been Activated.')
 
 		return HttpResponseRedirect(self.request.get_full_path())
+	
+def redirect_tp(request):
+	return redirect('index')
 
 def custom_403_view(request, exception):
 	return render(request, 'errors/403.html', status=403, context={'title': 403})

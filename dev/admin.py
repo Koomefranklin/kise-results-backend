@@ -1,5 +1,6 @@
 from django.contrib import admin
 from .models import Deadline, Hod, ModuleScore, SitinCat, User, Mode, Lecturer, Student, TeamLeader, Specialization, Paper, Module, CatCombination, Result, IndexNumber, Centre, Course
+from teaching_practice.models import Aspect, StudentLetter, StudentAspect, StudentSection, Section, Location
 from django.contrib.auth.admin import UserAdmin
 from .forms import CatCombinationAdminForm, StudentAdminForm, LecturerAdminForm, TeamLeaderAdminForm
 # Register your models here.
@@ -120,3 +121,8 @@ admin.site.register(ModuleScore, ModuleScoreAdmin)
 admin.site.register(SitinCat)
 admin.site.register(Deadline)
 admin.site.register(Hod)
+
+admin.site.register(Location)
+admin.site.register(StudentLetter)
+admin.site.register(Section)
+admin.site.register(Aspect)

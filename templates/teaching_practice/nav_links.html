@@ -1,0 +1,67 @@
+{% load i18n %}
+
+<div class="grid text-left p-px w-full">
+	<table class="w-full">
+		<caption class='border-b'>
+			<a
+				href="#"
+				class="">
+				Actions
+			</a>
+		</caption>
+		<tbody class="w-full uppercase">
+			
+
+			<tr class="py-6 border-b h-10">
+				<th scope="row" class='justify-between flex'><a href="{% url 'students_tp' %}">Students</a> 
+					{% if user.role == 'admin' %}
+						<a href='{% url "new_student" %}'><i class="fa-solid fa-plus text-[#4caf50] font-extrabold"></i> Add</a>
+					{% endif %}						
+				</th>
+			</tr>
+			
+			<tr class="py-6 border-b h-10">
+				<th
+					scope="row"
+					id="sections"
+					class="flex justify-between">
+					<a
+						href='{% url "sections" %}'
+						class="font-bold uppercase">
+						Sections
+					</a>
+					{% if user.role == 'admin' %}
+						<a href='{% url "new_section" %}'><i class="fa-solid fa-plus text-[#4caf50] font-extrabold"></i> Add</a>
+					{% endif %}
+				</th>
+			</tr>
+			
+			<tr class="py-6 border-b h-10">
+				<th scope="row" id='aspects' class='flex justify-between'><a href="{% url 'aspects' %}">Aspects</a>
+				{% if user.role == 'admin' %}
+						<a href='{% url "new_aspect" %}'><i class="fa-solid fa-plus text-[#4caf50] font-extrabold"></i> Add</a>
+					{% endif %}
+				</th>
+			</tr>
+			<tr class="py-6 border-b h-10">
+				<th
+					scope="row"
+					id="student_letters"
+					class="flex justify-between">
+					<a
+						href='{% url "student_letters" %}'
+						class="font-bold uppercase">
+						Student Letters
+					</a>
+					{% if user.role == 'admin' %}
+						<a href='{% url "new_student_letter" %}'><i class="fa-solid fa-plus text-[#4caf50] font-extrabold"></i> Add</a>
+					{% endif %}
+				</th>
+			</tr>	
+			<tr class="py-6 border-b h-10">
+				<th scope="row" class='justify-between flex'><a href="{% url 'dashboard' %}">Results Module</a> 						
+				</th>
+			</tr>		
+		</tbody>
+	</table>
+</div>

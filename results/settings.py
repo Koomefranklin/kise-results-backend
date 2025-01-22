@@ -38,6 +38,7 @@ ALLOWED_HOSTS = env('ALLOWED_HOSTS').split(' ')
 INSTALLED_APPS = [
     'dal',
     'dal_select2',
+    'teaching_practice.apps.TeachingPracticeConfig',
     'dev.apps.DevConfig',
     'django.contrib.admin',
     'django.contrib.auth',
@@ -53,6 +54,7 @@ INSTALLED_APPS = [
     'theme',
     'django_browser_reload',
     'fontawesomefree',
+    'django.contrib.gis',
 ]
     
 
@@ -103,11 +105,10 @@ WSGI_APPLICATION = 'results.wsgi.application'
 
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.mysql',
-        'NAME': env('MySQL_DB_NAME'),
-        'USER':  env('MySQL_DB_USER'),
-        'PASSWORD': env('MySQL_USER_PASSWORD'),
-        'HOST': env('MYSQL_HOST'),
+        'ENGINE': 'django.contrib.gis.db.backends.postgis',
+        'NAME': env('POSTGRES_DB_NAME'),
+        'USER':  env('POSTGRES_DB_USER'),
+        'PASSWORD': env('POSTGRES_USER_PASSWORD'),
     }
 }
 
@@ -177,7 +178,7 @@ LOGOUT_REDIRECT_URL = 'login'
 # Session Settings
 
 # Lifetime of the session cookie in seconds
-SESSION_COOKIE_AGE = 600
+# SESSION_COOKIE_AGE = 36000
 
 # Whether to expire session when the browser is closed
 SESSION_EXPIRE_AT_BROWSER_CLOSE = True

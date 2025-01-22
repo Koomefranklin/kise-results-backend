@@ -23,6 +23,7 @@ urlpatterns = [
     path('', include('dev.urls')),
     path("__reload__/", include("django_browser_reload.urls")),
     path("accounts/", include('django.contrib.auth.urls')),
+    path('teaching_practice/', include('teaching_practice.urls'), name='teaching_practice')
 ]
 handler403 = 'dev.views.custom_403_view'
 handler404 = 'dev.views.custom_404_view'

@@ -1,0 +1,98 @@
+{% extends "teaching_practice/base_site.html" %} {% block main %}
+{% load static %}
+<script src="https://maps.googleapis.com/maps/api/js?key=YOUR_GOOGLE_MAPS_API_KEY"></script>
+ <script>
+    function initMap() {
+        const location = { lat: {{ location.point.y }}, lng: {{ location.point.x }} };
+        const map = new google.maps.Map(document.getElementById("map"), {
+            zoom: 12,
+            center: location,
+        });
+        new google.maps.Marker({
+            position: location,
+            map: map,
+        });
+    }
+</script>
+<div class="grid w-full h-full">
+	<div class="h-full grid place-items-center w-full">
+		<form
+			method="post"
+			class="grid gap-4 place-self-center shadow-2xl p-4 rounded-md w-5/6">
+      {{ title }}
+			{% csrf_token %} {{ form.management_form }}
+			<div class="grid gap-4 md:grid-cols-2 lg:grid-cols-2">
+        
+        {% if student %}
+          <div class=''>
+            <label for='name'>Name</label>
+            <input type='text' class=' w-5/6 grid' id='name' disabled value='{{ student.user.full_name }}'>
+          </div>
+          <div class=''>
+            <label for='index'>Index Number</label>
+            <input type='text' class=' w-5/6 grid' id='index' disabled value='{{ student.index }}'>
+          </div>
+          <div class=''>
+            <label for='department'>Department</label>
+            <input type='text' class=' w-5/6 grid' id='department' disabled value='{{ student.department }}'>
+          </div>
+          <div class=''>
+            <label for='school'>School</label>
+            <input type='text' class=' w-5/6 grid' id='school' disabled value='{{ student.school }}'>
+          </div>
+          <div class=''>
+            <label for='grade'>PP/Grade</label>
+            <input type='text' class=' w-5/6 grid' id='grade' disabled value='{{ student.grade }}'>
+          </div>
+          <div class=''>
+            <label for='learning_area'>Learning Area</label>
+            <input type='text' class=' w-5/6 grid' id='learning_area' disabled value='{{ student.learning_area }}'>
+          </div>
+        {% endif %}
+          
+        {{ form.as_div }}
+        
+        {% if location %}
+          <div class=''>
+            <div class=''>
+              <label for='location'>Location</label>
+              <a href='{{ location.google_maps_url }}' target='_blank' class=' w-5/6 grid' id='location' >{{ location.name }}</a>
+              <div id="map" ></div>
+            </div>
+          </div>
+        {% endif %}
+          
+      </div>
+			<button
+				type="submit"
+				class="border w-fit grid rounded p-2 place-self-center shadow-lg bg-[#4caf50] font-bold">
+				Submit
+			</button>
+		</form>
+    <div class=''>
+      <h1 class=''>Sections</h1>
+      
+     <div class='grid md:grid-cols-2 lg:grid-cols-4 gap-4 '>
+       {% for section in sections %}
+          <div class='rounded border place-items-center'>
+            <a href='{% url "edit_student_section" section.pk %}' class='text-center underline'>{{ section.section.name }}</a>
+            <div class='grid grid-flow-col gap-2 p-2'>
+              <div class='p-2'>
+                <div class=''>Assessed Aspects: {{ 4 }}</div>
+                <div class=''>Total Aspects: {{ 5 }}</div>
+              </div>
+              <div class='p-2'>
+                <div class=''>Student Score: {{ 12 }}</div>
+                <div class=''>Total Score: {{ 15 }}</div>
+              </div>
+            </div>
+          </div>
+        {% endfor %}
+     </div>
+        
+    </div>
+		<script type="text/javascript" src="{% static 'admin/js/vendor/jquery/jquery.js' %}"></script>
+		{{ form.media }}
+	</div>
+</div>
+{% endblock main %}

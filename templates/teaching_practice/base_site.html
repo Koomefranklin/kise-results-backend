@@ -1,7 +1,7 @@
 {% extends "teaching_practice/base.html" %}
 {% load static %}
 
-{% block title %}{% if subtitle %}{{ subtitle }} | {% endif %}{{ title }} | {{site_title|default:_('Results') }}{% endblock %}
+{% block title %}{% if subtitle %}{{ subtitle }} | {% endif %}{{ title }} | {{site_title|default:_('TP') }}{% endblock %}
 
 {% block branding %}
 <div class="p-0 me-5 text-xl font-bold text-black flex flex-row">
@@ -11,7 +11,7 @@
 			width="50"
 			height="50" />
   </div>
-  <a href="{% url 'dashboard' %}" class="grid place-self-center mx-2">Teaching Practice</a>
+  <a href="{% url 'index' %}" class="grid place-self-center mx-2">Teaching Practice</a>
 </div>
 {% if user.is_anonymous %} {% include "admin/color_theme_toggle.html" %} {% endif %}
 {% endblock %}

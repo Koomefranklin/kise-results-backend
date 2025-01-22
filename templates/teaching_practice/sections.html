@@ -1,0 +1,95 @@
+{% extends "teaching_practice/base_site.html" %} {% block main %}
+{% load static %}
+<div class="grid w-full h-full">
+	<div class="h-full grid place-items-center w-full">
+		<table class="w-5/6 place-self-center border">
+			<form method="GET" action="{% url 'sections' %}" class='w-full'>  
+				<div class='flex w-5/6 h-fit place-self-center border-2 rounded'>
+					{{ search_query.search_query }}
+					<button type="submit" class='rounded-md border p-2'>Search</button>
+				</div>
+			</form>
+			<thead class="border-b bg-gray-500 text-white p-2">
+				<tr class="">
+					<th class='border-r px-2'>No.</th>
+					<th class="border-r px-2">Name</th>
+					<th class="border-r px-2">Score Contribution</th>
+					<th class="">Actions</th>
+				</tr>
+			</thead>
+
+			{% if page_obj %}
+			<tbody class="capitalize">
+				{% for section in page_obj %}
+
+				<tr
+					class="border-b dark:bg-{% cycle 'slate-900' 'slate-800' %} bg-{% cycle 'slate-50' 'slate-400' %}" >
+					<td class="border-r px-2">{{ section.number }}</td>
+					<td class="border-r px-2">
+						<a href='{% url "sections" %}?query={{ section.pk }}' title='View {{ section.name }} Aspects' class='underline p-2'>{{ section.name }}</a>
+					</td>
+					<td class="border-r px-2">{{ section.contribution }}</td>
+					
+					<!-- <td class="border-r px-2">{{ section.specialization }}</td> -->
+					<!-- <td class="border-r px-2">{{ section.mode}}</td>
+					<td class="border-r px-2">{{ section.centre }}</td>
+					<td class="border-r px-2">{{ section.specialization }}</td>
+					<td class="border-r px-2">{{ section.year.year }}</td> -->
+					<td class="flex justify-between">
+						
+						{% if user.role == 'admin' %}
+							<a href='{% url "edit_section" section.pk %}'>
+							edit
+							<i class="fa-regular fa-pen-to-square text-[#4caf50]"></i>
+						</a>
+						{% endif %}
+						
+					</td>
+				</tr>
+				{% endfor %}
+			</tbody>
+			<tfoot class="bg-gray-500 text-white font-bold">
+				<tr class="">
+					<td colspan='8' class=''>
+						<p class='w-full grid grid-flow-col'>
+							<span class='text-left'>Showing {{ page_obj.object_list|length }} of {{ page_obj.paginator.count }} Sections</span>
+							<span class='text-right'>
+								{% if page_obj.has_previous %}
+								<a
+									class="px-2"
+									href="?page={{ page_obj.previous_page_number }}">
+									Previous
+								</a>
+								{% endif %}
+								PAGE: {{ page_obj.number }} of
+								<a
+									class="px-2"
+									href="?page={{ page_obj.paginator.num_pages }}">
+									{{ page_obj.paginator.num_pages }}
+								</a>
+								{% if page_obj.has_next %}
+								<a
+									class="px-2 bg-[#4caf50] rounded"
+									href="?page={{ page_obj.next_page_number }}">
+									Next
+								</a>
+								{% endif %}
+							</span>
+						</p>
+					</td>
+				</tr>
+			</tfoot>
+			{% else %}
+			<tr class="">
+				<td
+					colspan="9"
+					class="text-center">
+					No Sections Found
+				</td>
+			</tr>
+			{% endif %}
+		</table>
+		
+	</div>
+</div>
+{% endblock main %}

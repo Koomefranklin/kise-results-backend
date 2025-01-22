@@ -6,10 +6,10 @@
 			method="post"
 			class="grid gap-4 place-self-center shadow-2xl p-4 rounded-md w-5/6">
 			{% csrf_token %} {{ form.management_form }}
-			<div class="grid gap-4 grid-cols-2">{{ form.as_div }}</div>
+			<div class="grid gap-4 grid-cols-2">{{ form.as_div }} {{ student_letter_form.as_div }} {{ location_form.as_div }}</div>
 			<button
 				type="submit"
-				class="border w-fit grid rounded p-2 place-self-center shadow-lg bg-[#4caf50] font-bold">
+				class="border w-fit grid rounded p-4 place-self-center shadow-lg">
 				Submit
 			</button>
 		</form>
