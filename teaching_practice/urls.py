@@ -18,6 +18,7 @@ urlpatterns = [
     path('student-section/<uuid:pk>/edit/', views.EditStudentSectionView.as_view(), name='edit_student_section'),
     path('student-section/', views.StudentSectionsViewList.as_view(), name='student_sections'),
     path('student-aspect/new/', views.NewStudentAspectView.as_view(), name='new_student_aspect'),
-    path('student-aspect/<uuid:pk>/edit/', views.EditStudentAspectView.as_view(), name='edit_student_aspect'),
+    path('student-score/<uuid:pk>/edit/', views.EditStudentAspectView.as_view(), name='edit_student_aspects'),
     path('student-aspect/', views.StudentAspectsViewList.as_view(), name='student_aspects'),
+    path('student-letter/report/<uuid:pk>/', views.GeneratePDF.as_view(), name='pdf_report'),
 ]

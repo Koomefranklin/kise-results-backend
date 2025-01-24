@@ -1,15 +1,16 @@
-from django.shortcuts import render, redirect
+from django.shortcuts import get_object_or_404, render, redirect
 from dal import autocomplete
+from django.views.generic.base import View
 from django.urls import reverse_lazy
 from dev.models import User
-from .forms import NewAspect, NewLocationForm, NewSection, NewStudentAspect, NewStudentForm, NewStudentLetter, NewStudentSection, StudentForm, UpdateAspect, UpdateSection, UpdateStudentAspect, UpdateStudentLetter, UpdateStudentSection
+from .forms import NewAspect, NewLocationForm, NewSection, NewStudentAspect, NewStudentForm, NewStudentLetter, NewStudentSection, StudentForm, UpdateAspect, UpdateSection, UpdateStudentAspect, UpdateStudentLetter, UpdateStudentSection, StudentAspectFormSet
 from .models import Student, Section, StudentAspect, StudentLetter, StudentSection, Aspect, Location
 from django.views.generic import ListView, CreateView, FormView, UpdateView
 from django.db.models import Q, Avg, F, ExpressionWrapper, FloatField, Value
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.contrib import messages
 from django.contrib.gis.geos import Point
-from django.http import HttpResponse
+from django.http import HttpResponse, HttpResponseRedirect
 
 # Create your views here.
 
@@ -188,10 +189,10 @@ class NewStudentLetterView(LoginRequiredMixin, FormView):
 			student_letter.save()
 
 			sections = Section.objects.all()
-			aspects = Aspect.objects.all()
 
 			for section in sections:
 				student_section = StudentSection.objects.create(student_letter=student_letter, section=section)
+				aspects = Aspect.objects.filter(section=section)
 				for aspect in aspects:
 					student_aspect = StudentAspect.objects.create(student_section=student_section, aspect=aspect)
 
@@ -215,7 +216,10 @@ class EditStudentLetterView(LoginRequiredMixin, UpdateView):
 	model = StudentLetter
 	form_class = UpdateStudentLetter
 	template_name = 'teaching_practice/update_student_letter.html'
-	success_url = reverse_lazy('student_letters')
+	
+	def get_success_url(self):
+		student_letter_id = self.kwargs.get('pk')
+		return reverse_lazy('pdf_report', kwargs={'pk': student_letter_id})
 
 	def get_context_data(self, **kwargs):
 		user = self.request.user
@@ -229,7 +233,7 @@ class EditStudentLetterView(LoginRequiredMixin, UpdateView):
 		context['is_nav_enabled'] = True
 		context['location'] = student_letter_instance.location
 		context['student'] = student_letter_instance.student
-		context['title']= 'Update Student Letter'
+		context['title']= f'Update {student_letter_instance}\'s Letter'
 		context['sections'] =student_sections
 		return context
 	
@@ -262,17 +266,35 @@ class EditStudentSectionView(LoginRequiredMixin, UpdateView):
 	model = StudentSection
 	form_class = UpdateStudentSection
 	template_name = 'teaching_practice/student_section_scores.html'
-	success_url = reverse_lazy('studentsections')
+
+	def get_success_url(self):
+		student_section = self.kwargs.get('pk')
+		student_letter_id = StudentSection.objects.get(pk=student_section).student_letter.pk
+		return reverse_lazy('edit_student_letter', kwargs={'pk': student_letter_id})
 
 	def get_context_data(self, **kwargs):
 		user = self.request.user
 		student_section = self.kwargs.get('pk')
+		section = StudentSection.objects.get(pk=student_section).section
 		student_aspects = StudentAspect.objects.filter(student_section=student_section)
 		context = super().get_context_data(**kwargs)
 		context['is_nav_enabled'] = True
 		context['title'] = 'Section Scores'
 		context['aspects'] = student_aspects
+		context['section'] = section
 		return context
+	
+	def form_valid(self, form):
+		form = self.get_form(self.get_form_class())
+		student_section = self.kwargs.get('pk')
+		student_letter = StudentSection.objects.get(pk=student_section).student_letter
+		student_sections = StudentSection.objects.filter(student_letter=student_letter)		
+		score =0
+		for section in student_sections:
+			score += section.score
+		student_letter.total_score = score
+		student_letter.save()
+		return super().form_valid(form)
 
 class StudentSectionsViewList(LoginRequiredMixin, ListView):
 	model = StudentSection
@@ -302,17 +324,53 @@ class NewStudentAspectView(LoginRequiredMixin, CreateView):
 		# context['title'] = 
 		return context
 
-class EditStudentAspectView(LoginRequiredMixin, UpdateView):
+class EditStudentAspectView(LoginRequiredMixin, View):
 	model = StudentAspect
-	form_class = UpdateStudentAspect
-	template_name = 'teaching_practice/base_form.html'
-	success_url = reverse_lazy('studentaspects')
+	template_name = 'teaching_practice/add_aspect_scores.html'
+	
+	def get_success_url(self):
+		return reverse_lazy('edit_student_section', kwargs={'pk': self.kwargs.get('pk')})
 
-	def get_context_data(self, **kwargs):
-		user = self.request.user
-		context = super().get_context_data(**kwargs)
-		context['is_nav_enabled'] = True
-		return context
+	def get(self, request, *args, **kwargs):
+		student_section_id = self.kwargs.get('pk')
+		student_section = get_object_or_404(StudentSection, pk=student_section_id)
+
+		queryset = StudentAspect.objects.filter(student_section=student_section)
+		formset = StudentAspectFormSet(queryset=queryset)
+
+		context = {
+			'is_nav_enabled': True,
+			'title': 'Add Aspect Scores',
+			'section': student_section,
+			'formset': formset,
+		}
+
+		return render(request, self.template_name, context)
+
+	def post(self, request, *args, **kwargs):
+		student_section_id = self.kwargs.get('pk')
+		student_section = get_object_or_404(StudentSection, pk=student_section_id)
+
+		queryset = StudentAspect.objects.filter(student_section=student_section)
+		formset = StudentAspectFormSet(request.POST, queryset=queryset)
+
+		if formset.is_valid():
+			formset.save()
+			student_aspects = StudentAspect.objects.filter(student_section=student_section)
+			sum = 0
+			for aspect in student_aspects:
+				sum += aspect.score
+			student_section.score = sum
+			student_section.save()
+			return redirect(self.get_success_url())
+
+		context = {
+			'is_nav_enabled': True,
+			'title': 'Add Aspect Scores',
+			'section': student_section,
+			'formset': formset,
+		}
+		return render(request, self.template_name, context)
 
 class StudentAspectsViewList(LoginRequiredMixin, ListView):
 	model = StudentAspect
@@ -325,3 +383,21 @@ class StudentAspectsViewList(LoginRequiredMixin, ListView):
 		context = super().get_context_data(**kwargs)
 		context['is_nav_enabled'] = True
 		return context
+
+class GeneratePDF(LoginRequiredMixin, ListView):
+	model = StudentLetter
+	template_name = 'teaching_practice/generate_pdf.html'
+	
+	def get_context_data(self, **kwargs):
+		letter_id = self.kwargs.get('pk')
+		letter = StudentLetter.objects.get(pk=letter_id)
+		sections = StudentSection.objects.filter(student_letter=letter)
+		aspects = StudentAspect.objects.filter(student_section__student_letter=letter)
+		context = super().get_context_data(**kwargs)
+		context['is_nav_enabled'] = True
+		context["title"] = 'Generate Report'
+		context['letter'] = letter
+		context['sections'] = sections
+		context['aspects'] = aspects
+		return context
+		

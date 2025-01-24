@@ -6,22 +6,25 @@
 			method="post"
 			class="grid gap-4 place-self-center shadow-2xl p-4 rounded-md w-5/6">
 			{% csrf_token %} {{ form.management_form }}
+			<div class='font-bold text-lg uppercase text-center'>{{ section.name }} Scores</div>
       <div class='gap-2'>
         
         {% if aspects %}
           
           {% for aspect in aspects %}
-            <div class='grid md:grid-cols-2 lg:grid-cols-2 p-2'>
+            <div class='grid md:grid-cols-3 lg:grid-cols-3 p-2 border-b'>
               <div class=''>
                 {{ aspect.aspect.name }}
               </div>
-              <input type='number' class='p-2 w-5/8' value="{{ aspect.score }}" >
+              <div class='p-2 w-5/8'>{{ aspect.score }}</div>
+							<div class='p-2 w-5/8'>{{ aspect.aspect.contribution }}</div>
             </div>
           {% endfor %}
             
         {% endif %}
           
       </div>
+			<div class='border-b-4 '></div>
 			<div class="grid gap-4 grid-cols-2">{{ form.as_div }}</div>
 			<button
 				type="submit"

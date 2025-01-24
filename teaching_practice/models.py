@@ -36,6 +36,9 @@ class Aspect(models.Model):
 
   def __str__(self):
     return self.name
+  
+  class Meta:
+    order_with_respect_to = 'section'
 
 class Student(models.Model):
   id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)

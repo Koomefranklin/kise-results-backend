@@ -1,0 +1,71 @@
+{% extends "teaching_practice/base_site.html" %} {% block main %}
+{% load static %}
+<div class="grid w-full h-full">
+	<div class="h-full grid  w-full">
+    <div class='uppercase text-lg font-bold text-center'>
+      <div class=''>kenya institute of special education</div>
+      <div class=''>teaching practice assessment guide (competence based curriculum)</div>
+    </div>
+    <div class='font-bold'>
+     <div class='flex w-full justify-between'>
+       <div class=''>Student's Name: <span class=''>{{ letter.student.user.full_name }}</span></div>
+        <div class=''>Department: <span class=''>{{ letter.student.department }}</span></div>
+        <div class=''>Student's Index No.': <span class=''>{{ letter.student.index }}</span></div>
+     </div>
+      <div class='flex w-full justify-between'>
+        <div class=''>School: <span class='underline'>{{ letter.student.school }}</span></div>
+        <div class=''>PP/Grade: <span class='underline'>{{ letter.student.grade }}</span></div>
+        <div class=''>Learning Area and / Subject: <span class='underline'>{{ letter.student.learning_area }}</span></div>
+        <div class=''>Date: <span class='underline'>{{ letter.created_at.date }}</span></div>
+        <div class=''>Time: <span class='underline'>{{ letter.created_at.time }}</span></div>
+      </div>
+    </div>
+    <div class='w-full'>
+      <table class='border w-full'>
+        <thead class='uppercase border-b'>
+          <tr class=''>
+            <th class='border-r'></th>
+            <th class='border-r'>aspects to consider (indicators)</th>
+            <th class='border-r'>marks</th>
+            <th class=''>assessor's comments</th>
+          </tr>
+        </thead>
+        <tbody class=''>
+          
+          {% for section in sections %}
+            <tr class='border-b'>
+              <td class='border-r'>{{ section.section.number }}</td>
+              <td class='border-r'>
+                <p class='font-bold'>{{ section.section.name }} ({{ section.section.contribution }} marks)</p>
+                
+                {% for aspect in aspects %}
+                  <p class=''>{{ aspect.aspect.name }}({{ aspect.aspect.contribution }} marks)</p>
+                {% endfor %}
+                  
+              </td>
+              <td class='border-r'>{{ section.score }}</td>
+              <td class=''>{{ section.comments }}</td>
+            </tr>
+          {% endfor %}
+            
+        </tbody>
+      </table>
+      <div class=''>
+        <div class=''>Total Score: {{ letter.total_score }}</div>
+
+      </div>
+    </div>
+    <div class='w-full font-bold'>
+      <div class=''>General comments and suggestions: {{ letter.comments }}</div>
+      <div class='flex justify-between'>
+        <div class=''>Name of Assessor: <span class='underline'>{{ letter.assessor }}</span></div>
+        <div class=''>Signature: <span class='underline'></span></div>
+        <div class=''>Date: <span class='underline'>{{ letter.updated_at.date }}</span></div>
+      </div>
+      <div class='text-center'>Location: <span class=''>{{ letter.location.name }}</span></div>
+    </div>
+
+		<script type="text/javascript" src="{% static 'admin/js/vendor/jquery/jquery.js' %}"></script>
+	</div>
+</div>
+{% endblock main %}

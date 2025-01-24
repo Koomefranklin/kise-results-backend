@@ -19,34 +19,34 @@
 		<form
 			method="post"
 			class="grid gap-4 place-self-center shadow-2xl p-4 rounded-md w-5/6">
-      {{ title }}
+      <div class='text-center font-bold text-lg'>{{ title }}</div>
 			{% csrf_token %} {{ form.management_form }}
 			<div class="grid gap-4 md:grid-cols-2 lg:grid-cols-2">
         
         {% if student %}
           <div class=''>
-            <label for='name'>Name</label>
-            <input type='text' class=' w-5/6 grid' id='name' disabled value='{{ student.user.full_name }}'>
+            <label for='name'>Name:</label>
+            <input type='text' class='p-2 bg-transparent border rounded w-5/6 grid' id='name' disabled value='{{ student.user.full_name }}'>
           </div>
           <div class=''>
-            <label for='index'>Index Number</label>
-            <input type='text' class=' w-5/6 grid' id='index' disabled value='{{ student.index }}'>
+            <label for='index'>Index Number:</label>
+            <input type='text' class='p-2 bg-transparent border rounded w-5/6 grid' id='index' disabled value='{{ student.index }}'>
           </div>
           <div class=''>
-            <label for='department'>Department</label>
-            <input type='text' class=' w-5/6 grid' id='department' disabled value='{{ student.department }}'>
+            <label for='department'>Department:</label>
+            <input type='text' class='p-2 bg-transparent border rounded w-5/6 grid' id='department' disabled value='{{ student.department }}'>
           </div>
           <div class=''>
-            <label for='school'>School</label>
-            <input type='text' class=' w-5/6 grid' id='school' disabled value='{{ student.school }}'>
+            <label for='school'>School:</label>
+            <input type='text' class='p-2 bg-transparent border rounded w-5/6 grid' id='school' disabled value='{{ student.school }}'>
           </div>
           <div class=''>
-            <label for='grade'>PP/Grade</label>
-            <input type='text' class=' w-5/6 grid' id='grade' disabled value='{{ student.grade }}'>
+            <label for='grade'>PP/Grade:</label>
+            <input type='text' class='p-2 bg-transparent border rounded w-5/6 grid' id='grade' disabled value='{{ student.grade }}'>
           </div>
           <div class=''>
-            <label for='learning_area'>Learning Area</label>
-            <input type='text' class=' w-5/6 grid' id='learning_area' disabled value='{{ student.learning_area }}'>
+            <label for='learning_area'>Learning Area:</label>
+            <input type='text' class='p-2 bg-transparent border rounded w-5/6 grid' id='learning_area' disabled value='{{ student.learning_area }}'>
           </div>
         {% endif %}
           
@@ -56,8 +56,8 @@
           <div class=''>
             <div class=''>
               <label for='location'>Location</label>
-              <a href='{{ location.google_maps_url }}' target='_blank' class=' w-5/6 grid' id='location' >{{ location.name }}</a>
-              <div id="map" ></div>
+              <div class='p-2 bg-transparent border rounded w-5/6 grid'>{{ location.name }}</div>
+              <a href='{{ location.google_maps_url }}' target='_blank'  id='location' >View in Google Maps</a>
             </div>
           </div>
         {% endif %}
@@ -66,30 +66,36 @@
 			<button
 				type="submit"
 				class="border w-fit grid rounded p-2 place-self-center shadow-lg bg-[#4caf50] font-bold">
-				Submit
+				Save and Generate Report
 			</button>
 		</form>
     <div class=''>
-      <h1 class=''>Sections</h1>
+      <h1 class='text-center font-bold text-lg'>Sections</h1>
       
-     <div class='grid md:grid-cols-2 lg:grid-cols-4 gap-4 '>
-       {% for section in sections %}
-          <div class='rounded border place-items-center'>
-            <a href='{% url "edit_student_section" section.pk %}' class='text-center underline'>{{ section.section.name }}</a>
-            <div class='grid grid-flow-col gap-2 p-2'>
+      <div class='grid md:grid-cols-2 lg:grid-cols-3 gap-4 '>
+        {% for section in sections %}
+            <div class='rounded border place-items-center'>
+              <div class='text-center underline'>{{ section.section.name }}</div>
               <div class='p-2'>
-                <div class=''>Assessed Aspects: {{ 4 }}</div>
-                <div class=''>Total Aspects: {{ 5 }}</div>
+                <div class=''>Score: {{ section.score }} of {{ section.section.contribution }}</div>
+                <div class=''>Comments: <div class=''>{{ section.comments }}</div></div>
               </div>
-              <div class='p-2'>
-                <div class=''>Student Score: {{ 12 }}</div>
-                <div class=''>Total Score: {{ 15 }}</div>
+              <div class='grid grid-flow-col gap-2 p-2 '>
+                <button class='p-2 border rounded-md'>
+                  <a href='{% url "edit_student_aspects" section.pk %}' class=''>Assess Aspects</a>
+                </button>
+                <button class='p-2 border rounded-md'>
+                  <a href='{% url "edit_student_section" section.pk %}' class=''>View Scores</a>
+                </button>
               </div>
             </div>
-          </div>
-        {% endfor %}
-     </div>
-        
+          {% endfor %}
+      </div>
+
+      <div class=''>
+        <div class='text-center font-bold text-lg'>Map</div>
+        <div id="map" ></div>
+      </div>
     </div>
 		<script type="text/javascript" src="{% static 'admin/js/vendor/jquery/jquery.js' %}"></script>
 		{{ form.media }}
