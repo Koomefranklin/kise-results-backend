@@ -5,32 +5,7 @@
 <html lang="{{ LANGUAGE_CODE|default:'en-us' }}" dir="{{ LANGUAGE_BIDI|yesno:'rtl,ltr,auto' }}">
 <head>
 <title>{% block title %}{% endblock %}</title>
-{% block extrahead %}
-<script>
-  window.onload = function () {
-    if (navigator.geolocation) {
-      navigator.geolocation.getCurrentPosition(
-        (position) => {
-          // Get latitude and longitude
-          const latitude = position.coords.latitude;
-          const longitude = position.coords.longitude;
-
-          // Set the values in the form
-          document.getElementById('id_latitude').value = latitude;
-          document.getElementById('id_longitude').value = longitude;
-        },
-        (error) => {
-          console.error('Error obtaining location:', error);
-            alert('Unable to access your location. Please enable location permissions.');
-        }
-      );
-    } else {
-      console.log('Geolocation is not supported by this browser.');
-      alert('Geolocation is not supported by your browser.');
-    }
-  };
-</script>
-{% endblock %}
+{% block extrahead %}{% endblock %}
 <meta name="viewport" content="width=device-width, initial-scale=1"/>
 <meta name="author" content="Koome Franklin"/>
 <meta name="color-scheme" content="dark light">
@@ -95,7 +70,6 @@
        {% if is_nav_enabled %}
          <div class='w-80 flex sticky left-0 top-0 bottom-0 shadow-2xl overflow-y-auto border-r-2'>
           {% block nav-sidebar %}
-            {% include "teaching_practice/nav_sidebar.html" %}
           {% endblock %}
         </div>
        {% endif %}
@@ -128,7 +102,7 @@
         <!-- END Content -->
       </main>
     </div>
-    {% block footer %}<footer id="footer" class='sticky bottom-0 justify-center h-fit w-screen p-3 bg-black text-white text-right'>Developed by: Koome Franklin</footer>{% endblock %}
+    {% block footer %}<footer id="footer" class='sticky bottom-0 justify-center h-fit w-screen p-2 bg-black text-white text-center'>Developed by: Koome Franklin</footer>{% endblock %}
 
 </body>
 </html>

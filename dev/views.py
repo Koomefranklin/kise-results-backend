@@ -6,6 +6,7 @@ from django.views import View
 from django.views.generic import ListView, CreateView, FormView, UpdateView
 from django.db.models import Q, Avg, F, ExpressionWrapper, FloatField, Value
 from django.contrib.auth.mixins import LoginRequiredMixin
+from django.contrib.auth.decorators import login_required
 from django.db.models.functions import Coalesce
 from .mixins import AdminMixin, AdminOrHeadMixin, AdminOrLecturerMixin, HoDMixin
 from .models import Deadline, Hod, ModuleScore, User, Student, Result, Mode, Lecturer, Specialization, Paper, TeamLeader, Module, CatCombination, IndexNumber, SitinCat, Centre
@@ -18,6 +19,9 @@ from django.contrib import messages
 import csv
 
 # Create your views here.
+@login_required
+def CommonBase(request):
+	return render(request,'common/index.html')
 
 class StudentAutocomplete(autocomplete.Select2QuerySetView):
 	def get_queryset(self):
@@ -664,7 +668,6 @@ class ModuleScoreUpdateView(LoginRequiredMixin, AdminOrLecturerMixin, UpdateView
 		user = self.request.user
 		form.instance.updated_by = user
 		return super().form_valid(form)
-	pass
 
 class SitinsViewList(LoginRequiredMixin, ListView):
 	model = SitinCat
