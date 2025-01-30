@@ -69,12 +69,13 @@ class CustomUserCreationForm(UserCreationForm):
 	def __init__(self, *args, **kwargs):
 		user = kwargs.pop('user', None)
 		super(CustomUserCreationForm, self).__init__(*args, **kwargs)
-		# for fieldname in ['username', 'password1', 'password2']:
-		#   self.fields[fieldname].help_text = None
-
-		# Adding extra class in the html tags
 		for fieldname, field in self.fields.items():
 			self.fields[fieldname].widget.attrs['class'] = 'rounded border-2 w-5/6 grid'
+		for fieldname in ['password1', 'password2']:
+			self.fields[fieldname].widget.attrs['value'] = 'Kisedefault1'
+			self.fields[fieldname].widget.attrs['class'] = 'hidden'
+			self.fields[fieldname].label = ''
+			self.fields[fieldname].help_text = None
 
 	def save(self, commit=True):
 		instance = super().save(commit=False)
@@ -82,6 +83,8 @@ class CustomUserCreationForm(UserCreationForm):
 		role = cleaned.get('role')
 		if role == 'admin':
 			instance.is_staff = True
+		elif role is None:
+			instance.role = 'student'
 		if commit:
 			instance.save()
 		return instance

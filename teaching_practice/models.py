@@ -23,11 +23,26 @@ class Section(models.Model):
 
   def __str__(self):
     return self.name
+  
+class SubSection(models.Model):
+  id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+  section = models.ForeignKey(Section, on_delete=models.CASCADE, related_name='sub_section')
+  name = models.CharField(max_length=200)
+  contribution = models.IntegerField()
+  created_at = models.DateTimeField(auto_now_add=True)
+  updated_at = models.DateTimeField(auto_now=True)
+
+  def __str__(self):
+    return f'{self.section.name} - {self.name}'
+  
+  class Meta:
+    order_with_respect_to = 'section'
 
 class Aspect(models.Model):
   id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
   name = models.CharField(max_length=200)
   section = models .ForeignKey(Section, on_delete=models.CASCADE)
+  sub_section = models.ForeignKey(SubSection, on_delete=models.CASCADE, related_name='aspect_sub_section', null=True, blank=True)
   contribution = models.IntegerField()
   created_by = models.ForeignKey(User, on_delete=models.CASCADE, related_name='aspect_created_by')
   updated_by = models.ForeignKey(User, on_delete=models.CASCADE, related_name='aspect_updated_by', null=True, blank=True)
@@ -138,7 +153,7 @@ class StudentSection(models.Model):
 
 class StudentAspect(models.Model):
   id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
-  student_section = models.ForeignKey(StudentSection, on_delete=models.CASCADE)
+  student_section = models.ForeignKey(StudentSection, on_delete=models.CASCADE, related_name='student_aspects')
   aspect = models.ForeignKey(Aspect, on_delete=models.CASCADE)
   score = models.FloatField(default=0)
   created_at = models.DateTimeField(auto_now_add=True)

@@ -20,29 +20,29 @@
 
 			{% if page_obj %}
 			<tbody class="capitalize">
-				{% for aspect in page_obj %}
+				{% for section in page_obj %}
 
 				<tr
 					class="border-b dark:bg-{% cycle 'slate-900' 'slate-800' %} bg-{% cycle 'slate-50' 'slate-400' %}" >
-					<td class="border-r px-2">{{ aspect.section }}</td>
+					<td class="border-r px-2">{{ section.section }}</td>
 					<td class="border-r px-2">
-						<a href='{% url "aspects" %}?query={{ aspect.pk }}' title='View {{ aspect.name }} Aspects' class='underline p-2'>{{ aspect.name }}</a>
+						<a href='{% url "aspects" %}?query={{ section.pk }}' title='View {{ section.name }} Aspects' class='underline p-2'>{{ section.name }}</a>
 					</td>
-					<td class="border-r px-2">{{ aspect.contribution }}</td>
+					<td class="border-r px-2">{{ section.contribution }}</td>
 					
-					<!-- <td class="border-r px-2">{{ aspect.specialization }}</td> -->
-					<!-- <td class="border-r px-2">{{ aspect.mode}}</td>
-					<td class="border-r px-2">{{ aspect.centre }}</td>
-					<td class="border-r px-2">{{ aspect.specialization }}</td>
-					<td class="border-r px-2">{{ aspect.year.year }}</td> -->
+					<!-- <td class="border-r px-2">{{ section.specialization }}</td> -->
+					<!-- <td class="border-r px-2">{{ section.mode}}</td>
+					<td class="border-r px-2">{{ section.centre }}</td>
+					<td class="border-r px-2">{{ section.specialization }}</td>
+					<td class="border-r px-2">{{ section.year.year }}</td> -->
 					<td class="flex justify-between">
 						
 						{% if user.role == 'admin' %}
-							<a href='{% url "edit_aspect" aspect.pk %}'>
+							<a href='{% url "edit_aspect" section.pk %}'>
 							edit
 							<i class="fa-regular fa-pen-to-square text-[#4caf50]"></i>
 						</a>
-						<a href='{% url "delete_aspect" aspect.pk %}'>Delete</a>
+						<a href='{% url "delete_aspect" section.pk %}'>Delete</a>
 						{% endif %}
 						
 					</td>

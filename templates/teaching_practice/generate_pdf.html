@@ -1,18 +1,73 @@
-{% extends "teaching_practice/base_site.html" %} {% block main %}
-{% load static %}
-<div class="grid w-full h-full">
+{% load i18n static %}
+
+<!DOCTYPE html>
+{% get_current_language as LANGUAGE_CODE %}{% get_current_language_bidi as LANGUAGE_BIDI %}
+<html lang="{{ LANGUAGE_CODE|default:'en-us' }}" dir="{{ LANGUAGE_BIDI|yesno:'rtl,ltr,auto' }}">
+<head>
+  <style>
+    body {
+        font-family: Arial, sans-serif;
+        font-size: 14px;
+    }
+    h1, h2, h3 {
+        color: #333;
+    }
+    table {
+        width: 100%;
+        border-collapse: collapse;
+        margin-top: 20px;
+    }
+    th, td {
+        border: 1px solid black;
+        padding: 8px;
+        text-align: left;
+    }
+    th {
+        background-color: #f2f2f2;
+    }
+    span {
+      text-decoration: underline;
+    }
+    ul {
+      font-size: smaller;
+    }
+    .upper {
+      font-weight: bold;
+      text-transform: uppercase;
+      text-align: center;
+    }
+    .row {
+      display: flex;
+      width: full;
+      justify-content: space-between;
+      line-height: 1.6;
+    }
+  </style>
+<title>{{ title }}</title>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<meta name="author" content="Koome Franklin"/>
+<meta name="color-scheme" content="dark light">
+<link rel="icon" type="image/x-icon" href="{{ MEDIA_URL }}icons/favicon.ico"/>
+{% block blockbots %}<meta name="robots" content="NONE,NOARCHIVE">{% endblock %}
+
+<link href="{% static 'fontawesomefree/css/all.min.css' %}" rel="stylesheet" type="text/css">
+</head>
+
+<body class='w-screen h-screen flex flex-col overflow-hidden'
+  data-admin-utc-offset="{% now 'Z' %}">
+<div class="grid w-full h-full px-4">
 	<div class="h-full grid  w-full">
-    <div class='uppercase text-lg font-bold text-center'>
+    <div class='upper'>
       <div class=''>kenya institute of special education</div>
       <div class=''>teaching practice assessment guide (competence based curriculum)</div>
     </div>
     <div class='font-bold'>
-     <div class='flex w-full justify-between'>
+     <div class='row'>
        <div class=''>Student's Name: <span class=''>{{ letter.student.user.full_name }}</span></div>
         <div class=''>Department: <span class=''>{{ letter.student.department }}</span></div>
-        <div class=''>Student's Index No.': <span class=''>{{ letter.student.index }}</span></div>
+        <div class=''>Student's Index No. <span class=''>{{ letter.student.index }}</span></div>
      </div>
-      <div class='flex w-full justify-between'>
+      <div class='row'>
         <div class=''>School: <span class='underline'>{{ letter.student.school }}</span></div>
         <div class=''>PP/Grade: <span class='underline'>{{ letter.student.grade }}</span></div>
         <div class=''>Learning Area and / Subject: <span class='underline'>{{ letter.student.learning_area }}</span></div>
@@ -21,51 +76,55 @@
       </div>
     </div>
     <div class='w-full'>
-      <table class='border w-full'>
-        <thead class='uppercase border-b'>
-          <tr class=''>
-            <th class='border-r'></th>
-            <th class='border-r'>aspects to consider (indicators)</th>
-            <th class='border-r'>marks</th>
-            <th class=''>assessor's comments</th>
+      <table style="width: 100%; border-collapse: collapse; border: 1px solid black;">
+        <thead>
+          <tr>
+            <th style="border: 1px solid black;">#</th>
+            <th style="border: 1px solid black;">Aspects to Consider</th>
+            <th style="border: 1px solid black;">Score</th>
+            <th style="border: 1px solid black;">Assessor's Comments</th>
           </tr>
         </thead>
-        <tbody class=''>
-          
-          {% for section in sections %}
-            <tr class='border-b'>
-              <td class='border-r'>{{ section.section.number }}</td>
-              <td class='border-r'>
-                <p class='font-bold'>{{ section.section.name }} ({{ section.section.contribution }} marks)</p>
-                
-                {% for aspect in aspects %}
-                  <p class=''>{{ aspect.aspect.name }}({{ aspect.aspect.contribution }} marks)</p>
-                {% endfor %}
-                  
+        <tbody>
+            {% for section in sections %}
+            <tr>
+              <td style="border: 1px solid black;">{{ section.section.number }}</td>
+              <td style="border: 1px solid black;">
+                <strong>{{ section.section.name }} ({{ section.section.contribution }} marks)</strong>
+                <ul>
+                    {% for aspect in section.student_aspects.all %}
+                        <li>{{ aspect.aspect.name }} ({{ aspect.aspect.contribution }} marks)</li>
+                    {% endfor %}
+                </ul>
               </td>
-              <td class='border-r'>{{ section.score }}</td>
-              <td class=''>{{ section.comments }}</td>
+              <td style="border: 1px solid black;">{{ section.score }}</td>
+              <td style="border: 1px solid black;">{{ section.comments }}</td>
             </tr>
-          {% endfor %}
-            
+            {% empty %}
+            <tr>
+                <td colspan="4" style="text-align: center; border: 1px solid black;">No data available</td>
+            </tr>
+            {% endfor %}
         </tbody>
       </table>
+
       <div class=''>
-        <div class=''>Total Score: {{ letter.total_score }}</div>
+        <div class=''>Total Score: <span>{{ letter.total_score }}</span></div>
 
       </div>
     </div>
     <div class='w-full font-bold'>
-      <div class=''>General comments and suggestions: {{ letter.comments }}</div>
-      <div class='flex justify-between'>
+      <div class=''>General comments and suggestions: <span>{{ letter.comments }}</span></div>
+      <div class='row'>
         <div class=''>Name of Assessor: <span class='underline'>{{ letter.assessor }}</span></div>
         <div class=''>Signature: <span class='underline'></span></div>
         <div class=''>Date: <span class='underline'>{{ letter.updated_at.date }}</span></div>
       </div>
-      <div class='text-center'>Location: <span class=''>{{ letter.location.name }}</span></div>
+      <div class='text-center'>Location: <span class=''><a href='{{ letter.location.google_maps_url }}'>{{ letter.location.name }}</a></span></div>
+      <div>Generated using <a href='{% url "index" %}'>KISE Teaching Practice Assessment Tool</a></div>
     </div>
 
-		<script type="text/javascript" src="{% static 'admin/js/vendor/jquery/jquery.js' %}"></script>
 	</div>
 </div>
-{% endblock main %}
+</body>
+</html>

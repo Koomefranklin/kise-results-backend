@@ -1,8 +1,9 @@
 from django import forms
 from dal import autocomplete
+from platformdirs import user_cache_path
 from dev import views
 from dev.models import User
-from .models import Location, Student, Section, StudentAspect, StudentLetter, StudentSection, Aspect
+from .models import Location, Student, Section, StudentAspect, StudentLetter, StudentSection, Aspect, SubSection
 
 class NewSection(forms.ModelForm):
   class Meta:
@@ -24,13 +25,37 @@ class UpdateSection(forms.ModelForm):
     for fieldname, field in self.fields.items():
       self.fields[fieldname].widget.attrs['class'] = 'rounded border-2 w-5/6 grid'
 
+class NewSubSection(forms.ModelForm):
+  class Meta:
+    model = SubSection
+    fields = ['section', 'name', 'contribution']
+
+  def __init__(self, *args, **kwargs):
+    super(NewSubSection, self).__init__(*args, **kwargs)
+    for fieldname, field in self.fields.items():
+      self.fields[fieldname].widget.attrs['class'] = 'rounded border-2 w-5/6 grid'
+
+class UpdateSubSection(forms.ModelForm):
+  class Meta:
+    model = SubSection
+    fields = '__all__'
+
+  def __init__(self, *args, **kwargs):
+    super(UpdateSubSection, self).__init__(*args, **kwargs)
+    for fieldname, field in self.fields.items():
+      self.fields[fieldname].widget.attrs['class'] = 'rounded border-2 w-5/6 grid'
+
+
 class NewAspect(forms.ModelForm):
   class Meta:
     model = Aspect
-    fields = ['section', 'name', 'contribution']
+    fields = ['section', 'name', 'contribution', 'created_by']
   
   def __init__(self, *args, **kwargs):
+    user = kwargs.pop('user', None)
     super(NewAspect, self).__init__(*args, **kwargs)
+    self.fields['created_by'].initial = user
+    self.fields['created_by'].queryset = User.objects.filter(pk=user.pk)
     for fieldname, field in self.fields.items():
       self.fields[fieldname].widget.attrs['class'] = 'rounded border-2 w-5/6 grid'
 
@@ -52,6 +77,7 @@ class NewStudentForm(forms.ModelForm):
   def __init__(self, *args, **kwargs):
     super(NewStudentForm, self).__init__(*args, **kwargs)
     self.fields['user'].label = 'Student'
+    self.fields['user'].queryset = User.objects.filter(role='student')
     for fieldname, field in self.fields.items():
       self.fields[fieldname].widget.attrs['class'] = 'rounded border-2 w-5/6 grid'
 
@@ -153,3 +179,10 @@ StudentAspectFormSet = forms.modelformset_factory(
   UpdateStudentAspect,
   extra=0
 )
+
+class SearchForm(forms.Form):
+	search_query = forms.CharField(label='Search', widget=forms.TextInput(attrs={'placeholder': 'Input Search Query'}))
+	
+	def __init__(self, *args, **kwargs):
+		super(SearchForm, self).__init__(*args, **kwargs)
+		self.fields['search_query'].widget.attrs['class'] = 'w-full h-fit p-2'

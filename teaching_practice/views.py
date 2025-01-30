@@ -2,15 +2,18 @@ from django.shortcuts import get_object_or_404, render, redirect
 from dal import autocomplete
 from django.views.generic.base import View
 from django.urls import reverse_lazy
+from dev.forms import CustomUserCreationForm
 from dev.models import User
-from .forms import NewAspect, NewLocationForm, NewSection, NewStudentAspect, NewStudentForm, NewStudentLetter, NewStudentSection, StudentForm, UpdateAspect, UpdateSection, UpdateStudentAspect, UpdateStudentLetter, UpdateStudentSection, StudentAspectFormSet
-from .models import Student, Section, StudentAspect, StudentLetter, StudentSection, Aspect, Location
-from django.views.generic import ListView, CreateView, FormView, UpdateView
+from .forms import NewAspect, NewLocationForm, NewSection, NewStudentAspect, NewStudentForm, NewStudentLetter, NewStudentSection, NewSubSection, SearchForm, StudentForm, UpdateAspect, UpdateSection, UpdateStudentAspect, UpdateStudentLetter, UpdateStudentSection, StudentAspectFormSet, UpdateSubSection
+from .models import Student, Section, StudentAspect, StudentLetter, StudentSection, Aspect, Location, SubSection
+from django.views.generic import ListView, CreateView, FormView, UpdateView, DeleteView, DetailView
 from django.db.models import Q, Avg, F, ExpressionWrapper, FloatField, Value
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.contrib import messages
 from django.contrib.gis.geos import Point
 from django.http import HttpResponse, HttpResponseRedirect
+from django_weasyprint import WeasyTemplateResponseMixin
+
 
 # Create your views here.
 
@@ -76,12 +79,66 @@ class SectionViewlist(LoginRequiredMixin, ListView):
 	template_name = 'teaching_practice/sections.html'
 	context_object_name = 'sections'
 	paginate_by = 20
+
+	def get_queryset(self):
+		qs = Section.objects.all()
+		search_query = self.request.GET.get('search_query')
+		if search_query:
+			qs = qs.filter(Q(name__icontains=search_query) | Q(score__icontains=search_query))
+		return qs.order_by('number')
 	
 	def get_context_data(self, **kwargs):
 		user = self.request.user
 		context = super().get_context_data(**kwargs)
 		context['is_nav_enabled'] = True
 		context['title'] = 'Sections'
+		context['search_query'] = SearchForm(self.request.GET)
+		return context
+	
+class NewSubSectionView(LoginRequiredMixin, CreateView):
+	model = SubSection
+	form_class = NewSubSection
+	template_name = 'teaching_practice/base_form.html'
+	success_url = reverse_lazy('sub_sections')
+	
+	def get_context_data(self, **kwargs):
+		user = self.request.user
+		context = super().get_context_data(**kwargs)
+		context['is_nav_enabled'] = True
+		context['title'] = 'New Sub-Section'
+		return context
+
+class EditSubSectionView(LoginRequiredMixin, UpdateView):
+	model = SubSection
+	form_class = UpdateSubSection
+	template_name = 'teaching_practice/base_form.html'
+	success_url = reverse_lazy('sub_sections')
+
+	def get_context_data(self, **kwargs):
+		user = self.request.user
+		context = super().get_context_data(**kwargs)
+		context['is_nav_enabled'] = True
+		return context
+	
+class SubSectionViewlist(LoginRequiredMixin, ListView):
+	model = SubSection
+	template_name = 'teaching_practice/sub_sections.html'
+	context_object_name = 'sub_sections'
+	paginate_by = 20
+
+	def get_queryset(self):
+		qs = SubSection.objects.all()
+		search_query = self.request.GET.get('search_query')
+		if search_query:
+			qs = qs.filter(Q(name__icontains=search_query) | Q(section__name__icontains=search_query))
+		return qs.order_by('section')
+	
+	def get_context_data(self, **kwargs):
+		user = self.request.user
+		context = super().get_context_data(**kwargs)
+		context['is_nav_enabled'] = True
+		context['title'] = 'Sub-Sections'
+		context['search_query'] = SearchForm(self.request.GET)
 		return context
 
 class NewAspectView(LoginRequiredMixin, CreateView):
@@ -89,6 +146,11 @@ class NewAspectView(LoginRequiredMixin, CreateView):
 	form_class = NewAspect
 	template_name = 'teaching_practice/base_form.html'
 	success_url = reverse_lazy('aspects')
+
+	def get_form_kwargs(self):
+		kwargs = super(NewAspectView, self).get_form_kwargs()
+		kwargs['user'] = self.request.user
+		return kwargs
 
 	def get_context_data(self, **kwargs):
 		user = self.request.user
@@ -102,9 +164,8 @@ class NewAspectView(LoginRequiredMixin, CreateView):
 		if form.is_valid:
 			instance = form.save(commit=False)
 			instance.created_by = self.request.user
-			print(instance.created_by)
 			instance.save()
-			return super().post(request, *args, **kwargs)
+			return instance
 
 class EditAspectView(LoginRequiredMixin, UpdateView):
 	model = Aspect
@@ -116,22 +177,45 @@ class EditAspectView(LoginRequiredMixin, UpdateView):
 		user = self.request.user
 		context = super().get_context_data(**kwargs)
 		context['is_nav_enabled'] = True
+		context['title'] = 'Edit Aspects to consider'
 		return context
 
 class AspectViewList(LoginRequiredMixin, ListView):
 	model = Aspect
 	template_name = 'teaching_practice/aspects.html'
 	context_object_name = 'aspects'
-	paginate_by = 20
+	paginate_by = 70
 
 	def get_context_data(self, **kwargs):
 		user = self.request.user
 		context = super().get_context_data(**kwargs)
 		context['is_nav_enabled'] = True
+		context['title'] = 'Aspects to consider'
+		context['search_query'] = SearchForm(self.request.GET)
+		return context
+	
+	def get_queryset(self):
+		qs = Aspect.objects.all()
+		search_query = self.request.GET.get('search_query')
+		if search_query:
+			qs = qs.filter(Q(name__icontains=search_query) | Q(section__name__icontains=search_query))
+		return qs.order_by('section')
+	
+class NewStudentView(LoginRequiredMixin, CreateView):
+	model = User
+	form_class = CustomUserCreationForm
+	template_name = 'teaching_practice/base_form.html'
+	success_url = reverse_lazy('students_tp')
+
+	def get_context_data(self, **kwargs):
+		user = self.request.user
+		context = super().get_context_data(**kwargs)
+		context['is_nav_enabled'] = True
+		context['title'] = 'New Student'
 		return context
 
 class StudentsViewList(LoginRequiredMixin, ListView):
-	model = Student
+	model = User
 	template_name = 'teaching_practice/students.html'
 	context_object_name = 'students'
 	paginate_by = 20
@@ -140,7 +224,16 @@ class StudentsViewList(LoginRequiredMixin, ListView):
 		user = self.request.user
 		context = super().get_context_data(**kwargs)
 		context['is_nav_enabled'] = True
+		context['title'] = 'Students'
+		context['search_query'] = SearchForm(self.request.GET)
 		return context
+	
+	def get_queryset(self):
+		qs = User.objects.all()
+		search_query = self.request.GET.get('search_query')
+		if search_query:
+			qs = qs.filter(full_name__icontains=search_query)
+		return qs.order_by('full_name')
 
 class NewStudentLetterView(LoginRequiredMixin, FormView):
 	model = StudentLetter
@@ -248,7 +341,15 @@ class StudentLetterViewList(LoginRequiredMixin, ListView):
 		context = super().get_context_data(**kwargs)
 		context['is_nav_enabled'] = True
 		context['title'] = 'Student Letters'
+		context['search_query'] = SearchForm(self.request.GET)
 		return context
+	
+	def get_queryset(self):
+		qs = StudentLetter.objects.all()
+		search_query = self.request.GET.get('search_query')
+		if search_query:
+			qs = qs.filter(Q(student__user__full_name__icontains=search_query) | Q(student__index__icontains=search_query))
+		return qs.order_by('student')
 
 class NewStudentSectionView(LoginRequiredMixin, CreateView):
 	model = StudentSection
@@ -302,10 +403,18 @@ class StudentSectionsViewList(LoginRequiredMixin, ListView):
 	context_object_name = 'studentsections'
 	paginate_by = 20
 
+	def get_queryset(self):
+		qs = StudentSection.objects.all()
+		search_query = self.request.GET.get('search_query')
+		if search_query:
+			qs = qs.filter(Q(student__user__full_name__icontains=search_query) | Q(student__index__icontains=search_query) | Q(section__name__icontains=search_query))
+		return qs.order_by('student')
+
 	def get_context_data(self, **kwargs):
 		user = self.request.user
 		context = super().get_context_data(**kwargs)
 		context['is_nav_enabled'] = True
+		context['search_query'] = SearchForm(self.request.GET)
 		return context
 
 class NewStudentAspectView(LoginRequiredMixin, CreateView):
@@ -378,26 +487,51 @@ class StudentAspectsViewList(LoginRequiredMixin, ListView):
 	context_object_name = 'studentaspects'
 	paginate_by = 20
 
+	def get_queryset(self):
+		qs  = StudentAspect.objects.all()
+		search_query = self.request.GET.get('search_query')
+		if search_query:
+			qs = qs.filter(Q(student__user__full_name__icontains=search_query) | Q(student__index__icontains=search_query) | Q(aspect__name__icontains=search_query) | Q(aspect__section__name__icontains=search_query))
+		return qs.order_by('student')
+
 	def get_context_data(self, **kwargs):
 		user = self.request.user
 		context = super().get_context_data(**kwargs)
 		context['is_nav_enabled'] = True
+		context['search_query'] = SearchForm(self.request.GET)
 		return context
 
-class GeneratePDF(LoginRequiredMixin, ListView):
+class GeneratePDF(LoginRequiredMixin, WeasyTemplateResponseMixin, DetailView):
 	model = StudentLetter
 	template_name = 'teaching_practice/generate_pdf.html'
+
+	def get_object(self):
+		return get_object_or_404(StudentLetter, pk=self.kwargs.get('pk'))
 	
+	def get_pdf_filename(self):
+		student = StudentLetter.objects.get(pk=self.kwargs.get('pk')).student
+		return f'{student.user.full_name}.pdf'
+
 	def get_context_data(self, **kwargs):
-		letter_id = self.kwargs.get('pk')
-		letter = StudentLetter.objects.get(pk=letter_id)
-		sections = StudentSection.objects.filter(student_letter=letter)
-		aspects = StudentAspect.objects.filter(student_section__student_letter=letter)
 		context = super().get_context_data(**kwargs)
+		letter = self.get_object()
+		sections = StudentSection.objects.prefetch_related('student_aspects').filter(student_letter=letter)
+		aspects = StudentAspect.objects.filter(student_section__student_letter=letter)
+
 		context['is_nav_enabled'] = True
 		context["title"] = 'Generate Report'
 		context['letter'] = letter
 		context['sections'] = sections
 		context['aspects'] = aspects
 		return context
+
+	
+class DeleteObject(LoginRequiredMixin, DeleteView):
+	model = Aspect
+	success_url = reverse_lazy('aspects')
+	template_name = 'teaching_practice/aspect_confirm_delete.html'
+
+	def get_object(self, queryset = None):
+		
+		return super().get_object(queryset)
 		

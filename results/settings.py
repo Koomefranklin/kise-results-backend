@@ -55,6 +55,7 @@ INSTALLED_APPS = [
     'django_browser_reload',
     'fontawesomefree',
     'django.contrib.gis',
+    'django_weasyprint',
 ]
     
 
