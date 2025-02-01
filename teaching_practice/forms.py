@@ -73,13 +73,18 @@ class NewStudentForm(forms.ModelForm):
   class Meta:
     model = Student
     fields = ['user', 'department', 'index', 'school', 'grade', 'learning_area']
+    widgets = {
+					'user': autocomplete.ModelSelect2(url='student-autocomplete',attrs={
+        'data-placeholder': 'Search ...',
+        # 'class': 'unded border-2 w-5/6 grid',
+    })}
   
   def __init__(self, *args, **kwargs):
     super(NewStudentForm, self).__init__(*args, **kwargs)
     self.fields['user'].label = 'Student'
     self.fields['user'].queryset = User.objects.filter(role='student')
     for fieldname, field in self.fields.items():
-      self.fields[fieldname].widget.attrs['class'] = 'rounded border-2 w-5/6 grid'
+      self.fields[fieldname].widget.attrs['class'] = 'rounded border-2 w-5/6 grid dark:bg-slate-900 p-2'
 
 class StudentForm(forms.ModelForm):
   class Meta:

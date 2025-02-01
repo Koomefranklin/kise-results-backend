@@ -20,9 +20,9 @@ from django_weasyprint import WeasyTemplateResponseMixin
 class StudentAutocomplete(autocomplete.Select2QuerySetView):
 	def get_queryset(self):
 		user = self.request.user
-		qs = Student.objects.filter(user__is_active=True)
+		qs = User.objects.filter(Q(is_active=True) | Q(role='student'))
 		if self.q:
-			qs = qs.filter(Q(user__full_name__icontains=self.q) | Q(index_icontains=self.q))
+			qs = qs.filter(Q(full_name__icontains=self.q))
 		return qs
 
 class IndexPage(LoginRequiredMixin, ListView):
