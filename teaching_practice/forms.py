@@ -84,7 +84,8 @@ class NewStudentForm(forms.ModelForm):
     self.fields['user'].label = 'Student'
     self.fields['user'].queryset = User.objects.filter(role='student')
     for fieldname, field in self.fields.items():
-      self.fields[fieldname].widget.attrs['class'] = 'rounded border-2 w-5/6 grid dark:bg-slate-900 p-2'
+      self.fields[fieldname].widget.attrs['class'] = 'rounded border-2 w-5/6 grid p-2'
+    self.fields['user'].widget.attrs['class'] = 'rounded border-2 w-5/6 grid p-2 dark:text-black'
 
 class StudentForm(forms.ModelForm):
   class Meta:
