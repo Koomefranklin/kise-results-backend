@@ -22,15 +22,24 @@
    <div class='sticky top-0 z-50 w-screen h-fit'>
      <!-- Header -->
     {% block header %}
-      <header id="header" class='w-full h-fit grid grid-flow-col p-2 bg-[#ffcb05]'>
+      <header id="header" class='w-full h-fit grid grid-flow-col p-2 dark:invert'>
         <div id="branding" class='grid'>
-        {% block branding %}{% endblock %}
+        {% block branding %}
+        <a href='{% url "common" %}' title='Home Page'>
+           <div id="main_logo">
+            <img
+              src="{{ MEDIA_URL }}icons/kise_logo.png"
+              width="50"
+              height="50" />
+          </div>
+        </a>
+        {% endblock %}
         </div>
         {% block usertools %}
           
           {% if user.is_authenticated %}
             
-            <div id="user-tools" class='grid grid-flow-col justify-end gap-px text-black'>
+            <div id="user-tools" class='grid grid-flow-col justify-end gap-px text-black self-center'>
               {% block welcome-msg %}
                   {% translate 'Welcome,' %}
                   <strong class='uppercase'>{% firstof user.full_name user.get_username %}, {{ user.role }}</strong>.
@@ -54,14 +63,15 @@
     <!-- END Header -->
 
     {% block nav-breadcrumbs %}
-      <nav aria-label="{% translate 'Breadcrumbs' %}" class='w-full border-b bg-[#4caf50]'>
+      <nav aria-label="{% translate 'Breadcrumbs' %}" class='pl-3 w-full border-b bg-[#4caf50]'>
         {% block breadcrumbs %}
           <div class="w-full">
-            <a href="{% url 'index' %}">{% translate 'Home' %}</a>
+            <a href="{% url 'common' %}">{% translate 'Home' %}</a>
             {% if title %} &rsaquo; {{ title }}{% endif %}
           </div>
         {% endblock %}
       </nav>
+      <div class='bg-[#ffcb05] min-h-2 w-full'></div>
     {% endblock %}
    </div>
 

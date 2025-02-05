@@ -13,13 +13,14 @@
 			<caption class=''>Student Letters</caption>
 			<thead class="border-b bg-gray-500 text-white p-2">
 				<tr class="">
-					<th class="border-r px-2">Index Number</th>
+					
 					<th class="border-r px-2">Full Name</th>
+					<th class="border-r px-2">Index Number</th>
 					<th class="border-r px-2">School</th>
 					<th class="border-r px-2">Date</th>
 					<th class='border-r px-2'>Time</th>
 					<th class='border-r px-2'>Assessor</th>
-					<th class='border-r px-2'>Location</th>
+					<!-- <th class='border-r px-2'>Location</th> -->
 					<th class="">Actions</th>
 				</tr>
 			</thead>
@@ -29,16 +30,16 @@
 				{% for letter in page_obj %}
 
 				<tr
-					class="border-b">
-					<td class="border-r px-2">{{ letter.student.index }}</td>
+					class="border-b hover:bg-slate-500">
 					<td class="border-r px-2">
 						<a href='{% url "edit_student_letter" letter.pk %}'>{{ letter.student.user.full_name }}</a>
 					</td>
+					<td class="border-r px-2">{{ letter.student.index }}</td>
 					<td class="border-r px-2">{{ letter.student.school }}</td>
 					<td class="border-r px-2">{{ letter.created_at.date }}</td>
 					<td class="border-r px-2">{{ letter.created_at.time }}</td>
 					<td class="border-r px-2">{{ letter.assessor }}</td>
-					<td class="border-r px-2">{{ letter.location.name }}</td>
+					<!-- <td class="border-r px-2">{{ letter.location.name }}</td> -->
 					<td class="flex justify-between">
 						<a href='{% url "edit_student_letter" letter.id %}' title='View'>View</a>
 						

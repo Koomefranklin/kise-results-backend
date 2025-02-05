@@ -35,10 +35,18 @@ class IndexPage(LoginRequiredMixin, ListView):
 	
 	def get_context_data(self, **kwargs):
 		user = self.request.user
+		students = Student.objects.all()
+		letters = StudentLetter.objects.all()
+		sections = Section.objects.all()
+		aspects = Aspect.objects.all()
 
 		context = super().get_context_data(**kwargs)
 		context['is_nav_enabled'] = True
-		context['title'] = 'Home'
+		context['title'] = 'Teaching Practice Home'
+		context['letters'] = letters.count()
+		context['students'] = students.count()
+		context['sections'] = sections.count()
+		context['aspects'] = aspects.count()
 		return context
 
 class NewSectionView(LoginRequiredMixin, CreateView):
@@ -380,9 +388,10 @@ class EditStudentSectionView(LoginRequiredMixin, UpdateView):
 		student_aspects = StudentAspect.objects.filter(student_section=student_section)
 		context = super().get_context_data(**kwargs)
 		context['is_nav_enabled'] = True
-		context['title'] = 'Section Scores'
+		context['title'] = f'{section.name} Scores'
 		context['aspects'] = student_aspects
 		context['section'] = section
+		context['pk'] = student_section
 		return context
 	
 	def form_valid(self, form):
@@ -395,7 +404,16 @@ class EditStudentSectionView(LoginRequiredMixin, UpdateView):
 			score += section.score
 		student_letter.total_score = score
 		student_letter.save()
-		return super().form_valid(form)
+
+		response = super().form_valid(form)
+		if "save_continue" in self.request.POST:
+			current_number = StudentSection.objects.get(pk=student_section).section.number
+			last_number = Section.objects.all().count()
+			if current_number != last_number:
+				next_number = current_number + 1
+				next_section = StudentSection.objects.get(section__number=next_number).pk
+				return redirect(reverse_lazy('edit_student_aspects', kwargs={'pk': next_section}))
+		return response
 
 class StudentSectionsViewList(LoginRequiredMixin, ListView):
 	model = StudentSection
@@ -443,6 +461,7 @@ class EditStudentAspectView(LoginRequiredMixin, View):
 	def get(self, request, *args, **kwargs):
 		student_section_id = self.kwargs.get('pk')
 		student_section = get_object_or_404(StudentSection, pk=student_section_id)
+		student_letter = student_section.student_letter
 
 		queryset = StudentAspect.objects.filter(student_section=student_section)
 		formset = StudentAspectFormSet(queryset=queryset)
@@ -451,6 +470,7 @@ class EditStudentAspectView(LoginRequiredMixin, View):
 			'is_nav_enabled': True,
 			'title': 'Add Aspect Scores',
 			'section': student_section,
+			'letter': student_letter,
 			'formset': formset,
 		}
 

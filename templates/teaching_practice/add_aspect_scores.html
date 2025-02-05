@@ -24,11 +24,20 @@
                 {% endfor %}
             </tbody>
         </table>
-			<button
-				type="submit"
-				class="border w-fit grid rounded p-2 place-self-center shadow-lg bg-[#4caf50] font-bold">
-				Submit
-			</button>
+			<div class='w-full flex justify-between'>
+                <a href='{% url "edit_student_letter" letter.pk %}'>
+					<button 
+						type="button" 
+						class="border w-fit grid rounded p-2 place-self-center shadow-lg bg-[#4caf50] font-bold">
+						Back to Sections
+					</button>
+				</a>
+                <button
+                    type="submit"
+                    class="border-[#ff] w-fit grid rounded p-2 place-self-center shadow-lg bg-[#4caf50] font-bold">
+                    Save and Continue
+                </button>
+            </div>
 		</form>
 		<script type="text/javascript" src="{% static 'admin/js/vendor/jquery/jquery.js' %}"></script>
 		{{ form.media }}

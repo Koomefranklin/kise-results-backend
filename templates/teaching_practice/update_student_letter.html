@@ -1,6 +1,6 @@
 {% extends "teaching_practice/base_site.html" %} {% block main %}
 {% load static %}
-<script src="https://maps.googleapis.com/maps/api/js?key=YOUR_GOOGLE_MAPS_API_KEY"></script>
+<!-- <script src="https://maps.googleapis.com/maps/api/js?key=YOUR_GOOGLE_MAPS_API_KEY"></script>
  <script>
     function initMap() {
         const location = { lat: {{ location.point.y }}, lng: {{ location.point.x }} };
@@ -12,7 +12,7 @@
             position: location,
             map: map,
         });
-    }
+    } -->
 </script>
 <div class="grid w-full h-full">
 	<div class="h-full grid place-items-center w-full">
@@ -70,7 +70,7 @@
 			</button>
 		</form>
     <div class=''>
-      <h1 class='text-center font-bold text-lg'>Sections</h1>
+      <h1 class='text-center font-bold text-xl w-full border-t-2 mt-4'>Sections</h1>
       
       <div class='grid md:grid-cols-2 lg:grid-cols-3 gap-4 '>
         {% for section in sections %}

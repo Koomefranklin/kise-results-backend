@@ -24,13 +24,29 @@
         {% endif %}
           
       </div>
-			<div class='border-b-4 '></div>
+			<div class='border-b-4'></div>
 			<div class="grid gap-4 grid-cols-2">{{ form.as_div }}</div>
-			<button
-				type="submit"
-				class="border w-fit grid rounded p-2 place-self-center shadow-lg bg-[#4caf50] font-bold">
-				Submit
-			</button>
+			<div class='flex gap-3'>
+				<a href='{% url "edit_student_aspects" pk %}'>
+					<button 
+						type="button" 
+						class="border w-fit grid rounded p-2 place-self-center shadow-lg bg-[#4caf50] font-bold">
+						Back to Scores
+					</button>
+				</a>
+				<button
+					type="submit"
+					name="save_continue"
+					class="border w-fit grid rounded p-2 place-self-center shadow-lg bg-[#4caf50] font-bold">
+					Save and Continue
+				</button>
+				<button 
+					type="submit" 
+					name="save_back" 
+					class="border w-fit grid rounded p-2 place-self-center shadow-lg bg-[#4caf50] font-bold">
+					Save and Back to Sections
+				</button>
+			</div>
 		</form>
 		<script type="text/javascript" src="{% static 'admin/js/vendor/jquery/jquery.js' %}"></script>
 		{{ form.media }}

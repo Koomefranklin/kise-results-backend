@@ -1,9 +1,9 @@
 {% extends "common/base.html" %} {% block main %}
 {% load static %}
 <div class="grid w-full h-full">
-	<div class="h-full place-items-center w-full gap-2 flex justify-center">
-		<a href='{% url "dashboard" %}' class='rounded-sm p-2 text-lg bg-green-900 w-fit h-fit'>Results Management</a>
-    <a href='{% url "index" %}' class='rounded-sm p-2 text-lg bg-green-700 w-fit h-fit'>Teaching Practice Assessment</a>
+	<div class="h-full place-items-center w-full gap-2 flex justify-center font-extrabold text-2xl">
+		<a href='{% url "dashboard" %}' class='rounded-md p-2 border-2 w-fit h-fit'>Results Management</a>
+    <a href='{% url "index" %}' class='rounded-md p-2 border-2 w-fit h-fit'>Teaching Practice Assessment</a>
 	</div>
 </div>
 {% endblock main %}
