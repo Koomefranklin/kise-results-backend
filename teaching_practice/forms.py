@@ -104,6 +104,8 @@ class NewLocationForm(forms.Form):
   
   def __init__(self, *args, **kwargs):
     super(NewLocationForm, self).__init__(*args, **kwargs)
+    self.fields['latitude'].initial = '-1.2265529324437932'
+    self.fields['longitude'].initial = '36.89541538541246'
     for fieldname, field in self.fields.items():
       self.fields[fieldname].label = ''
       self.fields[fieldname].widget.attrs['class'] = 'hidden'
