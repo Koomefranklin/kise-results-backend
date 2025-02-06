@@ -12,7 +12,7 @@
 		<tbody class="w-full uppercase">
 			<tr class="py-6 border-b h-10">
 				<th scope="row" class='justify-between flex'><a href="{% url 'students_tp' %}">Students</a> 
-					{% if user.role == 'admin' %}
+					{% if user.role != 'student' %}
 						<a href='{% url "new_student_tp" %}'><i class="fa-solid fa-plus text-[#4caf50] font-extrabold"></i> Add</a>
 					{% endif %}						
 				</th>
@@ -67,7 +67,7 @@
 						class="font-bold uppercase">
 						Student Letters
 					</a>
-					{% if user.role == 'admin' %}
+					{% if user.role != 'student' %}
 						<a href='{% url "new_student_letter" %}'><i class="fa-solid fa-plus text-[#4caf50] font-extrabold"></i> Add</a>
 					{% endif %}
 				</th>
