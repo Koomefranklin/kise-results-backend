@@ -32,7 +32,7 @@
 				<tr
 					class="border-b hover:bg-slate-500">
 					<td class="border-r px-2">
-						<a href='{% url "edit_student_letter" letter.pk %}'>{{ letter.student.user.full_name }}</a>
+						<a href='{% url "edit_student_letter" letter.pk %}' class='w-full'>{{ letter.student.user.full_name }}</a>
 					</td>
 					<td class="border-r px-2">{{ letter.student.index }}</td>
 					<td class="border-r px-2">{{ letter.student.school }}</td>

@@ -171,6 +171,7 @@ class NewStudentAspect(forms.ModelForm):
       self.fields[fieldname].widget.attrs['class'] = 'rounded border-2 w-5/6 grid'
 
 class UpdateStudentAspect(forms.ModelForm):
+  contribution = forms.IntegerField(disabled=True, required=False)
   class Meta:
     model = StudentAspect
     fields = ['aspect', 'score']
@@ -178,9 +179,12 @@ class UpdateStudentAspect(forms.ModelForm):
   def __init__(self, *args, **kwargs):
     section = kwargs.pop('section', None)
     super(UpdateStudentAspect, self).__init__(*args, **kwargs)
+    contribution = self.instance.aspect.contribution
+    self.fields['contribution'].initial = contribution
     self.fields['aspect'].disabled = True
     self.fields['aspect'].widget.attrs['class'] = 'p-4 mx-4 bg-transparent'
     self.fields['score'].widget.attrs['class'] = 'rounded border-2 w-5/6 grid p-2'
+    self.fields['contribution'].widget.attrs['class'] = 'bg-transparent grid p-2'
       
 StudentAspectFormSet = forms.modelformset_factory(
   StudentAspect,

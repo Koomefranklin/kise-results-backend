@@ -384,11 +384,11 @@ class EditStudentSectionView(LoginRequiredMixin, UpdateView):
 	def get_context_data(self, **kwargs):
 		user = self.request.user
 		student_section = self.kwargs.get('pk')
-		section = StudentSection.objects.get(pk=student_section).section
+		section = StudentSection.objects.get(pk=student_section)
 		student_aspects = StudentAspect.objects.filter(student_section=student_section)
 		context = super().get_context_data(**kwargs)
 		context['is_nav_enabled'] = True
-		context['title'] = f'{section.name} Scores'
+		context['title'] = f'{section.section.name} Scores'
 		context['aspects'] = student_aspects
 		context['section'] = section
 		context['pk'] = student_section
@@ -479,26 +479,47 @@ class EditStudentAspectView(LoginRequiredMixin, View):
 	def post(self, request, *args, **kwargs):
 		student_section_id = self.kwargs.get('pk')
 		student_section = get_object_or_404(StudentSection, pk=student_section_id)
+		student_letter = student_section.student_letter
+
 
 		queryset = StudentAspect.objects.filter(student_section=student_section)
 		formset = StudentAspectFormSet(request.POST, queryset=queryset)
-
-		if formset.is_valid():
-			formset.save()
-			student_aspects = StudentAspect.objects.filter(student_section=student_section)
-			sum = 0
-			for aspect in student_aspects:
-				sum += aspect.score
-			student_section.score = sum
-			student_section.save()
-			return redirect(self.get_success_url())
 
 		context = {
 			'is_nav_enabled': True,
 			'title': 'Add Aspect Scores',
 			'section': student_section,
+			'letter': student_letter,
 			'formset': formset,
 		}
+
+		if formset.is_valid():
+			errors = []
+			for form in formset:
+				if form.cleaned_data:
+					score = form.cleaned_data.get('score')
+					aspect = form.cleaned_data.get('aspect')
+					threshold = Aspect.objects.get(pk=aspect.pk).contribution
+					
+					if score > threshold:
+						errors.append(f"{aspect.name} score {score} exceeds the maximum ({threshold})")
+					if score < 0:
+						errors.append(f"{aspect.name} score {score} cannot be negative")
+
+			if len(errors) == 0:
+				formset.save()
+				student_aspects = StudentAspect.objects.filter(student_section=student_section)
+				sum = 0
+				for aspect in student_aspects:
+					sum += aspect.score
+				student_section.score = sum
+				student_section.save()
+				return redirect(self.get_success_url())
+			
+			else:
+				context['errors']= errors
+				return render(request, self.template_name, context)
+
 		return render(request, self.template_name, context)
 
 class StudentAspectsViewList(LoginRequiredMixin, ListView):
