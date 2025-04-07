@@ -66,7 +66,6 @@ class NewSectionView(LoginRequiredMixin, CreateView):
 		if form.is_valid:
 			instance = form.save(commit=False)
 			instance.created_by = self.request.user
-			print(instance.created_by)
 			instance.save()
 		return super().post(request, *args, **kwargs)
 

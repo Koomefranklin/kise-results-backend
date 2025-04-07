@@ -56,6 +56,7 @@ INSTALLED_APPS = [
     'fontawesomefree',
     'django.contrib.gis',
     'django_weasyprint',
+    'fontawesomefree',
 ]
     
 
@@ -113,8 +114,6 @@ DATABASES = {
     }
 }
 
-
-AUTH_USER_MODEL = 'dev.user'
 
 
 # Password validation
