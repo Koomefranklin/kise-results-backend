@@ -222,7 +222,7 @@ class NewStudentView(LoginRequiredMixin, CreateView):
 		return context
 
 class StudentsViewList(LoginRequiredMixin, ListView):
-	model = User
+	model = Student
 	template_name = 'teaching_practice/students.html'
 	context_object_name = 'students'
 	paginate_by = 20
@@ -236,7 +236,7 @@ class StudentsViewList(LoginRequiredMixin, ListView):
 		return context
 	
 	def get_queryset(self):
-		qs = User.objects.all()
+		qs = Student.objects.all()
 		search_query = self.request.GET.get('search_query')
 		if search_query:
 			qs = qs.filter(full_name__icontains=search_query)
@@ -550,7 +550,7 @@ class GeneratePDF(LoginRequiredMixin, WeasyTemplateResponseMixin, DetailView):
 	
 	def get_pdf_filename(self):
 		student = StudentLetter.objects.get(pk=self.kwargs.get('pk')).student
-		return f'{student.user.full_name}.pdf'
+		return f'{student.full_name}.pdf'
 
 	def get_context_data(self, **kwargs):
 		context = super().get_context_data(**kwargs)

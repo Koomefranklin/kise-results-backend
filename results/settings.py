@@ -53,10 +53,11 @@ INSTALLED_APPS = [
     'tailwind',
     'theme',
     'django_browser_reload',
+    'crispy_forms',
+    'crispy_tailwind',
     'fontawesomefree',
     'django.contrib.gis',
     'django_weasyprint',
-    'fontawesomefree',
 ]
     
 
@@ -169,6 +170,10 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 TAILWIND_APP_NAME = 'theme'
 
 INTERNAL_IPS = env('ALLOWED_HOSTS').split(' ')
+
+CRISPY_ALLOWED_TEMPLATE_PACKS = "tailwind"
+
+CRISPY_TEMPLATE_PACK = "tailwind"
 
 
 LOGIN_URL = 'login'

@@ -1,5 +1,6 @@
 {% extends "teaching_practice/base_site.html" %} {% block main %}
 {% load static %}
+{% load tailwind_filters %}
 <!-- <script src="https://maps.googleapis.com/maps/api/js?key=YOUR_GOOGLE_MAPS_API_KEY"></script>
  <script>
     function initMap() {
@@ -26,37 +27,37 @@
         {% if student %}
           <div class=''>
             <label for='name'>Name:</label>
-            <input type='text' class='p-2 bg-transparent border rounded w-5/6 grid' id='name' disabled value='{{ student.user.full_name }}'>
+            <input type='text' class='p-2 bg-transparent border rounded w-full grid' id='name' disabled value='{{ student.full_name }}'>
           </div>
           <div class=''>
             <label for='index'>Index Number:</label>
-            <input type='text' class='p-2 bg-transparent border rounded w-5/6 grid' id='index' disabled value='{{ student.index }}'>
+            <input type='text' class='p-2 bg-transparent border rounded w-full grid' id='index' disabled value='{{ student.index }}'>
           </div>
           <div class=''>
             <label for='department'>Department:</label>
-            <input type='text' class='p-2 bg-transparent border rounded w-5/6 grid' id='department' disabled value='{{ student.department }}'>
+            <input type='text' class='p-2 bg-transparent border rounded w-full grid' id='department' disabled value='{{ student.department }}'>
           </div>
           <div class=''>
             <label for='school'>School:</label>
-            <input type='text' class='p-2 bg-transparent border rounded w-5/6 grid' id='school' disabled value='{{ student.school }}'>
+            <input type='text' class='p-2 bg-transparent border rounded w-full grid' id='school' disabled value='{{ student.school }}'>
           </div>
           <div class=''>
             <label for='grade'>PP/Grade:</label>
-            <input type='text' class='p-2 bg-transparent border rounded w-5/6 grid' id='grade' disabled value='{{ student.grade }}'>
+            <input type='text' class='p-2 bg-transparent border rounded w-full grid' id='grade' disabled value='{{ student.grade }}'>
           </div>
           <div class=''>
             <label for='learning_area'>Learning Area:</label>
-            <input type='text' class='p-2 bg-transparent border rounded w-5/6 grid' id='learning_area' disabled value='{{ student.learning_area }}'>
+            <input type='text' class='p-2 bg-transparent border rounded w-full grid' id='learning_area' disabled value='{{ student.learning_area }}'>
           </div>
         {% endif %}
           
-        {{ form.as_div }}
+        {{ form|crispy }}
         
         {% if location %}
           <div class=''>
             <div class=''>
               <label for='location'>Location</label>
-              <div class='p-2 bg-transparent border rounded w-5/6 grid'>{{ location.name }}</div>
+              <div class='p-2 bg-transparent border rounded w-full grid'>{{ location.name }}</div>
               <a href='{{ location.google_maps_url }}' target='_blank'  id='location' >View in Google Maps</a>
             </div>
           </div>
@@ -74,7 +75,7 @@
       
       <div class='grid md:grid-cols-2 lg:grid-cols-3 gap-4 '>
         {% for section in sections %}
-            <div class='rounded border place-items-center'>
+            <div class='rounded p-2 place-items-center shadow-2xl'>
               <div class='text-center underline'>{{ section.section.name }}</div>
               <div class='p-2'>
                 <div class=''>Score: {{ section.score }} of {{ section.section.contribution }}</div>

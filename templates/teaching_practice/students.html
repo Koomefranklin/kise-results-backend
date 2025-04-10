@@ -1,15 +1,14 @@
 {% extends 'teaching_practice/base_site.html' %} 
 {% block main %}
 <div class="grid w-full h-full place-self-start gap-1">
-	<div class="grid w-full gap-2">
-		
+	<div class="flex flex-col w-full gap-2">
+		<form method="GET" action="{% url 'students_tp' %}" class='w-5/6 place-self-center'>  
+			<div class='flex '>
+				{{ search_query.search_query }}
+				<button type="submit" class='rounded-md border p-2'>Search</button>
+			</div>
+		</form>
 		<table class="w-5/6 place-self-center border">
-			<form method="GET" action="{% url 'students_tp' %}" class='w-full'>  
-				<div class='flex w-5/6 h-fit place-self-center'>
-					{{ search_query.search_query }}
-					<button type="submit" class='rounded-md border p-2'>Search</button>
-				</div>
-			</form>
 			<caption class=''>Students</caption>
 			<thead class="border-b bg-gray-500 text-white p-2">
 				<tr class="">
@@ -25,7 +24,7 @@
 				<tr
 					class="border-b">
 					<td class="border-r px-2">
-						<a href='{% url "students_tp"  %}'>{{ student.full_name }}</a>
+						<a href='{% url "students_tp"  %}'>{{ student.user.full_name }}</a>
 					</td>
 					<td class="flex justify-between">
 						
@@ -69,7 +68,7 @@
 				<td
 					colspan="2"
 					class="text-center">
-					No Student Letters Found
+					No Students Found
 				</td>
 			</tr>
 			{% endif %}

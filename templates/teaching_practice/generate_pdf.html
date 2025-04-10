@@ -63,7 +63,7 @@
     </div>
     <div class='font-bold'>
      <div class='row'>
-       <div class=''>Student's Name: <span class=''>{{ letter.student.user.full_name }}</span></div>
+       <div class=''>Student's Name: <span class=''>{{ letter.student.full_name }}</span></div>
         <div class=''>Department: <span class=''>{{ letter.student.department }}</span></div>
         <div class=''>Student's Index No. <span class=''>{{ letter.student.index }}</span></div>
      </div>
@@ -97,7 +97,7 @@
                     {% endfor %}
                 </ul>
               </td>
-              <td style="border: 1px solid black;">{{ section.score }}</td>
+              <td style="border: 1px solid black;">{{ section.section.contribution }}</td>
               <td style="border: 1px solid black;">{{ section.comments }}</td>
             </tr>
             {% empty %}

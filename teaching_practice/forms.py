@@ -72,7 +72,7 @@ class UpdateAspect(forms.ModelForm):
 class NewStudentForm(forms.ModelForm):
   class Meta:
     model = Student
-    fields = ['user', 'department', 'index', 'school', 'grade', 'learning_area']
+    fields = ['full_name', 'sex', 'department', 'index', 'school', 'grade', 'learning_area']
     widgets = {
 					'user': autocomplete.ModelSelect2(url='student-autocomplete',attrs={
         'data-placeholder': 'Search ...',
@@ -81,20 +81,17 @@ class NewStudentForm(forms.ModelForm):
   
   def __init__(self, *args, **kwargs):
     super(NewStudentForm, self).__init__(*args, **kwargs)
-    self.fields['user'].label = 'Student'
-    self.fields['user'].queryset = User.objects.filter(role='student')
     for fieldname, field in self.fields.items():
       self.fields[fieldname].widget.attrs['class'] = 'rounded border-2 w-5/6 grid p-2'
-    self.fields['user'].widget.attrs['class'] = 'rounded border-2 w-5/6 grid p-2 dark:text-black'
+    self.fields['full_name'].widget.attrs['class'] = 'rounded border-2 w-5/6 grid p-2 dark:text-black'
 
 class StudentForm(forms.ModelForm):
   class Meta:
     model = Student
-    fields = ['user', 'department', 'index', 'school', 'grade', 'learning_area']
+    fields = ['full_name', 'sex', 'department', 'index', 'school', 'grade', 'learning_area']
 
   def __init__(self, *args, **kwargs):
     super(StudentForm, self).__init__(*args, **kwargs)
-    self.fields['user'].label = 'Student'
     for fieldname, field in self.fields.items():
       self.fields[fieldname].disabled = True
       self.fields[fieldname].widget.attrs['class'] = 'rounded border-2 w-5/6 grid'
@@ -131,6 +128,7 @@ class UpdateStudentLetter(forms.ModelForm):
     super(UpdateStudentLetter, self).__init__(*args, **kwargs)
     self.fields['comments'].widget = forms.Textarea()
     self.fields['comments'].label = 'General Comments and Suggestions:'
+    self.fields['comments'].required = True
     for fieldname, field in self.fields.items():
       if fieldname != 'comments':
         self.fields[fieldname].disabled = True

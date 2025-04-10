@@ -5,6 +5,7 @@ from django.contrib.gis.db import models as gis_models
 from django.contrib.gis.geos import Point
 from geopy.geocoders import Nominatim
 from geopy.exc import GeopyError
+from django.utils.translation import gettext_lazy as _
 
 # Create your models here.
 
@@ -56,8 +57,13 @@ class Aspect(models.Model):
     order_with_respect_to = 'section'
 
 class Student(models.Model):
+  class Sex(models.TextChoices):
+    MALE = 'M', _('Male')
+    FEMALE = 'F', _('Female')
+
   id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
-  user = models.ForeignKey(User, on_delete=models.CASCADE)
+  full_name = models.CharField(max_length=200)
+  sex = models.CharField(max_length=2, choices=Sex.choices)
   department = models.CharField(max_length=50)
   index = models.IntegerField()
   school = models.CharField(max_length=200)
@@ -67,7 +73,7 @@ class Student(models.Model):
   updated_at = models.DateTimeField(auto_now=True)
 
   def __str__(self):
-    return self.user.full_name
+    return self.full_name
 
 class Location(gis_models.Model):
   name = models.CharField(max_length=255, blank=True)
@@ -137,7 +143,7 @@ class StudentLetter(models.Model):
     super().save(*args, **kwargs)
 
   def __str__(self):
-    return self.student.user.full_name
+    return self.student.full_name
 
 class StudentSection(models.Model):
   id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
