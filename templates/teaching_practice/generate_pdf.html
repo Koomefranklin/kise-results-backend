@@ -70,9 +70,9 @@
       <div class='row'>
         <div class=''>School: <span class='underline'>{{ letter.student.school }}</span></div>
         <div class=''>PP/Grade: <span class='underline'>{{ letter.student.grade }}</span></div>
-        <div class=''>Learning Area and / Subject: <span class='underline'>{{ letter.student.learning_area }}</span></div>
+        <div class=''>Sub Strand: <span class='underline'>{{ letter.student.sub_strand }}</span></div>
+        <div class=''>Skill: <span class='underline'>{{ letter.student.skill }}</span></div>
         <div class=''>Date: <span class='underline'>{{ letter.created_at.date }}</span></div>
-        <div class=''>Time: <span class='underline'>{{ letter.created_at.time }}</span></div>
       </div>
     </div>
     <div class='w-full'>
@@ -108,13 +108,13 @@
         </tbody>
       </table>
 
-      <div class=''>
-        <div class=''>Total Score: <span>{{ letter.total_score }}</span></div>
-
+      <div class='row upper'>
+        <div class=''>Total Score: <span></span></div>
+        <div class=''>Letter Score: <span></span></div>
       </div>
     </div>
     <div class='w-full font-bold'>
-      <div class=''>General comments and suggestions: <span>{{ letter.comments }}</span></div>
+      <div class=''><label>General comments and suggestions:</label> <textarea>{{ letter.comments }}</textarea></div>
       <div class='row'>
         <div class=''>Name of Assessor: <span class='underline'>{{ letter.assessor }}</span></div>
         <div class=''>Signature: <span class='underline'></span></div>

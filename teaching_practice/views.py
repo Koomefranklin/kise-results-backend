@@ -327,7 +327,7 @@ class EditStudentLetterView(LoginRequiredMixin, UpdateView):
 			for field in student._meta.get_fields():
 				if isinstance(field, Field):  # Exclude relations like ManyToMany
 					value = getattr(student, field.name)
-					if value is None:
+					if value is None and field.name != 'email':
 						null_fields.append(field.name)
 
 			for section in sections:

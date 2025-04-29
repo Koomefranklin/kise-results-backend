@@ -72,7 +72,7 @@ class UpdateAspect(forms.ModelForm):
 class NewStudentForm(forms.ModelForm):
   class Meta:
     model = Student
-    fields = ['full_name', 'sex', 'department', 'index', 'school', 'grade', 'learning_area']
+    fields = ['full_name', 'sex', 'department', 'index', 'school', 'grade', 'sub_strand', 'skill', 'email']
   
   def __init__(self, *args, **kwargs):
     super(NewStudentForm, self).__init__(*args, **kwargs)
@@ -83,7 +83,7 @@ class NewStudentForm(forms.ModelForm):
 class StudentForm(forms.ModelForm):
   class Meta:
     model = Student
-    fields = ['full_name', 'sex', 'department', 'index', 'school', 'grade', 'learning_area']
+    fields = ['full_name', 'sex', 'department', 'index', 'school', 'grade', 'sub_strand', 'skill', 'email']
 
   def __init__(self, *args, **kwargs):
     super(StudentForm, self).__init__(*args, **kwargs)

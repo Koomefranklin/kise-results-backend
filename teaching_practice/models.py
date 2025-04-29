@@ -68,7 +68,9 @@ class Student(models.Model):
   index = models.IntegerField(blank=True, null=True)
   school = models.CharField(max_length=200, null=True, blank=True)
   grade = models.IntegerField(null=True, blank=True)
-  learning_area = models.CharField(max_length=200, null=True, blank=True)
+  sub_strand = models.CharField(max_length=200, null=True, blank=True)
+  skill = models.CharField(max_length=200, null=True, blank=True)
+  email = models.EmailField(max_length=200, null=True, blank=True)
   created_at = models.DateTimeField(auto_now_add=True)
   updated_at = models.DateTimeField(auto_now=True)
 
