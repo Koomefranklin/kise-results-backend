@@ -1,5 +1,7 @@
+from email import errors, message
 from django.shortcuts import get_object_or_404, render, redirect
 from dal import autocomplete
+from django.template import context
 from django.views.generic.base import View
 from django.urls import reverse_lazy
 from dev.forms import CustomUserCreationForm
@@ -241,6 +243,8 @@ class StudentsViewList(LoginRequiredMixin, ListView):
 		if search_query:
 			qs = qs.filter(full_name__icontains=search_query)
 		return qs.order_by('full_name')
+	
+
 
 class NewStudentLetterView(LoginRequiredMixin, FormView):
 	model = StudentLetter
@@ -320,7 +324,29 @@ class EditStudentLetterView(LoginRequiredMixin, UpdateView):
 	def get_success_url(self):
 		student_letter_id = self.kwargs.get('pk')
 		return reverse_lazy('pdf_report', kwargs={'pk': student_letter_id})
-
+	
+	def get_form_kwargs(self):
+		kwargs = super(EditStudentLetterView, self).get_form_kwargs()
+		kwargs['user'] = self.request.user
+		return kwargs
+	
+	def form_valid(self, form):
+		if form.is_valid():
+			form.instance.assessor = self.request.user
+			response = super().form_valid(form)
+			student_letter = self.get_object()
+			sections = StudentSection.objects.filter(student_letter=student_letter)
+			uncommented_sections = []
+			for section in sections:
+				if not section.comments:
+					uncommented_sections.append(section.section)
+			if len(uncommented_sections) > 0:
+				messages.error(self.request, f'Please fiil in the grades and comments for these sections:')
+				for uncommented_section in uncommented_sections:
+					messages.error(self.request, f'<a href="{reverse_lazy('edit_student_aspects', kwargs={'pk': uncommented_section.pk})}">{uncommented_section.name}</a>')
+				return redirect(reverse_lazy('edit_student_letter', kwargs={'pk': student_letter.pk}))
+			return response
+		
 	def get_context_data(self, **kwargs):
 		user = self.request.user
 		student_letter_id = self.kwargs.get('pk')
@@ -334,7 +360,7 @@ class EditStudentLetterView(LoginRequiredMixin, UpdateView):
 		context['location'] = student_letter_instance.location
 		context['student'] = student_letter_instance.student
 		context['title']= f'Update {student_letter_instance}\'s Letter'
-		context['sections'] =student_sections
+		context['sections'] = student_sections
 		return context
 	
 class StudentLetterViewList(LoginRequiredMixin, ListView):
@@ -402,6 +428,7 @@ class EditStudentSectionView(LoginRequiredMixin, UpdateView):
 		for section in student_sections:
 			score += section.score
 		student_letter.total_score = score
+		student_letter.assessor = self.request.user
 		student_letter.save()
 
 		response = super().form_valid(form)

@@ -64,11 +64,11 @@ class Student(models.Model):
   id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
   full_name = models.CharField(max_length=200)
   sex = models.CharField(max_length=2, choices=Sex.choices)
-  department = models.CharField(max_length=50)
-  index = models.IntegerField()
-  school = models.CharField(max_length=200)
-  grade = models.IntegerField()
-  learning_area = models.CharField(max_length=200)
+  department = models.CharField(max_length=50, null=True, blank=True)
+  index = models.IntegerField(blank=True, null=True)
+  school = models.CharField(max_length=200, null=True, blank=True)
+  grade = models.IntegerField(null=True, blank=True)
+  learning_area = models.CharField(max_length=200, null=True, blank=True)
   created_at = models.DateTimeField(auto_now_add=True)
   updated_at = models.DateTimeField(auto_now=True)
 
@@ -155,7 +155,7 @@ class StudentSection(models.Model):
   updated_at = models.DateTimeField(auto_now=True)
 
   def __str__(self):
-    return f'{self.student_letter.student.user.full_name} {self.section.name}'
+    return f'{self.student_letter.student.full_name} {self.section.name}'
 
 class StudentAspect(models.Model):
   id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
@@ -166,4 +166,4 @@ class StudentAspect(models.Model):
   updated_at = models.DateTimeField(auto_now=True)
 
   def __str__(self):
-    return f'{self.student_section.student_letter.student.user.full_name} {self.aspect.name}'
+    return f'{self.student_section.student_letter.student.full_name} {self.aspect.name}'

@@ -125,6 +125,7 @@ class UpdateStudentLetter(forms.ModelForm):
     fields = ['assessor', 'total_score', 'comments']
   
   def __init__(self, *args, **kwargs):
+    user = kwargs.pop('user', None)
     super(UpdateStudentLetter, self).__init__(*args, **kwargs)
     self.fields['comments'].widget = forms.Textarea()
     self.fields['comments'].label = 'General Comments and Suggestions:'

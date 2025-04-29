@@ -24,10 +24,10 @@
 				<tr
 					class="border-b">
 					<td class="border-r px-2">
-						<a href='{% url "students_tp"  %}'>{{ student.user.full_name }}</a>
+						<a href='{% url "students_tp"  %}'>{{ student.full_name }}</a>
 					</td>
 					<td class="flex justify-between">
-						
+						<a href='{% url "student_letter" student.pk %}' class='text-[#4caf50] font-bold'>Assess</a>
 					</td>
 				</tr>
 				{% endfor %}

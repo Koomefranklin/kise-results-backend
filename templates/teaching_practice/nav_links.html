@@ -52,6 +52,19 @@
 			<tr class="py-6 border-b h-10">
 				<th
 					scope="row"
+					id="students"
+					class="flex justify-between">
+					<a
+						href='{% url "students_tp" %}'
+						class="font-bold uppercase">
+						Students
+					</a>
+					<a href='{% url "new_student_letter" %}'><i class="fa-solid fa-plus text-[#4caf50] font-extrabold"></i> Add</a>
+				</th>
+			</tr>	
+			<tr class="py-6 border-b h-10">
+				<th
+					scope="row"
 					id="student_letters"
 					class="flex justify-between">
 					<a
@@ -59,9 +72,7 @@
 						class="font-bold uppercase">
 						Student Letters
 					</a>
-					{% if user.role != 'student' %}
-						<a href='{% url "new_student_letter" %}'><i class="fa-solid fa-plus text-[#4caf50] font-extrabold"></i> Add</a>
-					{% endif %}
+					<a href='{% url "new_student_letter" %}'><i class="fa-solid fa-plus text-[#4caf50] font-extrabold"></i> Add</a>
 				</th>
 			</tr>	
 				

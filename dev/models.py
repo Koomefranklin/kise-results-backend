@@ -20,7 +20,7 @@ class User(AbstractUser):
   full_name = models.CharField(max_length=200)
   first_name = None
   last_name = None
-  sex = models.CharField(max_length=2, choices=Sex.choices)
+  sex = models.CharField(max_length=2, choices=Sex.choices, null=True, blank=True)
   role = models.CharField(choices=Role.choices, max_length=10, default=Role.STUDENT)
 
   REQUIRED_FIELDS = ['full_name', 'sex', 'role']
