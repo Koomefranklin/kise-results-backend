@@ -788,6 +788,10 @@ video {
   flex-direction: row;
 }
 
+.flex-col {
+  flex-direction: column;
+}
+
 .place-content-center {
   place-content: center;
 }
