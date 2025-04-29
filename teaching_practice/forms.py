@@ -73,11 +73,6 @@ class NewStudentForm(forms.ModelForm):
   class Meta:
     model = Student
     fields = ['full_name', 'sex', 'department', 'index', 'school', 'grade', 'learning_area']
-    widgets = {
-					'user': autocomplete.ModelSelect2(url='student-autocomplete',attrs={
-        'data-placeholder': 'Search ...',
-        # 'class': 'unded border-2 w-5/6 grid',
-    })}
   
   def __init__(self, *args, **kwargs):
     super(NewStudentForm, self).__init__(*args, **kwargs)
@@ -93,7 +88,7 @@ class StudentForm(forms.ModelForm):
   def __init__(self, *args, **kwargs):
     super(StudentForm, self).__init__(*args, **kwargs)
     for fieldname, field in self.fields.items():
-      self.fields[fieldname].disabled = True
+      # self.fields[fieldname].disabled = True
       self.fields[fieldname].widget.attrs['class'] = 'rounded border-2 w-5/6 grid'
 
 class NewLocationForm(forms.Form):

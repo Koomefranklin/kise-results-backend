@@ -4,10 +4,11 @@
 {% block title %}{% if subtitle %}{{ subtitle }} | {% endif %}{{ title }} | {{site_title|default:_('TP') }}{% endblock %}
   
 {% block branding %}
-<div class="p-0 me-5 text-xl font-bold text-black flex flex-row">
+<div class="p-0 me-5 text-xl font-bold flex flex-row">
   <div id="main_logo">
     <img
 			src="{{ MEDIA_URL }}icons/kise_logo.png"
+      class='dark:invert'
 			width="50"
 			height="50" />
   </div>

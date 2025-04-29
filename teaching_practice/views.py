@@ -1,4 +1,5 @@
 from email import errors, message
+from turtle import st
 from django.shortcuts import get_object_or_404, render, redirect
 from dal import autocomplete
 from django.template import context
@@ -211,8 +212,8 @@ class AspectViewList(LoginRequiredMixin, ListView):
 		return qs.order_by('section')
 	
 class NewStudentView(LoginRequiredMixin, CreateView):
-	model = User
-	form_class = CustomUserCreationForm
+	model = Student
+	form_class = NewStudentForm
 	template_name = 'teaching_practice/base_form.html'
 	success_url = reverse_lazy('students_tp')
 
@@ -222,12 +223,27 @@ class NewStudentView(LoginRequiredMixin, CreateView):
 		context['is_nav_enabled'] = True
 		context['title'] = 'New Student'
 		return context
+	
+class EditStudentView(LoginRequiredMixin, UpdateView):
+	model = Student
+	form_class = StudentForm
+	template_name = 'teaching_practice/base_form.html'
+	success_url = reverse_lazy('students_tp')
+
+	def get_context_data(self, **kwargs):
+		user = self.request.user
+		context = super().get_context_data(**kwargs)
+		context['is_nav_enabled'] = True
+		context['title'] = 'Edit Student'
+		return context
+	
 
 class StudentsViewList(LoginRequiredMixin, ListView):
 	model = Student
 	template_name = 'teaching_practice/students.html'
 	context_object_name = 'students'
 	paginate_by = 20
+	
 
 	def get_context_data(self, **kwargs):
 		user = self.request.user
@@ -235,6 +251,7 @@ class StudentsViewList(LoginRequiredMixin, ListView):
 		context['is_nav_enabled'] = True
 		context['title'] = 'Students'
 		context['search_query'] = SearchForm(self.request.GET)
+		context['location_form'] = NewLocationForm(self.request.POST)
 		return context
 	
 	def get_queryset(self):
@@ -246,52 +263,29 @@ class StudentsViewList(LoginRequiredMixin, ListView):
 	
 
 
-class NewStudentLetterView(LoginRequiredMixin, FormView):
-	model = StudentLetter
-	form_class = NewStudentForm
-	template_name = 'teaching_practice/new_student_letter.html'
-	success_url = reverse_lazy('student_letters')
-	
-	def get_context_data(self, **kwargs):
-		user = self.request.user
-		context = super().get_context_data(**kwargs)
-		context['is_nav_enabled'] = True
-		if 'student_letter_form' not in context:
-			context['student_letter_form'] = NewStudentLetter()
-		if 'location_form' not in context:
-			context['location_form'] = NewLocationForm()
-		context['title'] = 'New Student Letter'
-		return context
-	
+class NewStudentLetterView(LoginRequiredMixin, View):
 	def post(self, request, *args, **kwargs):
-		student_form = self.get_form(self.get_form_class())
-		student_letter_form = NewStudentLetter(self.request.POST)
-		location_form = NewLocationForm(self.request.POST)
+		longitude = self.kwargs.get('longitude')
+		latitude = self.kwargs.get('latitude')
+		student_id = self.kwargs.get('student_id')
 
-		if student_letter_form.is_valid() and student_form.is_valid() and location_form.is_valid():
-			location_data = location_form.cleaned_data
-			longitude = location_data['longitude']
-			latitude = location_data['latitude']
-
-			if latitude and longitude:
-				try:
-					point = Point(float(longitude), float(latitude))
-					location_instance = Location.objects.create(point=point)
-				except ValueError:
-					location_instance = None
-			else:
+		if latitude and longitude:
+			try:
+				point = Point(float(longitude), float(latitude))
+				location_instance = Location.objects.create(point=point)
+			except ValueError:
 				location_instance = None
+		else:
+			location_instance = None
 
+		
+		student_instance = Student.objects.get(pk=student_id)
+
+		student_letter, created = StudentLetter.objects.get_or_create(student=student_instance, 
+			assessor=self.request.user, defaults={'location':location_instance})
+		if created:
 			location_instance.save()
 			messages.success(self.request, f'Location Created Successfully')
-			student_instance = student_form.save()
-
-			student_letter = student_letter_form.save(commit=False)
-			student_letter.location = location_instance			
-			student_letter.student = student_instance
-			student_letter.assessor = self.request.user
-			student_letter.save()
-
 			sections = Section.objects.all()
 
 			for section in sections:
@@ -302,19 +296,7 @@ class NewStudentLetterView(LoginRequiredMixin, FormView):
 
 			messages.success(self.request, f'Added {student_letter.student} Successfully')
 
-			return redirect(self.get_success_url())
-
-		return self.form_invalid(student_letter_form, student_form, location_form)
-	
-	def form_invalid(self, student_letter_form, student_form, location_form):
-		"""
-		Renders the forms again with errors when validation fails.
-		"""
-		context = self.get_context_data()
-		context['student_letter_form'] = student_letter_form
-		context['form'] = student_form
-		context['location_form'] = location_form
-		return self.render_to_response(context)
+		return redirect(reverse_lazy('edit_student_letter', kwargs={'pk': student_letter.pk}))
 
 class EditStudentLetterView(LoginRequiredMixin, UpdateView):
 	model = StudentLetter

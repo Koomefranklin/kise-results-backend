@@ -22,7 +22,7 @@
    <div class='sticky top-0 z-50 w-screen h-fit'>
      <!-- Header -->
     {% block header %}
-      <header id="header" class='w-full h-fit grid grid-flow-col p-2 dark:invert'>
+      <header id="header" class='w-full h-fit grid grid-flow-col p-2'>
         <div id="branding" class='grid'>
         {% block branding %}
         <a href='{% url "common" %}' title='Home Page'>
@@ -39,7 +39,7 @@
           
           {% if user.is_authenticated %}
             
-            <div id="user-tools" class='grid grid-flow-col justify-end gap-px text-black self-center'>
+            <div id="user-tools" class='grid grid-flow-col justify-end gap-px self-center'>
               {% block welcome-msg %}
                   {% translate 'Welcome,' %}
                   <strong class='uppercase'>{% firstof user.full_name user.get_username %}, {{ user.role }}</strong>.

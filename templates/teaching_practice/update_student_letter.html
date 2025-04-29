@@ -73,16 +73,21 @@
         {% endif %}
           
       </div>
-			<button
+			<div class='flex flex-row justify-between'>
+        <button type='button' class='p-2 border rounded-md shadow-lg bg-[#4caf50] font-bold text-white'>
+          <a href='{% url "edit_student_tp" student.pk %}' class=''>Edit Student Details</a>
+        </button>
+        <button
 				type="submit"
-				class="border w-fit grid rounded p-2 place-self-center shadow-lg bg-[#4caf50] font-bold">
+				class="border w-fit grid rounded p-2 place-self-center shadow-lg bg-[#4caf50] font-bold text-white">
 				Save and Generate Report
 			</button>
+      </div>
 		</form>
     <div class=''>
       <h1 class='text-center font-bold text-xl w-full border-t-2 mt-4'>Sections</h1>
       
-      <div class='grid md:grid-cols-2 lg:grid-cols-3 gap-4 '>
+      <div class='grid md:grid-cols-2 lg:grid-cols-4 gap-4 '>
         {% for section in sections %}
             <div class='rounded p-2 place-items-center shadow-2xl'>
               <div class='text-center underline'>{{ section.section.name }}</div>

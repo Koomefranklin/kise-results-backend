@@ -5,36 +5,64 @@
 		<form method="GET" action="{% url 'students_tp' %}" class='w-5/6 place-self-center'>  
 			<div class='flex '>
 				{{ search_query.search_query }}
-				<button type="submit" class='rounded-md border p-2'>Search</button>
+				<button type="submit" class='rounded-md border p-2 bg-gray-300'>Search</button>
 			</div>
 		</form>
 		<table class="w-5/6 place-self-center border">
 			<caption class=''>Students</caption>
-			<thead class="border-b bg-gray-500 text-white p-2">
+			<thead class=" bg-gray-500 text-white p-2">
 				<tr class="">
-					<th class="border-r px-2">Full Name</th>
+					<th class=" px-2">Full Name</th>
+					<th class=''>sex</th>
+					<th class=''>Index Number</th>
+					<th class=''>Department</th>
+					<th class=''>School</th>
+					<th class=''>Grade</th>
+					<th class=''>Learning Area</th>
 					<th class="">Actions</th>
 				</tr>
 			</thead>
 
 			{% if page_obj %}
+			<form method='post' id='form'>
+				{% csrf_token %}
+			</form>
 			<tbody class="capitalize">
 				{% for student in page_obj %}
 
 				<tr
-					class="border-b">
-					<td class="border-r px-2">
+					class="bg-{% cycle 'gray-200' 'inherit' %} text-{% cycle 'black' 'inherit' %} hover:bg-[#333] hover:text-white">
+					<td class=" px-2">
 						<a href='{% url "students_tp"  %}'>{{ student.full_name }}</a>
 					</td>
-					<td class="flex justify-between">
-						<a href='{% url "student_letter" student.pk %}' class='text-[#4caf50] font-bold'>Assess</a>
+					<td class=''>
+						{{ student.sex }}
+					</td>
+					<td class=''>
+						{{ student.index }}
+					</td>
+					<td class=''>
+						{{ student.department }}
+					</td>
+					<td class=''>
+						{{ student.school }}
+					</td>
+					<td class=''>
+						{{ student.grade }}	
+					</td>
+					<td class=''>
+						{{ student.learning_area }}
+					</td>
+					<td class="flex justify-around">
+						<button type='button' class='text-[#4caf50] font-bold' onclick="sendLocation('{{ student.pk }}')">Assess</button>
+						<a href='{% url "edit_student_tp" student.pk %}' class='text-[#4caf50] font-bold'>Edit</a>
 					</td>
 				</tr>
 				{% endfor %}
 			</tbody>
 			<tfoot class="bg-gray-500 text-white font-bold">
 				<tr class="">
-					<td colspan='2' class=''>
+					<td colspan='8' class=''>
 						<p class='w-full grid grid-flow-col'>
 							<span class='text-left'>Showing {{ page_obj.object_list|length }} of {{ page_obj.paginator.count }} Students</span>
 							<span class='text-right'>
@@ -75,4 +103,29 @@
 		</table>
 	</div>
 </div>
+<script>
+	function sendLocation(student_id) {
+      if (navigator.geolocation) {
+        navigator.geolocation.getCurrentPosition(
+          (position) => {
+            // Get latitude and longitude
+            const latitude = position.coords.latitude;
+            const longitude = position.coords.longitude;
+
+						form = document.getElementById('form');
+						form.action = `/teaching_practice/student-letter/new/${student_id}/${longitude}/${latitude}/`;
+						console.log(form.action);
+						form.submit();
+          },
+          (error) => {
+            console.error('Error obtaining location:', error);
+              alert('Unable to access your location. Please enable location permissions.');
+          }
+        );
+      } else {
+        console.log('Geolocation is not supported by this browser.');
+        alert('Geolocation is not supported by your browser.');
+      }
+    };
+  </script>
 {% endblock main %}
