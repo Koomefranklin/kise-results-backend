@@ -90,9 +90,14 @@
           
         {% block messages %}
           {% if messages %}
-            <ul class="grid w-full h-fit bg-[#4caf50] text-white">
+            <ul class="grid w-full h-fit border-gray-500 border-2 text-white p-2 rounded-md">
               {% for message in messages %}
-              <li{% if message.tags %} class="{{ message.tags }}"{% endif %}>{{ message|safe }}</li>
+              <li{% if message.tags %} 
+              {}
+                class="w-full {% if message.tags == 'error' %}bg-red-500{% elif message.tags == 'success' %}bg-green-[#4caf50]{% elif message.tags == 'warning' %}bg-yellow-500{% elif message.tags == 'info' %}bg-blue-500{% else %}bg-inherit{% endif %}"
+                {% endif %}>
+                {{ message|safe }}
+              </li>
             {% endfor %}</ul>
           {% endif %}
         {% endblock messages %}

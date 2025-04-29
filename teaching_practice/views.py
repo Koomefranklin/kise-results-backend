@@ -1,5 +1,7 @@
 from email import errors, message
 from turtle import st
+from debugpy.common.timestamp import current
+from django.conf.locale import fi
 from django.shortcuts import get_object_or_404, render, redirect
 from dal import autocomplete
 from django.template import context
@@ -16,6 +18,7 @@ from django.contrib import messages
 from django.contrib.gis.geos import Point
 from django.http import HttpResponse, HttpResponseRedirect
 from django_weasyprint import WeasyTemplateResponseMixin
+from django.db.models.fields import Field
 
 
 # Create your views here.
@@ -319,13 +322,27 @@ class EditStudentLetterView(LoginRequiredMixin, UpdateView):
 			student_letter = self.get_object()
 			sections = StudentSection.objects.filter(student_letter=student_letter)
 			uncommented_sections = []
+			student = student_letter.student
+			null_fields = []
+			for field in student._meta.get_fields():
+				if isinstance(field, Field):  # Exclude relations like ManyToMany
+					value = getattr(student, field.name)
+					if value is None:
+						null_fields.append(field.name)
+
 			for section in sections:
 				if not section.comments:
 					uncommented_sections.append(section.section)
-			if len(uncommented_sections) > 0:
-				messages.error(self.request, f'Please fiil in the grades and comments for these sections:')
-				for uncommented_section in uncommented_sections:
-					messages.error(self.request, f'<a href="{reverse_lazy('edit_student_aspects', kwargs={'pk': uncommented_section.pk})}">{uncommented_section.name}</a>')
+			if len(uncommented_sections) > 0 or len(null_fields) > 0:
+				messages.info(self.request, f'Please correct the following errors first')
+				if len(null_fields) > 0:
+					messages.info(self.request, f'Please fill in the following details for the student:')
+					for field in null_fields:
+						messages.error(self.request, field)
+				if len(uncommented_sections) > 0:
+					messages.info(self.request, f'Please fiil in the grades and comments for these sections:')
+					for uncommented_section in uncommented_sections:
+						messages.error(self.request, f'<a href="{reverse_lazy('edit_student_aspects', kwargs={'pk': uncommented_section.pk})}">{uncommented_section.name}</a>')
 				return redirect(reverse_lazy('edit_student_letter', kwargs={'pk': student_letter.pk}))
 			return response
 		
@@ -415,11 +432,13 @@ class EditStudentSectionView(LoginRequiredMixin, UpdateView):
 
 		response = super().form_valid(form)
 		if "save_continue" in self.request.POST:
-			current_number = StudentSection.objects.get(pk=student_section).section.number
+			student_section = StudentSection.objects.get(pk=student_section)
+			current_number = student_section.section.number
+			student_letter = student_section.student_letter
 			last_number = Section.objects.all().count()
 			if current_number != last_number:
 				next_number = current_number + 1
-				next_section = StudentSection.objects.get(section__number=next_number).pk
+				next_section = StudentSection.objects.get(Q(section__number=next_number) & Q(student_letter=student_letter)).pk
 				return redirect(reverse_lazy('edit_student_aspects', kwargs={'pk': next_section}))
 		return response
 
@@ -510,9 +529,9 @@ class EditStudentAspectView(LoginRequiredMixin, View):
 					threshold = Aspect.objects.get(pk=aspect.pk).contribution
 					
 					if score > threshold:
-						errors.append(f"{aspect.name} score {score} exceeds the maximum ({threshold})")
+						errors.append(f"'{aspect.name}' score of '{score}' exceeds the maximum ({threshold})")
 					if score < 0:
-						errors.append(f"{aspect.name} score {score} cannot be negative")
+						errors.append(f"'{aspect.name}' score of '{score}' cannot be negative")
 
 			if len(errors) == 0:
 				formset.save()
