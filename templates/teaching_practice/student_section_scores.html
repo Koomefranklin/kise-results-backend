@@ -9,7 +9,7 @@
       <div class='gap-2'>
         
         {% if aspects %}
-          <table class='w-full'>
+          <table class='w-5/8'>
 						<caption class='font-bold text-lg uppercase text-center'>{{ section.section.name }} ({{ section.section.contribution }} Marks) Scores for {{ section.student_letter.student.user.full_name}}</caption>
 						<thead class='border-b-2'>
 							<th class=''>Aspect</th>
@@ -22,8 +22,8 @@
 									<td class=''>
 										{{ aspect.aspect.name }}
 									</td>
-									<td class='p-2 w-5/8'>{{ aspect.score }}</td>
-									<td class='p-2 w-5/8'>{{ aspect.aspect.contribution }}</td>
+									<td class='p-2 w-full'>{{ aspect.score }}</td>
+									<td class='p-2 w-full'>{{ aspect.aspect.contribution }}</td>
 								</tr>
 							{% endfor %}
 						</tbody>
