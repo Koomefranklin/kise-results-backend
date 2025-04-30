@@ -19,6 +19,7 @@
 					<th class=''>School</th>
 					<th class=''>Grade</th>
 					<th class=''>Sub Strand</th>
+					<th class=''>Skill</th>
 					<th class="">Actions</th>
 				</tr>
 			</thead>
@@ -52,6 +53,9 @@
 					</td>
 					<td class=''>
 						{{ student.sub_strand }}
+					</td>
+					<td class=''>
+						{{ student.skill }}
 					</td>
 					<td class="flex justify-around">
 						<button type='button' class='text-[#4caf50] font-bold' onclick="sendLocation('{{ student.pk }}')">Assess</button>

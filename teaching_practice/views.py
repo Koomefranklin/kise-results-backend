@@ -1,6 +1,5 @@
 from email import errors, message
 from turtle import st
-from debugpy.common.timestamp import current
 from django.conf.locale import fi
 from django.shortcuts import get_object_or_404, render, redirect
 from dal import autocomplete
@@ -245,7 +244,7 @@ class StudentsViewList(LoginRequiredMixin, ListView):
 	model = Student
 	template_name = 'teaching_practice/students.html'
 	context_object_name = 'students'
-	paginate_by = 20
+	paginate_by = 50
 	
 
 	def get_context_data(self, **kwargs):
@@ -377,7 +376,10 @@ class StudentLetterViewList(LoginRequiredMixin, ListView):
 		return context
 	
 	def get_queryset(self):
-		qs = StudentLetter.objects.all()
+		if self.request.user.is_staff:
+			qs = StudentLetter.objects.all()
+		else:
+			qs = StudentLetter.objects.filter(assessor=self.request.user)
 		search_query = self.request.GET.get('search_query')
 		if search_query:
 			qs = qs.filter(Q(student__user__full_name__icontains=search_query) | Q(student__index__icontains=search_query))
