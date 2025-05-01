@@ -90,7 +90,7 @@ class SectionViewlist(LoginRequiredMixin, ListView):
 	model = Section
 	template_name = 'teaching_practice/sections.html'
 	context_object_name = 'sections'
-	paginate_by = 20
+	paginate_by = 50
 
 	def get_queryset(self):
 		qs = Section.objects.all()
@@ -136,7 +136,7 @@ class SubSectionViewlist(LoginRequiredMixin, ListView):
 	model = SubSection
 	template_name = 'teaching_practice/sub_sections.html'
 	context_object_name = 'sub_sections'
-	paginate_by = 20
+	paginate_by = 50
 
 	def get_queryset(self):
 		qs = SubSection.objects.all()
@@ -239,7 +239,6 @@ class EditStudentView(LoginRequiredMixin, UpdateView):
 		context['title'] = 'Edit Student'
 		return context
 	
-
 class StudentsViewList(LoginRequiredMixin, ListView):
 	model = Student
 	template_name = 'teaching_practice/students.html'
@@ -262,8 +261,6 @@ class StudentsViewList(LoginRequiredMixin, ListView):
 		if search_query:
 			qs = qs.filter(full_name__icontains=search_query)
 		return qs.order_by('full_name')
-	
-
 
 class NewStudentLetterView(LoginRequiredMixin, View):
 	def post(self, request, *args, **kwargs):
@@ -280,7 +277,6 @@ class NewStudentLetterView(LoginRequiredMixin, View):
 		else:
 			location_instance = None
 
-		
 		student_instance = Student.objects.get(pk=student_id)
 
 		student_letter, created = StudentLetter.objects.get_or_create(student=student_instance, 
@@ -298,7 +294,46 @@ class NewStudentLetterView(LoginRequiredMixin, View):
 
 			messages.success(self.request, f'Added {student_letter.student} Successfully')
 
-		return redirect(reverse_lazy('edit_student_letter', kwargs={'pk': student_letter.pk}))
+		return redirect(reverse_lazy('edit_student_details', kwargs={'student_letter': student_letter.pk}))
+	
+class PreviousAssessmentsView(LoginRequiredMixin, ListView):
+	model = StudentLetter
+	template_name = 'teaching_practice/previous_assessments.html'
+	paginate_by = 5
+
+	def get_context_data(self, **kwargs):
+		user = self.request.user
+		context = super().get_context_data(**kwargs)
+		context['is_nav_enabled'] = True
+		context['title'] = 'Previous Assessments'
+		return context
+	
+	def get_queryset(self):
+		student = self.kwargs.get('student')
+		qs = StudentLetter.objects.filter(student=student)
+		search_query = self.request.GET.get('search_query')
+		if search_query:
+			qs = qs.filter(Q(student__full_name__icontains=search_query) | Q(student__index__icontains=search_query))
+		return qs.order_by('-created_at')
+	
+class PreviousAssessmentDetailView(LoginRequiredMixin, DetailView):
+	model = StudentLetter
+	template_name = 'teaching_practice/previous_assessment_detail.html'
+	context_object_name = 'student_letter'
+
+	def get_context_data(self, **kwargs):
+		user = self.request.user
+		student = StudentLetter.objects.get(pk=self.kwargs.get('pk')).student
+		context = super().get_context_data(**kwargs)
+		context['is_nav_enabled'] = True
+		context['title'] = f'Previous {student.full_name} Assessments Detail'
+		context['total'] = StudentLetter.objects.filter(student=student).aggregate(total_score=Avg('total_score'))
+		return context
+	
+	def get_queryset(self):
+		student_letter = self.get_object()
+		qs = StudentSection.objects.prefetch_related('student_aspects').filter(student_letter=student_letter)
+		return qs.order_by('-created_at')
 
 class EditStudentLetterView(LoginRequiredMixin, UpdateView):
 	model = StudentLetter
@@ -361,11 +396,55 @@ class EditStudentLetterView(LoginRequiredMixin, UpdateView):
 		context['sections'] = student_sections
 		return context
 	
+#To Edit
+class EditStudentDetailsView(LoginRequiredMixin, FormView):
+	model = StudentLetter
+	form_class = UpdateStudentLetter
+	template_name = 'teaching_practice/base_form.html'
+	
+	def get_success_url(self):
+		return reverse_lazy('edit_student_details', kwargs={'pk': self.kwargs.get('pk')})
+
+	def get_context_data(self, **kwargs):
+		user = self.request.user
+		context = super().get_context_data(**kwargs)
+		context['is_nav_enabled'] = True
+		if 'student_form' not in context:
+			context['student_form'] = StudentForm()
+		context['title'] = 'Add Student'
+		return context
+
+	def post(self, request, *args, **kwargs):
+				user_form = self.get_form(self.get_form_class())
+				student_form = StudentForm(self.request.POST)
+
+				if user_form.is_valid() and student_form.is_valid():
+						user_instance = user_form.save()
+
+						student = student_form.save(commit=False)
+						student.user = user_instance
+						student.added_by = self.request.user
+						student.save()
+						messages.success(self.request, f'Added {student.admission} Successfully')
+
+						return redirect(self.get_success_url())
+
+				return self.form_invalid(user_form, student_form)
+
+	def form_invalid(self, user_form, book_form):
+			"""
+			Renders the forms again with errors when validation fails.
+			"""
+			context = self.get_context_data()
+			context['user_form'] = user_form
+			context['student_form'] = book_form
+			return self.render_to_response(context)
+	
 class StudentLetterViewList(LoginRequiredMixin, ListView):
 	model = StudentLetter
 	template_name = 'teaching_practice/student_letters.html'
 	context_object_name = 'studentletters'
-	paginate_by = 20
+	paginate_by = 50
 
 	def get_context_data(self, **kwargs):
 		user = self.request.user
@@ -382,7 +461,7 @@ class StudentLetterViewList(LoginRequiredMixin, ListView):
 			qs = StudentLetter.objects.filter(assessor=self.request.user)
 		search_query = self.request.GET.get('search_query')
 		if search_query:
-			qs = qs.filter(Q(student__user__full_name__icontains=search_query) | Q(student__index__icontains=search_query))
+			qs = qs.filter(Q(student__full_name__icontains=search_query) | Q(student__index__icontains=search_query) | Q(student__school__icontains=search_query) | Q(student__grade__icontains=search_query) | Q(student__learning_area__icontains=search_query) | Q(student__zone__icontains=search_query) | Q(student__location__point__icontains=search_query) | Q(assessor=search_query))
 		return qs.order_by('student')
 
 class NewStudentSectionView(LoginRequiredMixin, CreateView):
@@ -448,7 +527,7 @@ class StudentSectionsViewList(LoginRequiredMixin, ListView):
 	model = StudentSection
 	template_name = 'teaching_practice/student_sections.html'
 	context_object_name = 'studentsections'
-	paginate_by = 20
+	paginate_by = 50
 
 	def get_queryset(self):
 		qs = StudentSection.objects.all()
@@ -555,7 +634,7 @@ class StudentAspectsViewList(LoginRequiredMixin, ListView):
 	model = StudentAspect
 	template_name = 'teaching_practice/student_aspects.html'
 	context_object_name = 'studentaspects'
-	paginate_by = 20
+	paginate_by = 50
 
 	def get_queryset(self):
 		qs  = StudentAspect.objects.all()

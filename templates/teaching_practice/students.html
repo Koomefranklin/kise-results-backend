@@ -13,13 +13,8 @@
 			<thead class=" bg-gray-500 text-white p-2">
 				<tr class="">
 					<th class=" px-2">Full Name</th>
-					<th class=''>sex</th>
-					<th class=''>Index Number</th>
-					<th class=''>Department</th>
-					<th class=''>School</th>
-					<th class=''>Grade</th>
-					<th class=''>Sub Strand</th>
-					<th class=''>Skill</th>
+					<th class=''>Sex</th>
+					<th class=''>Assessment Number</th>
 					<th class="">Actions</th>
 				</tr>
 			</thead>
@@ -32,7 +27,7 @@
 				{% for student in page_obj %}
 
 				<tr
-					class="bg-{% cycle 'gray-200' 'inherit' %} text-{% cycle 'black' 'inherit' %} hover:bg-[#333] hover:text-white">
+					class="{% cycle 'bg-gray-200' 'bg-inherit' %} text-{% cycle 'bg-black' 'inherit' %} hover:bg-[#333] hover:text-white">
 					<td class=" px-2">
 						<a href='{% url "students_tp"  %}'>{{ student.full_name }}</a>
 					</td>
@@ -42,24 +37,9 @@
 					<td class=''>
 						{{ student.index }}
 					</td>
-					<td class=''>
-						{{ student.department }}
-					</td>
-					<td class=''>
-						{{ student.school }}
-					</td>
-					<td class=''>
-						{{ student.grade }}	
-					</td>
-					<td class=''>
-						{{ student.sub_strand }}
-					</td>
-					<td class=''>
-						{{ student.skill }}
-					</td>
 					<td class="flex justify-around">
-						<button type='button' class='text-[#4caf50] font-bold' onclick="sendLocation('{{ student.pk }}')">Assess</button>
-						<a href='{% url "edit_student_tp" student.pk %}' class='text-[#4caf50] font-bold'>Edit</a>
+						<button type='button' class='text-[#4caf50] font-bold' onclick="sendLocation('{{ student.pk }}')">New Assessment</button>
+						<button type='button' class='text-[#4caf50] font-bold'><a href='{% url "edit_student_tp" student.pk %}' class='text-[#4caf50] font-bold'>Previous Assessments</a></button>
 					</td>
 				</tr>
 				{% endfor %}

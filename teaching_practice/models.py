@@ -9,6 +9,20 @@ from django.utils.translation import gettext_lazy as _
 
 # Create your models here.
 
+class ZonalLeader(models.Model):
+  class ZONES(models.TextChoices):
+    ZONE_1 = 'Zone 1', _('Zone 1')
+    ZONE_2 = 'Zone 2', _('Zone 2')
+    ZONE_3 = 'Zone 3', _('Zone 3')
+    ZONE_4 = 'Zone 4', _('Zone 4')
+    ZONE_5 = 'Zone 5', _('Zone 5')
+
+  id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+  zone_name = models.CharField(max_length=200, choices=ZONES.choices)
+  assessor = models.ForeignKey(User, on_delete=models.CASCADE, related_name='zonal_leader')
+  created_at = models.DateTimeField(auto_now_add=True)
+  updated_at = models.DateTimeField(auto_now=True)
+
 class Section(models.Model):
   id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
   number = models.IntegerField()
@@ -65,11 +79,7 @@ class Student(models.Model):
   full_name = models.CharField(max_length=200)
   sex = models.CharField(max_length=2, choices=Sex.choices)
   department = models.CharField(max_length=50, null=True, blank=True)
-  index = models.IntegerField(blank=True, null=True)
-  school = models.CharField(max_length=200, null=True, blank=True)
-  grade = models.IntegerField(null=True, blank=True)
-  sub_strand = models.CharField(max_length=200, null=True, blank=True)
-  skill = models.CharField(max_length=200, null=True, blank=True)
+  index = models.CharField(blank=True, null=True, max_length=50, verbose_name='Assessment Number')
   email = models.EmailField(max_length=200, null=True, blank=True)
   created_at = models.DateTimeField(auto_now_add=True)
   updated_at = models.DateTimeField(auto_now=True)
@@ -112,12 +122,25 @@ class Location(gis_models.Model):
     super().save(*args, **kwargs)
 
 class StudentLetter(models.Model):
+  class ZONES(models.TextChoices):
+    ZONE_1 = 'Zone 1', _('Zone 1')
+    ZONE_2 = 'Zone 2', _('Zone 2')
+    ZONE_3 = 'Zone 3', _('Zone 3')
+    ZONE_4 = 'Zone 4', _('Zone 4')
+    ZONE_5 = 'Zone 5', _('Zone 5')
+
   id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
   student = models.ForeignKey(Student, on_delete=models.CASCADE)
+  school = models.CharField(max_length=200, null=True, blank=True)
+  grade = models.IntegerField(null=True, blank=True, verbose_name='Grade/Level')
+  learning_area = models.CharField(max_length=200, null=True, blank=True)
   assessor = models.ForeignKey(User, on_delete=models.CASCADE, related_name='assessor')
-  total_score = models.FloatField(default=0)
-  comments = models.CharField(max_length=255, blank=True, null=True)
+  total_score = models.IntegerField(default=0)
+  comments = models.CharField(max_length=255, blank=True, null=True, verbose_name='General Comments and Suggestions:')
+  zone = models.CharField(max_length=200, null=True, blank=True, choices=ZONES.choices)
   location = models.ForeignKey(Location, on_delete=models.CASCADE)
+  late_submission = models.BooleanField(default=False)
+  reason = models.CharField(max_length=255, blank=True, null=True, verbose_name='Reason for late submission')
   created_at = models.DateTimeField(auto_now_add=True)
   updated_at = models.DateTimeField(auto_now=True)
 
@@ -151,7 +174,7 @@ class StudentSection(models.Model):
   id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
   student_letter = models.ForeignKey(StudentLetter, on_delete=models.CASCADE)
   section = models.ForeignKey(Section, on_delete=models.CASCADE)
-  score = models.FloatField(default=0)
+  score = models.IntegerField(default=0)
   comments = models.CharField(max_length=255, null=True)
   created_at = models.DateTimeField(auto_now_add=True)
   updated_at = models.DateTimeField(auto_now=True)
@@ -163,7 +186,7 @@ class StudentAspect(models.Model):
   id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
   student_section = models.ForeignKey(StudentSection, on_delete=models.CASCADE, related_name='student_aspects')
   aspect = models.ForeignKey(Aspect, on_delete=models.CASCADE)
-  score = models.FloatField(default=0)
+  score = models.IntegerField(default=0)
   created_at = models.DateTimeField(auto_now_add=True)
   updated_at = models.DateTimeField(auto_now=True)
 

@@ -72,7 +72,7 @@ class UpdateAspect(forms.ModelForm):
 class NewStudentForm(forms.ModelForm):
   class Meta:
     model = Student
-    fields = ['full_name', 'sex', 'department', 'index', 'school', 'grade', 'sub_strand', 'skill', 'email']
+    fields = ['full_name', 'sex', 'department', 'index', 'school', 'grade', 'learning_area', 'skill', 'email']
   
   def __init__(self, *args, **kwargs):
     super(NewStudentForm, self).__init__(*args, **kwargs)
@@ -83,7 +83,7 @@ class NewStudentForm(forms.ModelForm):
 class StudentForm(forms.ModelForm):
   class Meta:
     model = Student
-    fields = ['full_name', 'sex', 'department', 'index', 'school', 'grade', 'sub_strand', 'skill', 'email']
+    fields = ['full_name', 'sex', 'department', 'index', 'email']
 
   def __init__(self, *args, **kwargs):
     super(StudentForm, self).__init__(*args, **kwargs)
@@ -106,7 +106,7 @@ class NewLocationForm(forms.Form):
 class NewStudentLetter(forms.ModelForm):
   class Meta:
     model = StudentLetter
-    fields = ['comments']
+    fields = ['comments', 'school', 'grade', 'learning_area']
   
   def __init__(self, *args, **kwargs):
     super(NewStudentLetter, self).__init__(*args, **kwargs)
@@ -117,7 +117,7 @@ class NewStudentLetter(forms.ModelForm):
 class UpdateStudentLetter(forms.ModelForm):
   class Meta:
     model = StudentLetter
-    fields = ['assessor', 'total_score', 'comments']
+    fields = ['assessor', 'total_score', 'comments', 'school', 'grade', 'learning_area']
   
   def __init__(self, *args, **kwargs):
     user = kwargs.pop('user', None)
@@ -177,7 +177,7 @@ class UpdateStudentAspect(forms.ModelForm):
     self.fields['contribution'].initial = contribution
     self.fields['aspect'].disabled = True
     self.fields['aspect'].widget.attrs['class'] = 'p-4 mx-4 bg-transparent'
-    self.fields['score'].widget.attrs['class'] = 'rounded border-2 w-5/6 grid p-2'
+    self.fields['score'].widget.attrs['class'] = 'rounded border-2 grid p-2'
     self.fields['contribution'].widget.attrs['class'] = 'bg-transparent grid p-2'
       
 StudentAspectFormSet = forms.modelformset_factory(

@@ -1,0 +1,65 @@
+{% extends 'teaching_practice/base_site.html' %} 
+{% block main %}
+<div class="grid w-full h-full place-self-start gap-1">
+    <div class='font-bold'>
+     <div class='grid gap-2 grid-cols-2'>
+       <div class=''>Student's Name: <span class=''>{{ letter.student.full_name }}</span></div>
+        <div class=''>Student's Assessment No. <span class=''>{{ letter.student.index }}</span></div>
+        <div class=''>Department: <span class=''>{{ letter.student.department }}</span></div>
+        <div class=''>Learning Area: <span class='underline'>{{ letter.student.learning_area }}</span></div>
+        <div class=''>Name of Assessor: <span class='underline'>{{ letter.assessor }}</span></div>
+        <div class=''>Date: <span class='underline'>{{ letter.created_at.date }}</span></div>
+        <div class=''>School: <span class='underline'>{{ letter.student.school }}</span></div>
+        <div class=''>Grade/ Level: <span class='underline'>{{ letter.student.grade }}</span></div>
+        <div class=''>Letter Score: <span>{{ letter.total_score }}</span></div>
+        <div class=''>Total Score: <span>{{ total }}</span></div>
+      </div>
+    </div>
+    <div class='w-full'>
+      <table style="width: 100%; border-collapse: collapse; border: 1px solid black;">
+        <thead>
+          <tr>
+            <th style="border: 1px solid black;">#</th>
+            <th style="border: 1px solid black;">Aspects to Consider</th>
+            <th style="border: 1px solid black;">Score</th>
+            <th style="border: 1px solid black;">Assessor's Comments</th>
+          </tr>
+        </thead>
+        <tbody>
+            {% for section in sections %}
+            <tr>
+              <td style="border: 1px solid black;">{{ section.section.number }}</td>
+              <td style="border: 1px solid black;">
+                <strong>{{ section.section.name }} ({{ section.section.contribution }} marks)</strong>
+                <ul>
+                    {% for aspect in section.student_aspects.all %}
+                        <li>{{ aspect.aspect.name }} ({{ aspect.aspect.contribution }} marks)</li>
+                    {% endfor %}
+                </ul>
+              </td>
+              <td style="border: 1px solid black;">{{ section.section.contribution }}</td>
+              <td style="border: 1px solid black;">{{ section.comments }}</td>
+            </tr>
+            {% empty %}
+            <tr>
+                <td colspan="4" style="text-align: center; border: 1px solid black;">No data available</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+      </table>
+
+      <div class='row upper'>
+        
+      </div>
+    </div>
+    <div class='w-full font-bold'>
+      <div class=''><label>General comments and suggestions:</label> <textarea>{{ letter.comments }}</textarea></div>
+      <div class='row'>
+        <div class=''>Date: <span class='underline'>{{ letter.updated_at.date }}</span></div>
+      </div>
+      <div class='text-center'>Location: <span class=''><a href='{{ letter.location.google_maps_url }}'>{{ letter.location.name }}</a></span></div>
+    </div>
+
+	</div>
+</div>
+{% endblock main %}

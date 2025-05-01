@@ -55,8 +55,8 @@
             <input type='text' class='p-2 bg-transparent border rounded w-full grid' id='grade' disabled value='{{ student.grade }}'>
           </div>
           <div class=''>
-            <label for='sub_strand'>Sub Strand:</label>
-            <input type='text' class='p-2 bg-transparent border rounded w-full grid' id='sub_strand' disabled value='{{ student.sub_strand }}'>
+            <label for='learning_area'>Learning Area:</label>
+            <input type='text' class='p-2 bg-transparent border rounded w-full grid' id='learning_area' disabled value='{{ student.learning_area }}'>
           </div>
           <div class=''>
             <label for='skill'>Skill:</label>
@@ -115,10 +115,10 @@
           {% endfor %}
       </div>
 
-      <div class=''>
+      <!-- <div class=''>
         <div class='text-center font-bold text-lg'>Map</div>
         <div id="map" ></div>
-      </div>
+      </div> -->
     </div>
 		<script type="text/javascript" src="{% static 'admin/js/vendor/jquery/jquery.js' %}"></script>
 		{{ form.media }}
