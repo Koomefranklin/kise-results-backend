@@ -94,7 +94,7 @@
               {% for message in messages %}
               <li{% if message.tags %} 
               {}
-                class="w-full {% if message.tags == 'error' %}bg-red-500{% elif message.tags == 'success' %}bg-green-[#4caf50]{% elif message.tags == 'warning' %}bg-yellow-500{% elif message.tags == 'info' %}bg-blue-500{% else %}bg-inherit{% endif %}"
+                class="w-full {% if message.tags == 'error' %}text-red-500{% elif message.tags == 'success' %}text-[#4caf50]{% elif message.tags == 'warning' %}text-yellow-500{% elif message.tags == 'info' %}text-blue-500{% else %}bg-inherit{% endif %}"
                 {% endif %}>
                 {{ message|safe }}
               </li>
