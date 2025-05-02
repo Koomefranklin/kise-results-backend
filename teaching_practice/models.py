@@ -78,9 +78,9 @@ class Student(models.Model):
   id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
   full_name = models.CharField(max_length=200)
   sex = models.CharField(max_length=2, choices=Sex.choices)
-  department = models.CharField(max_length=50, null=True, blank=True)
   index = models.CharField(blank=True, null=True, max_length=50, verbose_name='Assessment Number')
   email = models.EmailField(max_length=200, null=True, blank=True)
+  period = models.DateField(null=True, blank=True)
   created_at = models.DateTimeField(auto_now_add=True)
   updated_at = models.DateTimeField(auto_now=True)
 
@@ -131,8 +131,9 @@ class StudentLetter(models.Model):
 
   id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
   student = models.ForeignKey(Student, on_delete=models.CASCADE)
+  department = models.CharField(max_length=50, null=True, blank=True)
   school = models.CharField(max_length=200, null=True, blank=True)
-  grade = models.IntegerField(null=True, blank=True, verbose_name='Grade/Level')
+  grade = models.CharField(null=True, blank=True, verbose_name='Grade/Level', max_length=50)
   learning_area = models.CharField(max_length=200, null=True, blank=True)
   assessor = models.ForeignKey(User, on_delete=models.CASCADE, related_name='assessor')
   total_score = models.IntegerField(default=0)

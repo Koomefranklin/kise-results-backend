@@ -78,10 +78,10 @@
     <div class="flex w-full h-full overflow-y-auto p-3" id="main">
        
        {% if is_nav_enabled %}
-         <!-- <div class='w-80 flex sticky left-0 top-0 bottom-0 shadow-2xl overflow-y-auto border-r-2'> -->
+         <div class='flex flex-col'>
           {% block nav-sidebar %}
           {% endblock %}
-        <!-- </div> -->
+        </div>
        {% endif %}
         
       <main id="content-start" class="h-full w-full p-4 overflow-auto mb-10" tabindex="-1">

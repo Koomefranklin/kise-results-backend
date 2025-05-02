@@ -1,6 +1,7 @@
 from email import errors, message
 from turtle import st
 from django.conf.locale import fi
+from django.core.exceptions import PermissionDenied
 from django.shortcuts import get_object_or_404, render, redirect
 from dal import autocomplete
 from django.template import context
@@ -9,13 +10,13 @@ from django.urls import reverse_lazy
 from dev.forms import CustomUserCreationForm
 from dev.models import User
 from .forms import NewAspect, NewLocationForm, NewSection, NewStudentAspect, NewStudentForm, NewStudentLetter, NewStudentSection, NewSubSection, SearchForm, StudentForm, UpdateAspect, UpdateSection, UpdateStudentAspect, UpdateStudentLetter, UpdateStudentSection, StudentAspectFormSet, UpdateSubSection
-from .models import Student, Section, StudentAspect, StudentLetter, StudentSection, Aspect, Location, SubSection
+from .models import Student, Section, StudentAspect, StudentLetter, StudentSection, Aspect, Location, SubSection, ZonalLeader
 from django.views.generic import ListView, CreateView, FormView, UpdateView, DeleteView, DetailView
 from django.db.models import Q, Avg, F, ExpressionWrapper, FloatField, Value
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.contrib import messages
 from django.contrib.gis.geos import Point
-from django.http import HttpResponse, HttpResponseRedirect
+from django.http import Http404, HttpResponse, HttpResponseRedirect
 from django_weasyprint import WeasyTemplateResponseMixin
 from django.db.models.fields import Field
 
@@ -310,7 +311,7 @@ class PreviousAssessmentsView(LoginRequiredMixin, ListView):
 	
 	def get_queryset(self):
 		student = self.kwargs.get('student')
-		qs = StudentLetter.objects.filter(student=student)
+		qs = StudentLetter.objects.filter(student__pk=student)
 		search_query = self.request.GET.get('search_query')
 		if search_query:
 			qs = qs.filter(Q(student__full_name__icontains=search_query) | Q(student__index__icontains=search_query))
@@ -319,21 +320,22 @@ class PreviousAssessmentsView(LoginRequiredMixin, ListView):
 class PreviousAssessmentDetailView(LoginRequiredMixin, DetailView):
 	model = StudentLetter
 	template_name = 'teaching_practice/previous_assessment_detail.html'
-	context_object_name = 'student_letter'
+
+	def get_object(self):
+		return get_object_or_404(StudentLetter, pk=self.kwargs.get('pk'))
 
 	def get_context_data(self, **kwargs):
 		user = self.request.user
-		student = StudentLetter.objects.get(pk=self.kwargs.get('pk')).student
+		student_letter = self.get_object()
+		student = student_letter.student
+		sections = StudentSection.objects.prefetch_related('student_aspects').filter(student_letter=student_letter)
 		context = super().get_context_data(**kwargs)
 		context['is_nav_enabled'] = True
 		context['title'] = f'Previous {student.full_name} Assessments Detail'
 		context['total'] = StudentLetter.objects.filter(student=student).aggregate(total_score=Avg('total_score'))
+		context['sections'] = sections
+		context['letter'] = student_letter
 		return context
-	
-	def get_queryset(self):
-		student_letter = self.get_object()
-		qs = StudentSection.objects.prefetch_related('student_aspects').filter(student_letter=student_letter)
-		return qs.order_by('-created_at')
 
 class EditStudentLetterView(LoginRequiredMixin, UpdateView):
 	model = StudentLetter
@@ -394,51 +396,43 @@ class EditStudentLetterView(LoginRequiredMixin, UpdateView):
 		context['student'] = student_letter_instance.student
 		context['title']= f'Update {student_letter_instance}\'s Letter'
 		context['sections'] = student_sections
+		context['letter'] = student_letter_instance
 		return context
 	
-#To Edit
-class EditStudentDetailsView(LoginRequiredMixin, FormView):
+class EditStudentDetailsView(LoginRequiredMixin, View):
 	model = StudentLetter
-	form_class = UpdateStudentLetter
-	template_name = 'teaching_practice/base_form.html'
+	form_class = NewStudentLetter
+	template_name = 'teaching_practice/student_details.html'
 	
 	def get_success_url(self):
-		return reverse_lazy('edit_student_details', kwargs={'pk': self.kwargs.get('pk')})
-
-	def get_context_data(self, **kwargs):
-		user = self.request.user
-		context = super().get_context_data(**kwargs)
-		context['is_nav_enabled'] = True
-		if 'student_form' not in context:
-			context['student_form'] = StudentForm()
-		context['title'] = 'Add Student'
-		return context
+		return reverse_lazy('edit_student_letter', kwargs={'pk': self.kwargs.get('pk')})
+	
+	def get(self, request, *args, **kwargs):
+		student_letter_id = self.kwargs.get('student_letter')
+		student_letter_instance = StudentLetter.objects.get(pk=student_letter_id)
+		student_instance = student_letter_instance.student
+		context = {
+			'student_form': StudentForm(instance=student_instance),
+			'form': NewStudentLetter(instance=student_letter_instance),
+			'is_nav_enabled': True,
+			'title': f'Edit {student_letter_instance}\'s Details',
+		}
+		return render(request, 'teaching_practice/student_details.html', context=context)
 
 	def post(self, request, *args, **kwargs):
-				user_form = self.get_form(self.get_form_class())
-				student_form = StudentForm(self.request.POST)
+		student_letter_id = self.kwargs.get('student_letter')
+		student_letter_instance = StudentLetter.objects.get(pk=student_letter_id)
+		student_instance = student_letter_instance.student
+		letter_form = NewStudentLetter(self.request.POST, instance=student_letter_instance)
+		student_form = StudentForm(self.request.POST, instance=student_instance)
 
-				if user_form.is_valid() and student_form.is_valid():
-						user_instance = user_form.save()
+		if letter_form.is_valid() and student_form.is_valid():
+			letter = letter_form.save(commit=True)
 
-						student = student_form.save(commit=False)
-						student.user = user_instance
-						student.added_by = self.request.user
-						student.save()
-						messages.success(self.request, f'Added {student.admission} Successfully')
+			student = student_form.save(commit=True)
+			messages.success(self.request, f'Updated {student.full_name} Successfully')
+			return redirect(reverse_lazy('edit_student_letter', kwargs={'pk': letter.pk}))
 
-						return redirect(self.get_success_url())
-
-				return self.form_invalid(user_form, student_form)
-
-	def form_invalid(self, user_form, book_form):
-			"""
-			Renders the forms again with errors when validation fails.
-			"""
-			context = self.get_context_data()
-			context['user_form'] = user_form
-			context['student_form'] = book_form
-			return self.render_to_response(context)
 	
 class StudentLetterViewList(LoginRequiredMixin, ListView):
 	model = StudentLetter
@@ -673,7 +667,35 @@ class GeneratePDF(LoginRequiredMixin, WeasyTemplateResponseMixin, DetailView):
 		context['sections'] = sections
 		context['aspects'] = aspects
 		return context
+	
+class ZonesViewList(LoginRequiredMixin, ListView):
+	model = StudentLetter
+	template_name = 'teaching_practice/zonal_leader.html'
+	context_object_name = 'studentletters'
+	paginate_by = 50
 
+	def get_queryset(self):
+		user = self.request.user
+		zonal_leaders = ZonalLeader.objects.all().values_list('assessor', flat=True)
+		if user.is_staff:
+			qs = StudentLetter.objects.all()
+		elif user in zonal_leaders:
+			zone = ZonalLeader.objects.get(assessor=user)
+			qs = StudentLetter.objects.filter(zone=zone)
+		else:
+			raise PermissionDenied
+		search_query = self.request.GET.get('search_query')
+		if search_query:
+			qs = qs.filter(Q(student__full_name__icontains=search_query) | Q(student__index__icontains=search_query) | Q(student__school__icontains=search_query) | Q(student__grade__icontains=search_query) | Q(student__learning_area__icontains=search_query) | Q(student__zone__icontains=search_query) | Q(student__location__point__icontains=search_query))
+		return qs.order_by('student')
+
+	def get_context_data(self, **kwargs):
+		user = self.request.user
+		context = super().get_context_data(**kwargs)
+		context['is_nav_enabled'] = True
+		context['title'] = 'Zonal Leader'
+		context['search_query'] = SearchForm(self.request.GET)
+		return context
 	
 class DeleteObject(LoginRequiredMixin, DeleteView):
 	model = Aspect

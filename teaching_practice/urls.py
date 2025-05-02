@@ -28,5 +28,7 @@ urlpatterns = [
     path('student-letter/report/<uuid:pk>/', views.GeneratePDF.as_view(), name='pdf_report'),
     # path('aspect/<uuid:pk>/delete/', views.DeleteObject.as_view(), name='delete_aspect'),
     path('student-letter/<uuid:student>/previous/', views.PreviousAssessmentsView.as_view(), name='previous_assessments'),
-    path('student-letter/<uuid:student>/previous/<uuid:pk>/', views.PreviousAssessmentDetailView.as_view(), name='previous_assessment_detail'),
+    path('student-letter/previous/<uuid:pk>/', views.PreviousAssessmentDetailView.as_view(), name='previous_assessment_detail'),
+    path('student/edit/<uuid:student_letter>/', views.EditStudentDetailsView.as_view(), name='edit_student_details'),
+    path('zones/', views.ZonesViewList.as_view(), name='zones'),
 ]

@@ -39,7 +39,7 @@
 					</td>
 					<td class="flex justify-around">
 						<button type='button' class='text-[#4caf50] font-bold' onclick="sendLocation('{{ student.pk }}')">New Assessment</button>
-						<button type='button' class='text-[#4caf50] font-bold'><a href='{% url "edit_student_tp" student.pk %}' class='text-[#4caf50] font-bold'>Previous Assessments</a></button>
+						<button type='button' class='text-[#4caf50] font-bold'><a href='{% url "previous_assessments" student.pk %}' class='text-[#4caf50] font-bold'>Previous Assessments</a></button>
 					</td>
 				</tr>
 				{% endfor %}

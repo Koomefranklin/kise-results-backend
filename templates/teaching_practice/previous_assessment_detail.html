@@ -1,21 +1,20 @@
 {% extends 'teaching_practice/base_site.html' %} 
 {% block main %}
 <div class="grid w-full h-full place-self-start gap-1">
-    <div class='font-bold'>
-     <div class='grid gap-2 grid-cols-2'>
-       <div class=''>Student's Name: <span class=''>{{ letter.student.full_name }}</span></div>
-        <div class=''>Student's Assessment No. <span class=''>{{ letter.student.index }}</span></div>
-        <div class=''>Department: <span class=''>{{ letter.student.department }}</span></div>
-        <div class=''>Learning Area: <span class='underline'>{{ letter.student.learning_area }}</span></div>
-        <div class=''>Name of Assessor: <span class='underline'>{{ letter.assessor }}</span></div>
-        <div class=''>Date: <span class='underline'>{{ letter.created_at.date }}</span></div>
-        <div class=''>School: <span class='underline'>{{ letter.student.school }}</span></div>
-        <div class=''>Grade/ Level: <span class='underline'>{{ letter.student.grade }}</span></div>
-        <div class=''>Letter Score: <span>{{ letter.total_score }}</span></div>
-        <div class=''>Total Score: <span>{{ total }}</span></div>
-      </div>
-    </div>
+  <div class='grid gap-2 grid-cols-2 font-bold'>
+    <div class=''>Student's Name: <span class=''>{{ letter.student.full_name }}</span></div>
+    <div class=''>Student's Assessment No. <span class=''>{{ letter.student.index }}</span></div>
+    <div class=''>Department: <span class=''>{{ letter.student.department }}</span></div>
+    <div class=''>Learning Area: <span class='underline'>{{ letter.student.learning_area }}</span></div>
+    <div class=''>Name of Assessor: <span class='underline'>{{ letter.assessor }}</span></div>
+    <div class=''>Date: <span class='underline'>{{ letter.created_at.date }}</span></div>
+    <div class=''>School: <span class='underline'>{{ letter.student.school }}</span></div>
+    <div class=''>Grade/ Level: <span class='underline'>{{ letter.student.grade }}</span></div>
+    <div class=''>Letter Score: <span>{{ letter.total_score }}</span></div>
+    <div class=''>Total Score: <span>{{ total.total_score }}</span></div>
+  </div>
     <div class='w-full'>
+      <button class='w-full border rounded-md p-2 bg-gray-500 text-white'><a href='{% url "previous_assessments" letter.student.pk %}'>More Assessments</a></button>
       <table style="width: 100%; border-collapse: collapse; border: 1px solid black;">
         <thead>
           <tr>
@@ -47,10 +46,6 @@
             {% endfor %}
         </tbody>
       </table>
-
-      <div class='row upper'>
-        
-      </div>
     </div>
     <div class='w-full font-bold'>
       <div class=''><label>General comments and suggestions:</label> <textarea>{{ letter.comments }}</textarea></div>

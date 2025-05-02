@@ -72,18 +72,18 @@ class UpdateAspect(forms.ModelForm):
 class NewStudentForm(forms.ModelForm):
   class Meta:
     model = Student
-    fields = ['full_name', 'sex', 'department', 'index', 'school', 'grade', 'learning_area', 'skill', 'email']
+    fields = ['full_name', 'sex', 'index', 'email']
   
   def __init__(self, *args, **kwargs):
     super(NewStudentForm, self).__init__(*args, **kwargs)
     for fieldname, field in self.fields.items():
       self.fields[fieldname].widget.attrs['class'] = 'rounded border-2 w-5/6 grid p-2'
-    self.fields['full_name'].widget.attrs['class'] = 'rounded border-2 w-5/6 grid p-2 dark:text-black'
+    self.fields['full_name'].widget.attrs['class'] = 'rounded border-2 w-5/6 grid p-2'
 
 class StudentForm(forms.ModelForm):
   class Meta:
     model = Student
-    fields = ['full_name', 'sex', 'department', 'index', 'email']
+    fields = ['full_name', 'sex', 'index', 'email']
 
   def __init__(self, *args, **kwargs):
     super(StudentForm, self).__init__(*args, **kwargs)
@@ -106,18 +106,17 @@ class NewLocationForm(forms.Form):
 class NewStudentLetter(forms.ModelForm):
   class Meta:
     model = StudentLetter
-    fields = ['comments', 'school', 'grade', 'learning_area']
+    fields = ['school', 'grade', 'department', 'learning_area', 'zone']
   
   def __init__(self, *args, **kwargs):
     super(NewStudentLetter, self).__init__(*args, **kwargs)
     for fieldname, field in self.fields.items():
-      self.fields[fieldname].label = ''
-      self.fields[fieldname].widget.attrs['class'] = 'rounded border-2 w-5/6 grid hidden'
+      self.fields[fieldname].widget.attrs['class'] = 'rounded border-2 w-5/6 grid'
 
 class UpdateStudentLetter(forms.ModelForm):
   class Meta:
     model = StudentLetter
-    fields = ['assessor', 'total_score', 'comments', 'school', 'grade', 'learning_area']
+    fields = ['assessor', 'total_score', 'department', 'school', 'grade', 'learning_area', 'comments']
   
   def __init__(self, *args, **kwargs):
     user = kwargs.pop('user', None)
