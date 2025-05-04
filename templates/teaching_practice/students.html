@@ -27,7 +27,7 @@
 				{% for student in page_obj %}
 
 				<tr
-					class="{% cycle 'bg-gray-200' 'bg-inherit' %} text-{% cycle 'bg-black' 'inherit' %} hover:bg-[#333] hover:text-white">
+					class="{% cycle 'bg-gray-200 dark:text-black' 'bg-inherit' %} text-{% cycle 'bg-black' 'inherit' %} hover:bg-[#333] hover:text-white">
 					<td class=" px-2">
 						<a href='{% url "students_tp"  %}'>{{ student.full_name }}</a>
 					</td>

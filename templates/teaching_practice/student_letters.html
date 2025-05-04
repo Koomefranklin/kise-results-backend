@@ -31,7 +31,7 @@
 				{% for letter in page_obj %}
 
 				<tr
-					class="{% cycle 'bg-gray-200' 'bg-inherit' %} text-{% cycle 'bg-black' 'inherit' %} hover:bg-[#333] hover:text-white">
+					class="{% cycle 'bg-gray-200 dark:text-black' 'bg-inherit' %} text-{% cycle 'bg-black' 'inherit' %} hover:bg-[#333] hover:text-white">
 					<td class="px-2">
 						<a href='{% url "edit_student_letter" letter.pk %}' class='w-full'>{{ letter.student.full_name }}</a>
 					</td>

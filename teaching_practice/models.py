@@ -98,7 +98,7 @@ class Location(gis_models.Model):
   
   def google_maps_url(self):
     if self.point:
-        return f"https://www.google.com/maps?q={self.point.y},{self.point.x}"
+      return f"https://www.google.com/maps?q={self.point.y},{self.point.x}"
     return None
 
   def get_address(self):

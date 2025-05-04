@@ -12,6 +12,9 @@
     <div class=''>Grade/ Level: <span class='underline'>{{ letter.student.grade }}</span></div>
     <div class=''>Letter Score: <span>{{ letter.total_score }}</span></div>
     <div class=''>Total Score: <span>{{ total.total_score }}</span></div>
+    <div class=''>Zome: <span>{{ letter.zone }}</span></div>
+    <div class=''>Late Submission: <span>{{ letter.late_submission }}</span></div>
+    <div class=''>Reason for late submission: <span>{{ letter.reason }}</span></div>
   </div>
     <div class='w-full'>
       <button class='w-full border rounded-md p-2 bg-gray-500 text-white'><a href='{% url "previous_assessments" letter.student.pk %}'>More Assessments</a></button>
@@ -52,7 +55,14 @@
       <div class='row'>
         <div class=''>Date: <span class='underline'>{{ letter.updated_at.date }}</span></div>
       </div>
-      <div class='text-center'>Location: <span class=''><a href='{{ letter.location.google_maps_url }}'>{{ letter.location.name }}</a></span></div>
+      {% if letter.location %}
+          <div class='text-center'>
+            <div class=''>Location: <span class=''><a href='{{ letter.location.google_maps_url }}'>{{ letter.location.name }}</a></span></div>
+            <div class=''>
+              <a href='{{ letter.location.google_maps_url }}' target='_blank'  id='location' >View Locaion in Google Maps</a>
+            </div>
+          </div>
+        {% endif %}
     </div>
 
 	</div>

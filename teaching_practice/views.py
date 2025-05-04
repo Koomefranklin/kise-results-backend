@@ -9,6 +9,7 @@ from django.views.generic.base import View
 from django.urls import reverse_lazy
 from dev.forms import CustomUserCreationForm
 from dev.models import User
+from teaching_practice.mailer import send_student_report
 from .forms import NewAspect, NewLocationForm, NewSection, NewStudentAspect, NewStudentForm, NewStudentLetter, NewStudentSection, NewSubSection, SearchForm, StudentForm, UpdateAspect, UpdateSection, UpdateStudentAspect, UpdateStudentLetter, UpdateStudentSection, StudentAspectFormSet, UpdateSubSection
 from .models import Student, Section, StudentAspect, StudentLetter, StudentSection, Aspect, Location, SubSection, ZonalLeader
 from django.views.generic import ListView, CreateView, FormView, UpdateView, DeleteView, DetailView
@@ -18,6 +19,7 @@ from django.contrib import messages
 from django.contrib.gis.geos import Point
 from django.http import Http404, HttpResponse, HttpResponseRedirect
 from django_weasyprint import WeasyTemplateResponseMixin
+import tempfile
 from django.db.models.fields import Field
 
 
@@ -361,9 +363,14 @@ class EditStudentLetterView(LoginRequiredMixin, UpdateView):
 			student = student_letter.student
 			null_fields = []
 			for field in student._meta.get_fields():
-				if isinstance(field, Field):  # Exclude relations like ManyToMany
+				if isinstance(field, Field):
 					value = getattr(student, field.name)
-					if value is None and field.name != 'email':
+					if value is None:
+						null_fields.append(field.name)
+			for field in student_letter._meta.get_fields():
+				if isinstance(field, Field):
+					value = getattr(student_letter, field.name)
+					if value is None and field.name != 'reason':
 						null_fields.append(field.name)
 
 			for section in sections:
@@ -455,7 +462,7 @@ class StudentLetterViewList(LoginRequiredMixin, ListView):
 			qs = StudentLetter.objects.filter(assessor=self.request.user)
 		search_query = self.request.GET.get('search_query')
 		if search_query:
-			qs = qs.filter(Q(student__full_name__icontains=search_query) | Q(student__index__icontains=search_query) | Q(student__school__icontains=search_query) | Q(student__grade__icontains=search_query) | Q(student__learning_area__icontains=search_query) | Q(student__zone__icontains=search_query) | Q(student__location__point__icontains=search_query) | Q(assessor=search_query))
+			qs = qs.filter(Q(student__full_name__icontains=search_query) | Q(student__index__icontains=search_query) | Q(school__icontains=search_query) | Q(grade__icontains=search_query) | Q(learning_area__icontains=search_query) | Q(zone__icontains=search_query) | Q(assessor__full_name__icontains=search_query))
 		return qs.order_by('student')
 
 class NewStudentSectionView(LoginRequiredMixin, CreateView):
@@ -527,7 +534,7 @@ class StudentSectionsViewList(LoginRequiredMixin, ListView):
 		qs = StudentSection.objects.all()
 		search_query = self.request.GET.get('search_query')
 		if search_query:
-			qs = qs.filter(Q(student__user__full_name__icontains=search_query) | Q(student__index__icontains=search_query) | Q(section__name__icontains=search_query))
+			qs = qs.filter(Q(student__full_name__icontains=search_query) | Q(student__index__icontains=search_query) | Q(section__name__icontains=search_query))
 		return qs.order_by('student')
 
 	def get_context_data(self, **kwargs):
@@ -634,7 +641,7 @@ class StudentAspectsViewList(LoginRequiredMixin, ListView):
 		qs  = StudentAspect.objects.all()
 		search_query = self.request.GET.get('search_query')
 		if search_query:
-			qs = qs.filter(Q(student__user__full_name__icontains=search_query) | Q(student__index__icontains=search_query) | Q(aspect__name__icontains=search_query) | Q(aspect__section__name__icontains=search_query))
+			qs = qs.filter(Q(student__full_name__icontains=search_query) | Q(student__index__icontains=search_query) | Q(aspect__name__icontains=search_query) | Q(aspect__section__name__icontains=search_query))
 		return qs.order_by('student')
 
 	def get_context_data(self, **kwargs):
@@ -662,11 +669,24 @@ class GeneratePDF(LoginRequiredMixin, WeasyTemplateResponseMixin, DetailView):
 		aspects = StudentAspect.objects.filter(student_section__student_letter=letter)
 
 		context['is_nav_enabled'] = True
-		context["title"] = 'Generate Report'
+		context["title"] = f'{letter.student.full_name}\'s Assessment Report'
 		context['letter'] = letter
 		context['sections'] = sections
 		context['aspects'] = aspects
 		return context
+	
+	def render_to_response(self, context, **response_kwargs):
+		response = super().render_to_response(context, **response_kwargs)
+
+		response.render()
+
+		with tempfile.NamedTemporaryFile(suffix='.pdf', delete=False) as tmpfile:
+			tmpfile.write(response.content)
+			tmpfile.seek(0)
+
+		send_student_report(self.request, tmpfile.name, self.get_object())
+
+		return response
 	
 class ZonesViewList(LoginRequiredMixin, ListView):
 	model = StudentLetter
@@ -686,7 +706,7 @@ class ZonesViewList(LoginRequiredMixin, ListView):
 			raise PermissionDenied
 		search_query = self.request.GET.get('search_query')
 		if search_query:
-			qs = qs.filter(Q(student__full_name__icontains=search_query) | Q(student__index__icontains=search_query) | Q(student__school__icontains=search_query) | Q(student__grade__icontains=search_query) | Q(student__learning_area__icontains=search_query) | Q(student__zone__icontains=search_query) | Q(student__location__point__icontains=search_query))
+			qs = qs.filter(Q(student__full_name__icontains=search_query) | Q(student__index__icontains=search_query) | Q(school__icontains=search_query) | Q(grade__icontains=search_query) | Q(learning_area__icontains=search_query) | Q(zone__icontains=search_query) | Q(assessor__icontains=search_query))
 		return qs.order_by('student')
 
 	def get_context_data(self, **kwargs):

@@ -106,21 +106,23 @@ class NewLocationForm(forms.Form):
 class NewStudentLetter(forms.ModelForm):
   class Meta:
     model = StudentLetter
-    fields = ['school', 'grade', 'department', 'learning_area', 'zone']
+    fields = ['school', 'grade', 'department', 'learning_area', 'zone', 'late_submission', 'reason']
   
   def __init__(self, *args, **kwargs):
     super(NewStudentLetter, self).__init__(*args, **kwargs)
+    self.fields['late_submission'].widget = forms.Select(choices=[(False, 'No'), (True, 'Yes')])
     for fieldname, field in self.fields.items():
       self.fields[fieldname].widget.attrs['class'] = 'rounded border-2 w-5/6 grid'
 
 class UpdateStudentLetter(forms.ModelForm):
   class Meta:
     model = StudentLetter
-    fields = ['assessor', 'total_score', 'department', 'school', 'grade', 'learning_area', 'comments']
+    fields = ['assessor', 'total_score', 'department', 'school', 'grade', 'learning_area', 'zone', 'late_submission', 'reason', 'location', 'comments']
   
   def __init__(self, *args, **kwargs):
     user = kwargs.pop('user', None)
     super(UpdateStudentLetter, self).__init__(*args, **kwargs)
+    # self.fields['late_submission'].widget = forms.Select()
     self.fields['comments'].widget = forms.Textarea()
     self.fields['comments'].label = 'General Comments and Suggestions:'
     self.fields['comments'].required = True
