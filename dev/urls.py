@@ -39,6 +39,7 @@ urlpatterns = [
   path('deadlines/new/', views.DeadlineCreateView.as_view(), name='new_deadline'),
   path('deadlines/<uuid:pk>/update/', views.DeadlineUpdateView.as_view(), name='edit_deadline'),
   path('user/<uuid:pk>/change-password/', views.UpdateUserPassword.as_view(), name='password-change'),
+  path('change-password/<uuid:pk>', views.FirstTimePasswordChangeView.as_view(), name='first_password_change'),
   path('cat-combinations/', views.CatCombinationsViewList.as_view(), name='cat_combinations'),
   path('cat-combinations/new/', views.CatCombinationCreateView.as_view(), name='new_cat_combination'),
   path('cat-combinations/<uuid:pk>/update/', views.CatCombinationUpdateView.as_view(), name='edit_cat_combination'),

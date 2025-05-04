@@ -22,6 +22,7 @@ class User(AbstractUser):
   last_name = None
   sex = models.CharField(max_length=2, choices=Sex.choices, null=True, blank=True)
   role = models.CharField(choices=Role.choices, max_length=10, default=Role.STUDENT)
+  is_first_login = models.BooleanField(default=True)
 
   REQUIRED_FIELDS = ['full_name', 'sex', 'role']
 

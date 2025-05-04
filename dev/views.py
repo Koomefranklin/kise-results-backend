@@ -134,8 +134,18 @@ class UpdateUserPassword(LoginRequiredMixin, FormView):
 		user = self.request.user
 		context = super().get_context_data(**kwargs)
 		context['title'] = 'Password Change'
-		context['is_nav_enabled'] = True
 		return context
+	
+class FirstTimePasswordChangeView(UpdateUserPassword):
+	template_name = 'registration/change_password.html'
+	success_url = '/'
+
+	def form_valid(self, form):
+		response = super().form_valid(form)
+		user = self.request.user
+		user.is_first_login = False
+		user.save()
+		return response
 
 class StudentsViewList(LoginRequiredMixin, ListView):
 	model = Student
