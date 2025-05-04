@@ -182,6 +182,9 @@ class StudentSection(models.Model):
 
   def __str__(self):
     return f'{self.student_letter.student.full_name} {self.section.name}'
+  
+  class Meta:
+    order_with_respect_to = 'section'
 
 class StudentAspect(models.Model):
   id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
@@ -193,3 +196,6 @@ class StudentAspect(models.Model):
 
   def __str__(self):
     return f'{self.student_section.student_letter.student.full_name} {self.aspect.name}'
+  
+  class Meta:
+    order_with_respect_to = 'aspect'

@@ -510,7 +510,6 @@ class EditStudentSectionView(LoginRequiredMixin, UpdateView):
 		for section in student_sections:
 			score += section.score
 		student_letter.total_score = score
-		student_letter.assessor = self.request.user
 		student_letter.save()
 
 		response = super().form_valid(form)

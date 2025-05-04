@@ -1,4 +1,5 @@
 import csv
+from operator import index
 from django.core.management.base import BaseCommand
 from teaching_practice.models import Student
 
@@ -18,11 +19,13 @@ class Command(BaseCommand):
 				for row in reader:
 					name = row['name']
 					# email = row['email']
+					index = row['index']
 					sex = row['sex']
 
 					student, created = Student.objects.get_or_create(
 						full_name=name,
             # email=email,
+						index=index,
 						sex=sex
 					)
 
