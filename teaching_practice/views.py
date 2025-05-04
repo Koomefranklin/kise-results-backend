@@ -404,6 +404,7 @@ class EditStudentLetterView(LoginRequiredMixin, UpdateView):
 		context['title']= f'Update {student_letter_instance}\'s Letter'
 		context['sections'] = student_sections
 		context['letter'] = student_letter_instance
+		context['can_edit'] = student_letter_instance.assessor == self.request.user
 		return context
 	
 class EditStudentDetailsView(LoginRequiredMixin, View):
