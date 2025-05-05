@@ -67,6 +67,7 @@ class Aspect(models.Model):
   section = models .ForeignKey(Section, on_delete=models.CASCADE)
   sub_section = models.ForeignKey(SubSection, on_delete=models.CASCADE, related_name='aspect_sub_section', null=True, blank=True)
   contribution = models.IntegerField()
+  is_active = models.BooleanField(default=True)
   created_by = models.ForeignKey(User, on_delete=models.CASCADE, related_name='aspect_created_by')
   updated_by = models.ForeignKey(User, on_delete=models.CASCADE, related_name='aspect_updated_by', null=True, blank=True)
   created_at = models.DateTimeField(auto_now_add=True)

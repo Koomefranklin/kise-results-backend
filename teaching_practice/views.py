@@ -302,7 +302,7 @@ class NewStudentLetterView(LoginRequiredMixin, View):
 
 			for section in sections:
 				student_section = StudentSection.objects.create(student_letter=student_letter, section=section)
-				aspects = Aspect.objects.filter(section=section)
+				aspects = Aspect.objects.filter(Q(section=section) & Q(is_active=True))
 				for aspect in aspects:
 					student_aspect = StudentAspect.objects.create(student_section=student_section, aspect=aspect)
 
