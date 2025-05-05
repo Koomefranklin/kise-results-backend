@@ -11,17 +11,25 @@ from django.utils.translation import gettext_lazy as _
 
 class ZonalLeader(models.Model):
   class ZONES(models.TextChoices):
-    ZONE_1 = 'Zone 1', _('Zone 1')
-    ZONE_2 = 'Zone 2', _('Zone 2')
-    ZONE_3 = 'Zone 3', _('Zone 3')
-    ZONE_4 = 'Zone 4', _('Zone 4')
-    ZONE_5 = 'Zone 5', _('Zone 5')
+    KISE_A = 'KISE A', _('KISE A')
+    KISE_B = 'KISE B', _('KISE B')
+    KISE_C = 'KISE C', _('KISE C')
+    KISE_NAIROBI_KAJIADO_EAST = 'KISE-NAIROBI/KAJIADO EAST', _('KISE-NAIROBI/KAJIADO EAST')
+    KISE_NAIROBI_KAJIADO_WEST = 'KISE-NAIROBI/KAJIADO WEST', _('KISE-NAIROBI/KAJIADO WEST')
+    EREGI = 'EREGI', _('EREGI')
+    MIGORI = 'MIGORI', _('MIGORI')
+    KERICHO_A = 'KERICHO A', _('KERICHO A')
+    KERICHO_B = 'KERICHO B', _('KERICHO B')
+    SHANZU = 'SHANZU', _('SHANZU')
 
   id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
   zone_name = models.CharField(max_length=200, choices=ZONES.choices)
   assessor = models.ForeignKey(User, on_delete=models.CASCADE, related_name='zonal_leader')
   created_at = models.DateTimeField(auto_now_add=True)
   updated_at = models.DateTimeField(auto_now=True)
+
+  def __str__(self):
+    return self.zone_name
 
 class Section(models.Model):
   id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)

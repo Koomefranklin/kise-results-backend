@@ -84,6 +84,11 @@
 						class="font-bold uppercase">
 						Zones
 					</a>
+					
+					{% if user.is_staff %}
+						<a href='{% url "zonal_leaders" %}'><i class="fa-solid fa-plus text-[#4caf50] font-extrabold"></i> Add</a>
+					{% endif %}
+						
 				</th>
 			</tr>	
 				

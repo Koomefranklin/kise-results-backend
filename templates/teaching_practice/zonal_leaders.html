@@ -1,0 +1,55 @@
+{% extends 'teaching_practice/base_site.html' %} 
+{% block main %}
+<div class="grid w-full h-full place-self-start gap-1">
+	<div class="flex flex-col w-full gap-2">
+		
+    {% if user.is_staff %}
+      <div class='grid place-self-center w-5/6'>
+        <h2 class='text-center font-bold'>Add Zonal Leaders</h2>
+      </div>
+      <form method="post" class='flex gap-2 place-content-center'> 
+        {% csrf_token %} 
+          {{ form.as_div }}
+          <button type="submit" class='rounded-md border px-2'>Submit</button>
+      </form>
+    {% endif %}
+      
+		<table class="w-5/6 place-self-center border">
+			<caption class=''>Zonal Leaders</caption>
+			<thead class="border-b bg-gray-500 text-white p-2">
+				<tr class="">
+					
+					<th class="px-2">Zone Name</th>
+					<th class="px-2">Leader</th>
+					<!-- <th class="">Actions</th> -->
+				</tr>
+			</thead>
+
+			{% if zonal_leaders %}
+			<tbody class="capitalize">
+				{% for leader in zonal_leaders %}
+
+				<tr
+					class="{% cycle 'bg-gray-200 dark:text-black' 'bg-inherit' %} text-{% cycle 'bg-black' 'inherit' %} hover:bg-[#333] hover:text-white">
+					<td class="px-2">{{ leader.assessor.full_name }}</td>
+					<td class="px-2">{{ leader.zone_name }}</td>
+					<!-- <td class="flex justify-between">
+						<a href='#' title='View'>View</a>
+					</td> -->
+				</tr>
+				{% endfor %}
+			</tbody>
+			
+			{% else %}
+			<tr class="">
+				<td
+					colspan="11"
+					class="text-center">
+					No Zonal Leaders Found
+				</td>
+			</tr>
+			{% endif %}
+		</table>
+	</div>
+</div>
+{% endblock main %}

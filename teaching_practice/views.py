@@ -10,7 +10,7 @@ from django.urls import reverse_lazy
 from dev.forms import CustomUserCreationForm
 from dev.models import User
 from teaching_practice.mailer import send_student_report
-from .forms import NewAspect, NewLocationForm, NewSection, NewStudentAspect, NewStudentForm, NewStudentLetter, NewStudentSection, NewSubSection, SearchForm, StudentForm, UpdateAspect, UpdateSection, UpdateStudentAspect, UpdateStudentLetter, UpdateStudentSection, StudentAspectFormSet, UpdateSubSection
+from .forms import NewAspect, NewLocationForm, NewSection, NewStudentAspect, NewStudentForm, NewStudentLetter, NewStudentSection, NewSubSection, SearchForm, StudentForm, UpdateAspect, UpdateSection, UpdateStudentAspect, UpdateStudentLetter, UpdateStudentSection, StudentAspectFormSet, UpdateSubSection, ZonalLeaderForm
 from .models import Student, Section, StudentAspect, StudentLetter, StudentSection, Aspect, Location, SubSection, ZonalLeader
 from django.views.generic import ListView, CreateView, FormView, UpdateView, DeleteView, DetailView
 from django.db.models import Q, Avg, F, ExpressionWrapper, FloatField, Value
@@ -29,6 +29,14 @@ class StudentAutocomplete(autocomplete.Select2QuerySetView):
 	def get_queryset(self):
 		user = self.request.user
 		qs = User.objects.filter(Q(is_active=True) | Q(role='student'))
+		if self.q:
+			qs = qs.filter(Q(full_name__icontains=self.q))
+		return qs
+	
+class LecturerAutocomplete(autocomplete.Select2QuerySetView):
+	def get_queryset(self):
+		user = self.request.user
+		qs = User.objects.filter(Q(is_active=True) | Q(role='lecturer'))
 		if self.q:
 			qs = qs.filter(Q(full_name__icontains=self.q))
 		return qs
@@ -715,6 +723,27 @@ class ZonesViewList(LoginRequiredMixin, ListView):
 		context['is_nav_enabled'] = True
 		context['title'] = 'Zonal Leader'
 		context['search_query'] = SearchForm(self.request.GET)
+		return context
+	
+class ZonalLeaderViewList(LoginRequiredMixin, CreateView):
+	model = ZonalLeader
+	template_name = 'teaching_practice/zonal_leaders.html'
+	form_class = ZonalLeaderForm
+	success_url = reverse_lazy('zonal_leaders')
+	
+	def get_context_data(self, **kwargs):
+		user = self.request.user
+		zonal_leaders = ZonalLeader.objects.all().values_list('assessor', flat=True)
+		context = super().get_context_data(**kwargs)
+		if user.is_staff:
+			context['zonal_leaders'] = ZonalLeader.objects.all()
+		elif user in zonal_leaders:
+			zone = ZonalLeader.objects.get(assessor=user)
+			context['zonal_leaders'] = ZonalLeader.objects.filter(zone=zone)
+		else:
+			context['zonal_leaders'] = ZonalLeader.objects.none()
+		context['is_nav_enabled'] = True
+		context['title'] = 'Zonal Leaders'
 		return context
 	
 class DeleteObject(LoginRequiredMixin, DeleteView):

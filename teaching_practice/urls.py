@@ -3,6 +3,7 @@ from . import views
 
 urlpatterns = [
     path('student-autocomplete/', views.StudentAutocomplete.as_view(), name='student-autocomplete'),
+    path('lecturer-autocomplete/', views.LecturerAutocomplete.as_view(), name='lecturer-autocomplete'),
     path('', views.IndexPage.as_view(), name='index'),
     path('student-letter/new/<uuid:student_id>/<str:longitude>/<str:latitude>/', views.NewStudentLetterView.as_view(), name='new_student_letter'),
     path('student/', views.StudentsViewList.as_view(), name='students_tp'),
@@ -31,4 +32,5 @@ urlpatterns = [
     path('student-letter/previous/<uuid:pk>/', views.PreviousAssessmentDetailView.as_view(), name='previous_assessment_detail'),
     path('student/edit/<uuid:student_letter>/', views.EditStudentDetailsView.as_view(), name='edit_student_details'),
     path('zones/', views.ZonesViewList.as_view(), name='zones'),
+    path('zonal_leader/', views.ZonalLeaderViewList.as_view(), name='zonal_leaders'),
 ]

@@ -1,9 +1,10 @@
+from dal_gm2m import fields
 from django import forms
 from dal import autocomplete
 from platformdirs import user_cache_path
 from dev import views
 from dev.models import User
-from .models import Location, Student, Section, StudentAspect, StudentLetter, StudentSection, Aspect, SubSection
+from .models import Location, Student, Section, StudentAspect, StudentLetter, StudentSection, Aspect, SubSection, ZonalLeader
 
 class NewSection(forms.ModelForm):
   class Meta:
@@ -177,9 +178,26 @@ class UpdateStudentAspect(forms.ModelForm):
     contribution = self.instance.aspect.contribution
     self.fields['contribution'].initial = contribution
     self.fields['aspect'].disabled = True
-    self.fields['aspect'].widget.attrs['class'] = 'p-4 mx-4 bg-transparent'
+    self.fields['aspect'].widget.attrs['class'] = 'p-4 mx-4 bg-transparent w-5/6 grid'
     self.fields['score'].widget.attrs['class'] = 'rounded border-2 grid p-2'
     self.fields['contribution'].widget.attrs['class'] = 'bg-transparent grid p-2'
+
+class ZonalLeaderForm(forms.ModelForm):
+  class Meta:
+    model = ZonalLeader
+    fields = ['zone_name', 'assessor']
+    # widgets = {
+		# 	'assessor': autocomplete.ModelSelect2(url='lecturer-autocomplete',attrs={
+    #     'data-placeholder': 'Search ...',
+    #   })
+    # }
+
+  def __init__(self, *args, **kwargs):
+    super(ZonalLeaderForm, self).__init__(*args, **kwargs)
+    self.fields['assessor'].queryset = User.objects.filter(role='lecturer')
+    self.fields['assessor'].label = 'Zonal Leader'
+    for fieldname, field in self.fields.items():
+      self.fields[fieldname].widget.attrs['class'] = 'rounded border-2 p-2 m2 grid'
       
 StudentAspectFormSet = forms.modelformset_factory(
   StudentAspect,
