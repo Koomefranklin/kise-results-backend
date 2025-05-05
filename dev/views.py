@@ -123,7 +123,7 @@ class Index(LoginRequiredMixin, ListView):
 class UpdateUserPassword(LoginRequiredMixin, FormView):
 	form_class = CustomPasswordChangeForm
 	template_name = 'registration/change_password.html'
-	success_url = reverse_lazy('dashboard')
+	success_url = reverse_lazy('common')
 
 	def get_form_kwargs(self):
 		kwargs = super(UpdateUserPassword, self).get_form_kwargs()
@@ -137,12 +137,13 @@ class UpdateUserPassword(LoginRequiredMixin, FormView):
 		return context
 	
 class FirstTimePasswordChangeView(UpdateUserPassword):
-	template_name = 'registration/change_password.html'
+	template_name = 'registration/change_password_first.html'
 	success_url = '/'
 
 	def form_valid(self, form):
 		response = super().form_valid(form)
 		user = self.request.user
+		user.set_password(form.cleaned_data['new_password1'])
 		user.is_first_login = False
 		user.save()
 		return response

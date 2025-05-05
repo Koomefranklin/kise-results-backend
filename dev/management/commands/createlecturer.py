@@ -19,22 +19,24 @@ class Command(BaseCommand):
 					username = row['username']
 					full_name = row['name']
 					email = row['email']
-					password = row['password']
+					password = 'Kisedefault24#'
 					sex = row['sex']
-					role = row['role']					
-					department = row['department'].split(',')
+					role = 'lecturer'					
+					# department = row['department'].split(',')
 
-					specializations = Specialization.objects.filter(code__in=department).values_list('id', flat=True)
-					user = User.objects.create_user(username=username, email=email, password=password, full_name=full_name, sex=sex, role=role)
-					lecturer, created = Lecturer.objects.get_or_create(
-						user=user,
-					)
-					lecturer.specializations.add(*specializations)
+					# specializations = Specialization.objects.filter(code__in=department).values_list('id', flat=True)
+					user, created = User.objects.get_or_create(username=username, email=email, sex=sex, defaults={'full_name': full_name,  'role': role})
+					# lecturer, created = Lecturer.objects.get_or_create(
+					# 	user=user,
+					# )
+					# lecturer.specializations.add(*specializations)
 
 					if created:
+						user.set_password(password)
+						user.save()
 						self.stdout.write(self.style.SUCCESS(f"Successfully created Lecturer: {full_name}"))
 					else:
-						self.stdout.write(self.style.WARNING(f"Lecturer: {full_name} already exists"))
+						self.stdout.write(self.style.WARNING(f"Lecturer: {full_name}, already exists"))
 
 		except FileNotFoundError:
 			self.stdout.write(self.style.ERROR('CSV file not found.'))
