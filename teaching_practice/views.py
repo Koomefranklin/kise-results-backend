@@ -141,6 +141,7 @@ class EditSubSectionView(LoginRequiredMixin, UpdateView):
 		user = self.request.user
 		context = super().get_context_data(**kwargs)
 		context['is_nav_enabled'] = True
+		context['title'] = 'Edit Sub-Section'
 		return context
 	
 class SubSectionViewlist(LoginRequiredMixin, ListView):
