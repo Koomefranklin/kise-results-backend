@@ -25,7 +25,7 @@ class Command(BaseCommand):
 					# department = row['department'].split(',')
 
 					# specializations = Specialization.objects.filter(code__in=department).values_list('id', flat=True)
-					user, created = User.objects.get_or_create(username=username, email=email, sex=sex, defaults={'full_name': full_name,  'role': role})
+					user, created = User.objects.get_or_create(username=username, sex=sex, defaults={'full_name': full_name, 'email': email,  'role': role})
 					# lecturer, created = Lecturer.objects.get_or_create(
 					# 	user=user,
 					# )
