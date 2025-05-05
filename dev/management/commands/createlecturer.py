@@ -19,7 +19,7 @@ class Command(BaseCommand):
 					username = row['username']
 					full_name = row['name']
 					email = row['email']
-					password = 'Kisedefault24#'
+					password = row['password']
 					sex = row['sex']
 					role = 'lecturer'					
 					# department = row['department'].split(',')
