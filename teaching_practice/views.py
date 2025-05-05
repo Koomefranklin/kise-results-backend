@@ -188,7 +188,10 @@ class NewAspectView(LoginRequiredMixin, CreateView):
 			instance = form.save(commit=False)
 			instance.created_by = self.request.user
 			instance.save()
-			return instance
+			self.object = instance
+			return HttpResponseRedirect(self.get_success_url())
+		else:
+			return self.form_invalid(form)
 
 class EditAspectView(LoginRequiredMixin, UpdateView):
 	model = Aspect
