@@ -14,6 +14,7 @@
 					<th class='border-r px-2'>No.</th>
 					<th class="border-r px-2">Name</th>
 					<th class="border-r px-2">Score Contribution</th>
+					<th class="border-r px-2">Assessment Type</th>
 					<th class="">Actions</th>
 				</tr>
 			</thead>
@@ -30,11 +31,7 @@
 					</td>
 					<td class="border-r px-2">{{ section.contribution }}</td>
 					
-					<!-- <td class="border-r px-2">{{ section.specialization }}</td> -->
-					<!-- <td class="border-r px-2">{{ section.mode}}</td>
-					<td class="border-r px-2">{{ section.centre }}</td>
-					<td class="border-r px-2">{{ section.specialization }}</td>
-					<td class="border-r px-2">{{ section.year.year }}</td> -->
+					<td class="border-r px-2">{{ section.assessment_type }}</td>
 					<td class="flex justify-between">
 						
 						{% if user.role == 'admin' %}

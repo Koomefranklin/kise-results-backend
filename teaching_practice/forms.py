@@ -9,10 +9,13 @@ from .models import Location, Student, Section, StudentAspect, StudentLetter, St
 class NewSection(forms.ModelForm):
   class Meta:
     model = Section
-    fields = ['name', 'contribution']
+    fields = ['number', 'name', 'contribution', 'assessment_type', 'created_by']
 
   def __init__(self, *args, **kwargs):
+    user = kwargs.pop('user', None)
     super(NewSection, self).__init__(*args, **kwargs)
+    self.fields['created_by'].initial = user
+    self.fields['created_by'].queryset = User.objects.filter(pk=user.pk)
     for fieldname, field in self.fields.items():
       self.fields[fieldname].widget.attrs['class'] = 'rounded border-2 w-5/6 grid'
 
@@ -89,7 +92,7 @@ class StudentForm(forms.ModelForm):
   def __init__(self, *args, **kwargs):
     super(StudentForm, self).__init__(*args, **kwargs)
     for fieldname, field in self.fields.items():
-      # self.fields[fieldname].disabled = True
+      self.fields[fieldname].required = True
       self.fields[fieldname].widget.attrs['class'] = 'rounded border-2 w-5/6 grid'
 
 class NewLocationForm(forms.Form):
@@ -113,6 +116,8 @@ class NewStudentLetter(forms.ModelForm):
     super(NewStudentLetter, self).__init__(*args, **kwargs)
     self.fields['late_submission'].widget = forms.Select(choices=[(False, 'No'), (True, 'Yes')])
     for fieldname, field in self.fields.items():
+      if fieldname != 'late_submission' and fieldname != 'reason':
+        self.fields[fieldname].required = True
       self.fields[fieldname].widget.attrs['class'] = 'rounded border-2 w-5/6 grid'
 
 class UpdateStudentLetter(forms.ModelForm):

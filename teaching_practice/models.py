@@ -32,10 +32,15 @@ class ZonalLeader(models.Model):
     return self.zone_name
 
 class Section(models.Model):
+  class AssessmentType(models.TextChoices):
+    GENERAL = 'General', _('General')
+    PHE = 'PHE', _('Physical Health Education')
+
   id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
   number = models.IntegerField()
   name = models.CharField(max_length=200)
   contribution = models.IntegerField()
+  assessment_type = models.CharField(max_length=50, choices=AssessmentType.choices)
   created_by = models.ForeignKey(User, on_delete=models.CASCADE, related_name='section_created_by')
   updated_by = models.ForeignKey(User, on_delete=models.CASCADE, related_name='section_updated_by', null=True, blank=True)
   created_at = models.DateTimeField(auto_now_add=True)
@@ -45,7 +50,7 @@ class Section(models.Model):
     ordering = ['number']
 
   def __str__(self):
-    return self.name
+    return f'{self.name} - {self.assessment_type}'
   
 class SubSection(models.Model):
   id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)

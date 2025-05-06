@@ -12,8 +12,10 @@
 			<thead class="border-b bg-gray-500 text-white p-2">
 				<tr class="">
 					<th class='border-r px-2'>Section</th>
+					<th class="border-r px-2">Sub Section</th>
 					<th class="border-r px-2">Name</th>
-					<th class="border-r px-2">Marks</th>
+					<th class='border-r px-2'>Assessment Type</th>
+					<th class="border-r px-2">Score Contribution</th>
 					<th class="">Actions</th>
 				</tr>
 			</thead>
@@ -25,16 +27,14 @@
 				<tr
 					class="border-b dark:bg-{% cycle 'slate-900' 'slate-800' %} bg-{% cycle 'slate-50' 'slate-400' %}" >
 					<td class="border-r px-2">{{ aspect.section }}</td>
+					<td class="border-r px-2">{{ aspect.sub_section }}</td>
 					<td class="border-r px-2">
 						<a href='{% url "aspects" %}?query={{ aspect.pk }}' title='View {{ aspect.name }} Aspects' class='underline p-2'>{{ aspect.name }}</a>
 					</td>
-					<td class="border-r px-2">{{ aspect.contribution }}</td>
+					<td class="border-r px-2">{{ aspect.section.assessment_type }}</td>
+					<td class="border-r px-2">{{ aspect.assessment_type }}</td>
+					<td class="border-r px-2">{{ aspect.contribution }}</td>	
 					
-					<!-- <td class="border-r px-2">{{ aspect.specialization }}</td> -->
-					<!-- <td class="border-r px-2">{{ aspect.mode}}</td>
-					<td class="border-r px-2">{{ aspect.centre }}</td>
-					<td class="border-r px-2">{{ aspect.specialization }}</td>
-					<td class="border-r px-2">{{ aspect.year.year }}</td> -->
 					<td class="flex justify-between">
 						
 						{% if user.role == 'admin' %}

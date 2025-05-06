@@ -21,7 +21,7 @@
 					<th class="px-2">Date</th>
 					<th class='px-2'>Time</th>
 					<th class='px-2'>Assessor</th>
-					<!-- <th class='px-2'>Location</th> -->
+					<th class='px-2'>Assessment Type</th>
 					<th class="">Actions</th>
 				</tr>
 			</thead>
@@ -42,7 +42,7 @@
 					<td class="px-2">{{ letter.created_at.date }}</td>
 					<td class="px-2">{{ letter.created_at.time }}</td>
 					<td class="px-2">{{ letter.assessor }}</td>
-					<!-- <td class="px-2">{{ letter.location.name }}</td> -->
+					<td class="px-2">{{ letter.section.assessment_type }}</td>
 					<td class="flex justify-between">
 						<a href='{% url "edit_student_letter" letter.id %}' title='View'>View</a>
 						

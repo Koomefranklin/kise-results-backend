@@ -1,10 +1,12 @@
 from email import errors, message
 from turtle import st
+from django.conf import settings
 from django.conf.locale import fi
 from django.core.exceptions import PermissionDenied
 from django.shortcuts import get_object_or_404, render, redirect
 from dal import autocomplete
 from django.template import context
+from django.template.context_processors import media
 from django.views.generic.base import View
 from django.urls import reverse_lazy
 from dev.forms import CustomUserCreationForm
@@ -71,6 +73,11 @@ class NewSectionView(LoginRequiredMixin, CreateView):
 	template_name = 'teaching_practice/base_form.html'
 	success_url = reverse_lazy('sections')
 	
+	def get_form_kwargs(self):
+		kwargs = super(NewSectionView, self).get_form_kwargs()
+		kwargs['user'] = self.request.user
+		return kwargs
+	
 	def get_context_data(self, **kwargs):
 		user = self.request.user
 		context = super().get_context_data(**kwargs)
@@ -83,7 +90,10 @@ class NewSectionView(LoginRequiredMixin, CreateView):
 			instance = form.save(commit=False)
 			instance.created_by = self.request.user
 			instance.save()
-		return super().post(request, *args, **kwargs)
+			self.object = instance
+			return HttpResponseRedirect(self.get_success_url())
+		else:
+			return self.form_invalid(form)
 
 class EditsectionView(LoginRequiredMixin, UpdateView):
 	model = Section
@@ -108,7 +118,7 @@ class SectionViewlist(LoginRequiredMixin, ListView):
 		search_query = self.request.GET.get('search_query')
 		if search_query:
 			qs = qs.filter(Q(name__icontains=search_query) | Q(score__icontains=search_query))
-		return qs.order_by('number')
+		return qs.order_by('assessment_type', 'number')
 	
 	def get_context_data(self, **kwargs):
 		user = self.request.user
@@ -282,6 +292,7 @@ class NewStudentLetterView(LoginRequiredMixin, View):
 		longitude = self.kwargs.get('longitude')
 		latitude = self.kwargs.get('latitude')
 		student_id = self.kwargs.get('student_id')
+		assessment_type = self.kwargs.get('assessment_type')
 
 		if latitude and longitude:
 			try:
@@ -299,7 +310,12 @@ class NewStudentLetterView(LoginRequiredMixin, View):
 		if created:
 			location_instance.save()
 			messages.success(self.request, f'Location Created Successfully')
-			sections = Section.objects.all()
+			if assessment_type == 'General':
+				sections = Section.objects.filter(assessment_type='General')
+			elif assessment_type == 'PHE':
+				sections = Section.objects.filter(assessment_type='PHE')
+			else:
+				raise Http404('Invalid Assessment Type')
 
 			for section in sections:
 				student_section = StudentSection.objects.create(student_letter=student_letter, section=section)
@@ -349,6 +365,7 @@ class PreviousAssessmentDetailView(LoginRequiredMixin, DetailView):
 		context['total'] = StudentLetter.objects.filter(student=student).aggregate(total_score=Avg('total_score'))
 		context['sections'] = sections
 		context['letter'] = student_letter
+		context['assessment_type'] = StudentSection.objects.filter(student_letter=student_letter).first().section.assessment_type
 		return context
 
 class EditStudentLetterView(LoginRequiredMixin, UpdateView):
@@ -447,7 +464,12 @@ class EditStudentDetailsView(LoginRequiredMixin, View):
 		student_form = StudentForm(self.request.POST, instance=student_instance)
 
 		if letter_form.is_valid() and student_form.is_valid():
-			letter = letter_form.save(commit=True)
+			letter = letter_form.save(commit=False)
+			if letter_form.cleaned_data['late_submission'] and letter_form.cleaned_data['reason'] is None:
+				messages.error(self.request, f'Please provide a reason for late submission')
+				return redirect(reverse_lazy('edit_student_details', kwargs={'student_letter': letter.pk}))
+			else:
+				letter.save()
 
 			student = student_form.save(commit=True)
 			messages.success(self.request, f'Updated {student.full_name} Successfully')
@@ -529,7 +551,7 @@ class EditStudentSectionView(LoginRequiredMixin, UpdateView):
 			student_section = StudentSection.objects.get(pk=student_section)
 			current_number = student_section.section.number
 			student_letter = student_section.student_letter
-			last_number = Section.objects.all().count()
+			last_number = Section.objects.filter(assessment_type=student_section.section.assessment_type).count()
 			if current_number != last_number:
 				next_number = current_number + 1
 				next_section = StudentSection.objects.get(Q(section__number=next_number) & Q(student_letter=student_letter)).pk
@@ -665,26 +687,36 @@ class StudentAspectsViewList(LoginRequiredMixin, ListView):
 
 class GeneratePDF(LoginRequiredMixin, WeasyTemplateResponseMixin, DetailView):
 	model = StudentLetter
-	template_name = 'teaching_practice/generate_pdf.html'
+	# template_name = 'teaching_practice/general_pdf_report.html'
 
 	def get_object(self):
 		return get_object_or_404(StudentLetter, pk=self.kwargs.get('pk'))
+	
+	def get_template_names(self):
+		student_letter = self.get_object()
+		assessment_type = StudentSection.objects.filter(student_letter=student_letter).first().section.assessment_type
+		if assessment_type == 'PHE':
+			return ['teaching_practice/phe_pdf_report.html']
+		elif assessment_type == 'General':
+			return ['teaching_practice/general_pdf_report.html']
+		return super().get_template_names()
 	
 	def get_pdf_filename(self):
 		student = StudentLetter.objects.get(pk=self.kwargs.get('pk')).student
 		return f'{student.full_name}.pdf'
 
 	def get_context_data(self, **kwargs):
-		context = super().get_context_data(**kwargs)
 		letter = self.get_object()
+		context = super().get_context_data(**kwargs)
 		sections = StudentSection.objects.prefetch_related('student_aspects').filter(student_letter=letter)
 		aspects = StudentAspect.objects.filter(student_section__student_letter=letter)
-
+		image_url = self.request.build_absolute_uri(settings.MEDIA_URL + 'icons/kise_logo.png')
 		context['is_nav_enabled'] = True
 		context["title"] = f'{letter.student.full_name}\'s Assessment Report'
 		context['letter'] = letter
 		context['sections'] = sections
 		context['aspects'] = aspects
+		context['image_url'] = image_url
 		return context
 	
 	def render_to_response(self, context, **response_kwargs):
