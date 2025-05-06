@@ -17,12 +17,12 @@
         border-collapse: collapse;
         margin-top: 20px;
     }
-    th, td {
+    thead tr th, td {
         border: 1px solid black;
         padding: 8px;
         text-align: left;
     }
-    th {
+    thead tr th {
         background-color: #f2f2f2;
     }
     span {
@@ -42,6 +42,18 @@
       justify-content: space-between;
       line-height: 1.6;
     }
+    .center {
+      text-align: center;
+    }
+    .left {
+      text-align: left;
+    }
+    .right {
+      text-align: right;
+    }
+    .border {
+      border: 3px solid black;
+    }
   </style>
 <title>{{ title }}</title>
 <meta name="viewport" content="width=device-width, initial-scale=1"/>
@@ -57,8 +69,29 @@
   data-admin-utc-offset="{% now 'Z' %}">
 <div class="grid w-full h-full px-4">
 	<div class="h-full grid  w-full">
-    <div class='upper'>
-      <div class=''>kenya institute of special education</div>
+    
+    <div class='upper'>kenya institute of special education</div>
+    <table>
+      <tr>
+        <th class='left'>Tel: 0111055810,</th>
+        <th class='center' rowspan='4'><img src='{{ MEDIA_URL }}icons/kise_logo.png' width="50"	height="50"></th>
+        <th class='right'>Kasarani, Thika Superhighway Exit 8</th>
+      </tr>
+      <tr>
+        <th class='left'>Cell: 0111055810</th>
+        <th class='right'>Off Kasarani-Mwiki Rd</th>
+      </tr>
+      <tr>
+        <th class='left'>Website: www.kise.ac.ke</th>
+        <th class='right'>P.O. Box 48413-00100</th>
+      </tr>
+      <tr>
+        <th class='left'>Email: info@kise.ac.ke.</th>
+        <th class='right'>NAIROBI, KENYA</th>
+      </tr>
+      <tr><th class='border' colspan='3'></th></tr>
+    </table>
+      <div class='upper'></div>
       <div class=''>teaching practice assessment guide (competence based curriculum)</div>
     </div>
     <div class='font-bold'>
