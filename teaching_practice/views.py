@@ -474,7 +474,6 @@ class EditStudentDetailsView(LoginRequiredMixin, View):
 			student = student_form.save(commit=True)
 			messages.success(self.request, f'Updated {student.full_name} Successfully')
 			return redirect(reverse_lazy('edit_student_letter', kwargs={'pk': letter.pk}))
-
 	
 class StudentLetterViewList(LoginRequiredMixin, ListView):
 	model = StudentLetter
