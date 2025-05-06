@@ -50,7 +50,7 @@ class UpdateSubSection(forms.ModelForm):
 class NewAspect(forms.ModelForm):
   class Meta:
     model = Aspect
-    fields = ['section', 'name', 'contribution', 'created_by']
+    fields = ['section', 'name', 'sub_section', 'contribution', 'created_by']
   
   def __init__(self, *args, **kwargs):
     user = kwargs.pop('user', None)

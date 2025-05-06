@@ -141,6 +141,7 @@ class EditSubSectionView(LoginRequiredMixin, UpdateView):
 		user = self.request.user
 		context = super().get_context_data(**kwargs)
 		context['is_nav_enabled'] = True
+		context['title'] = 'Edit Sub-Section'
 		return context
 	
 class SubSectionViewlist(LoginRequiredMixin, ListView):
@@ -188,7 +189,10 @@ class NewAspectView(LoginRequiredMixin, CreateView):
 			instance = form.save(commit=False)
 			instance.created_by = self.request.user
 			instance.save()
-			return instance
+			self.object = instance
+			return HttpResponseRedirect(self.get_success_url())
+		else:
+			return self.form_invalid(form)
 
 class EditAspectView(LoginRequiredMixin, UpdateView):
 	model = Aspect
@@ -299,7 +303,7 @@ class NewStudentLetterView(LoginRequiredMixin, View):
 
 			for section in sections:
 				student_section = StudentSection.objects.create(student_letter=student_letter, section=section)
-				aspects = Aspect.objects.filter(section=section)
+				aspects = Aspect.objects.filter(Q(section=section) & Q(is_active=True))
 				for aspect in aspects:
 					student_aspect = StudentAspect.objects.create(student_section=student_section, aspect=aspect)
 

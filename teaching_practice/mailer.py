@@ -18,5 +18,5 @@ def send_student_report(request, file, obj):
     messages.success(request, f'Email sent to {student} at {email}')
   except Exception as e:
     with open('error.log', '+a') as error_file:
-      error_file.write(f'{timezone.now()}: Error: {e}\n')
+      error_file.write(f'{timezone.localtime(timezone.now())}: Error: {e}\n')
     messages.error(request, f'Error sending email to {student} at {email}.')
