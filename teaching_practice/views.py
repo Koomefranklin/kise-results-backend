@@ -717,6 +717,7 @@ class GeneratePDF(LoginRequiredMixin, WeasyTemplateResponseMixin, DetailView):
 		context['sections'] = sections
 		context['aspects'] = aspects
 		context['image_url'] = image_url
+		print(context['image_url'])
 		return context
 	
 	def render_to_response(self, context, **response_kwargs):
