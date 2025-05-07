@@ -7,6 +7,7 @@ from django.shortcuts import get_object_or_404, render, redirect
 from dal import autocomplete
 from django.template import context
 from django.template.context_processors import media
+from django.utils import timezone
 from django.views.generic.base import View
 from django.urls import reverse_lazy
 from dev.forms import CustomUserCreationForm
@@ -305,9 +306,19 @@ class NewStudentLetterView(LoginRequiredMixin, View):
 
 		student_instance = Student.objects.get(pk=student_id)
 
-		student_letter, created = StudentLetter.objects.get_or_create(student=student_instance, 
-			assessor=self.request.user, defaults={'location':location_instance})
-		if created:
+		try:
+			student_letter, created = StudentLetter.objects.get_or_create(student=student_instance, 
+				assessor=self.request.user, defaults={'location':location_instance})
+			if not created:
+				previous_assessment_type = StudentSection.objects.filter(student_letter=student_letter).first().section.assessment_type
+				creation_time = student_letter.updated_at
+				current_time = timezone.now()
+				time_difference = current_time - creation_time
+				if time_difference.days < 7 and assessment_type == previous_assessment_type:
+					return redirect(reverse_lazy('edit_student_letter', kwargs={'pk': student_letter.pk}))
+				else:
+					student_letter = StudentLetter.objects.create(student=student_instance, assessor=self.request.user, location=location_instance)
+					
 			location_instance.save()
 			messages.success(self.request, f'Location Created Successfully')
 			if assessment_type == 'General':
@@ -325,7 +336,10 @@ class NewStudentLetterView(LoginRequiredMixin, View):
 
 			messages.success(self.request, f'Added {student_letter.student} Successfully')
 
-		return redirect(reverse_lazy('edit_student_details', kwargs={'student_letter': student_letter.pk}))
+			return redirect(reverse_lazy('edit_student_details', kwargs={'student_letter': student_letter.pk}))
+		except Exception as e:
+			messages.error(self.request, f'Error: {e}')
+			return redirect(f'{reverse_lazy("student_letters")}?search_query={student_instance.full_name}')
 	
 class PreviousAssessmentsView(LoginRequiredMixin, ListView):
 	model = StudentLetter
@@ -716,7 +730,6 @@ class GeneratePDF(LoginRequiredMixin, WeasyTemplateResponseMixin, DetailView):
 		context['sections'] = sections
 		context['aspects'] = aspects
 		context['image_url'] = image_url
-		print(context['image_url'])
 		return context
 	
 	def render_to_response(self, context, **response_kwargs):

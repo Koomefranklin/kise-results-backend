@@ -26,7 +26,7 @@
         background-color: #f2f2f2;
     }
     span {
-      text-decoration: underline;
+      text-decoration: input;
     }
     ul {
       font-size: smaller;
@@ -53,6 +53,9 @@
     }
     .border {
       border: 3px solid black;
+    }
+    .input {
+      color: blue;
     }
   </style>
 <title>{{ title }}</title>
@@ -101,10 +104,10 @@
         <div class=''>Student's Index No. <span class=''>{{ letter.student.index }}</span></div>
      </div>
       <div class='row'>
-        <div class=''>School: <span class='underline'>{{ letter.school }}</span></div>
-        <div class=''>PP/Grade: <span class='underline'>{{ letter.grade }}</span></div>
-        <div class=''>Learning Area: <span class='underline'>{{ letter.learning_area }}</span></div>
-        <div class=''>Date: <span class='underline'>{{ letter.created_at.date }}</span></div>
+        <div class=''>School: <span class='input'>{{ letter.school }}</span></div>
+        <div class=''>PP/Grade: <span class='input'>{{ letter.grade }}</span></div>
+        <div class=''>Learning Area: <span class='input'>{{ letter.learning_area }}</span></div>
+        <div class=''>Date: <span class='input'>{{ letter.created_at.date }}</span></div>
       </div>
     </div>
     <div class='w-full'>
@@ -148,9 +151,9 @@
     <div class='w-full font-bold'>
       <div class=''><label>General comments and suggestions:</label> <textarea>{{ letter.comments }}</textarea></div>
       <div class='row'>
-        <div class=''>Name of Assessor: <span class='underline'>{{ letter.assessor }}</span></div>
-        <div class=''>Signature: <span class='underline'></span></div>
-        <div class=''>Date: <span class='underline'>{{ letter.updated_at.date }}</span></div>
+        <div class=''>Name of Assessor: <span class='input'>{{ letter.assessor }}</span></div>
+        <div class=''>Signature: <span class='input'></span></div>
+        <div class=''>Date: <span class='input'>{{ letter.updated_at.date }}</span></div>
       </div>
       <div class='text-center'>Location: <span class=''><a href='{{ letter.location.google_maps_url }}'>{{ letter.location.name }}</a></span></div>
       <!-- <div>Generated using <a href='{% url "index" %}'>KISE Teaching Practice Assessment Tool</a></div> -->

@@ -90,7 +90,29 @@
 </div>
 <script>
 	function sendLocation(student_id, assessment_type) {
+		const loader = document.createElement('div');
+		loader.id = 'loader';
+		loader.style.position = 'fixed';
+		loader.style.top = '0';
+		loader.style.left = '0';
+		loader.style.width = '100vw';
+		loader.style.height = '100vh';
+		loader.style.backgroundColor = 'rgba(0, 0, 0, 0.5)';
+		loader.style.zIndex = '1000';
+		loader.style.display = 'flex';
+		loader.style.justifyContent = 'center';
+		loader.style.alignItems = 'center';
+
+		const messageBox = document.createElement('div');
+		messageBox.textContent = 'Getting Your Location...';
+		messageBox.style.padding = '20px';
+		// messageBox.style.backgroundColor = '#fff';
+		messageBox.style.borderRadius = '8px';
+		messageBox.style.boxShadow = '0 0 10px rgba(0,0,0,0.25)';
       if (navigator.geolocation) {
+
+				loader.appendChild(messageBox);
+				document.body.appendChild(loader);
         navigator.geolocation.getCurrentPosition(
           (position) => {
             // Get latitude and longitude
@@ -100,14 +122,16 @@
 						form = document.getElementById('form');
 						form.action = `/teaching_practice/student-letter/new/${student_id}/${longitude}/${latitude}/${assessment_type}/`;
 						form.submit();
+
+						document.body.removeChild(loader);
           },
           (error) => {
-            console.error('Error obtaining location:', error);
-              alert('Unable to access your location. Please enable location permissions.');
+						document.body.removeChild(loader);
+						alert('Unable to access your location. Please enable location permissions on your browser and try again.');
           }
         );
       } else {
-        console.log('Geolocation is not supported by this browser.');
+				document.body.removeChild(loader);
         alert('Geolocation is not supported by your browser.');
       }
     };
