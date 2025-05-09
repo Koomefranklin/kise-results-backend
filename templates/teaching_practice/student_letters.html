@@ -8,6 +8,12 @@
 				<button type="submit" class='rounded-md border p-2'>Search</button>
 			</div>
 		</form>
+		<div class='grid gap-2 place-self-center text-left shadow-2xl p-2'>
+			<p class=''>Filter</p>
+			<button class=''><a href='{% url "student_letters" %}?filter_query=PHE'>PHE Assessments</a></button>
+			<button class=''><a href='{% url "student_letters" %}?filter_query=PHE'>General Assessments</a></button>
+			<button class=''><a href='{% url "student_letters" %}'>All Assessments</a></button>
+		</div>
 		<table class="w-5/6 place-self-center border">
 			<caption class=''>Student Letters</caption>
 			<thead class="border-b bg-gray-500 text-white p-2">
@@ -37,12 +43,12 @@
 					</td>
 					<td class="px-2">{{ letter.student.index }}</td>
 					<td class="px-2">{{ letter.school }}</td>
-					<td class="px-2">{{ letter.student.grade }}</td>
-					<td class="px-2">{{ letter.student.learning_area }}</td>
+					<td class="px-2">{{ letter.grade }}</td>
+					<td class="px-2">{{ letter.learning_area }}</td>
 					<td class="px-2">{{ letter.created_at.date }}</td>
 					<td class="px-2">{{ letter.created_at.time }}</td>
 					<td class="px-2">{{ letter.assessor }}</td>
-					<td class="px-2">{{ letter.section.assessment_type }}</td>
+					<td class="px-2">{{ letter.student_sections.first.section.assessment_type }}</td>
 					<td class="flex justify-between">
 						<a href='{% url "edit_student_letter" letter.id %}' title='View'>View</a>
 						
@@ -91,6 +97,11 @@
 			</tr>
 			{% endif %}
 		</table>
+		
+		{% for sectio in letter.student_sections.all %}
+			{{section.section.name}}
+		{% endfor %}
+			
 	</div>
 </div>
 {% endblock main %}

@@ -505,10 +505,15 @@ class StudentLetterViewList(LoginRequiredMixin, ListView):
 	
 	def get_queryset(self):
 		if self.request.user.is_staff:
-			qs = StudentLetter.objects.all()
+			qs = StudentLetter.objects.prefetch_related('student_sections').all()
 		else:
-			qs = StudentLetter.objects.filter(assessor=self.request.user)
+			qs = StudentLetter.objects.prefetch_related('student_sections').filter(assessor=self.request.user)
 		search_query = self.request.GET.get('search_query')
+		if filter_query := self.request.GET.get('filter_query'):
+			if filter_query == 'PHE':
+				qs = qs.filter(Q(student_sections__section__assessment_type='PHE')).distinct()
+			elif filter_query == 'General':
+				qs = qs.filter(Q(student_sections__section__assessment_type='General'))
 		if search_query:
 			qs = qs.filter(Q(student__full_name__icontains=search_query) | Q(student__index__icontains=search_query) | Q(school__icontains=search_query) | Q(grade__icontains=search_query) | Q(learning_area__icontains=search_query) | Q(zone__icontains=search_query) | Q(assessor__full_name__icontains=search_query))
 		return qs.order_by('student')

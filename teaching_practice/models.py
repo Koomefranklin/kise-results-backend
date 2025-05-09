@@ -192,7 +192,7 @@ class StudentLetter(models.Model):
 
 class StudentSection(models.Model):
   id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
-  student_letter = models.ForeignKey(StudentLetter, on_delete=models.CASCADE)
+  student_letter = models.ForeignKey(StudentLetter, on_delete=models.CASCADE, related_name='student_sections')
   section = models.ForeignKey(Section, on_delete=models.CASCADE)
   score = models.IntegerField(default=0)
   comments = models.CharField(max_length=255, null=True)
