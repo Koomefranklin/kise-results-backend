@@ -1,0 +1,36 @@
+{% load i18n static %}
+{% load static tailwind_tags %}
+<!DOCTYPE html>
+{% get_current_language as LANGUAGE_CODE %}{% get_current_language_bidi as LANGUAGE_BIDI %}
+<html lang="{{ LANGUAGE_CODE|default:'en-us' }}" dir="{{ LANGUAGE_BIDI|yesno:'rtl,ltr,auto' }}">
+<head>
+<title>{% block title %}{% endblock %}</title>
+{% block extrahead %}{% endblock %}
+{% block blockbots %}<meta name="robots" content="NONE,NOARCHIVE">{% endblock %}
+<meta name="color-scheme" content="dark light">
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<meta name="author" content="Koome Franklin"/>
+<link rel="icon" type="image/x-icon" href="{{ MEDIA_URL }}icons/favicon.ico"/>
+{% tailwind_css %}
+</head>
+<body class='grid w-screen h-screen bg dark:bg-slate-900'>
+  <div class='grid place-self-center w-fit border rounded-lg shadow-2xl p-2 font-bold text-2xl gap-4'>
+    <div class='grid font-bold text-center capitalize justify-center w-full bg-[#ffcb05]'>
+      <img src='{{ MEDIA_URL }}icons/kise_logo.png' class='grid place-self-center' width='50' height='50'>
+      <div class='grid  w-full'>
+        <!-- <h1 class='text-center'>Result Management</h1> -->
+      <h2 class='uppercase'>
+      {% block head %}
+        
+      {% endblock head %}
+        </h2>
+        </div>
+    </div>
+    
+    {% block main %}
+      
+    {% endblock main %}
+    {% block footer %}<footer id="footer" class=' justify-center w-screen p-2 text white h-fit text-center'>Developed by: Koome Franklin</footer>{% endblock %}
+  </div>
+</body>
+</html>

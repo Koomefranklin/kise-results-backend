@@ -1,0 +1,80 @@
+{% extends 'results/base_site.html' %} 
+{% block main %}
+{% if user.role == 'admin' or user.role == 'lecturer' %}
+  
+<div class="grid w-full place-items-center gap-4">
+  <div
+		class="w-full grid lg:grid-cols-2 md:grid-cols-2 gap-6 place-self-center font-bold px-4 lg:px-48">
+		<a
+			href='{% url "students" %}'
+			id="students"
+			class="grid rounded-lg bg-green-400 text-black drop-shadow-lg h-64 w-full place-content-center">
+			<div class="grid w-full justify-center p-2">
+				<img
+					src="{{ MEDIA_URL }}icons/people-line-solid.svg"
+					width="80"
+					height="50" />
+			</div>
+			<div class="font-bold text-xl lg:text-lg uppercase text-center">
+				students
+			</div>
+			<div class="font-bold text-xl lg:text-lg text-center">
+				{{ students }}
+			</div>
+		</a>
+		<a
+			href='{% url "specializations" %}'
+			id="specializations"
+			class="grid rounded-lg bg-blue-400 text-black drop-shadow-lg h-64 w-full place-content-center">
+			<div class="grid w-full justify-center p-2">
+				<img
+					src="{{ MEDIA_URL }}icons/book-solid.svg"
+					width="80"
+					height="50" />
+			</div>
+			<div class="font-bold text-xl lg:text-lg uppercase text-center">
+				specializations
+			</div>
+			<div class="font-bold text-xl lg:text-lg text-center">
+				{{ specializations }}
+			</div>
+		</a>
+    <a
+			href='{% url "papers" %}'
+			id="papers"
+			class="grid rounded-lg bg-yellow-500 text-black drop-shadow-lg h-64 w-full place-content-center">
+			<div class="grid w-full justify-center p-2">
+				<img
+					src="{{ MEDIA_URL }}icons/file-solid.svg"
+					width="80"
+					height="50" />
+			</div>
+			<div class="font-bold text-xl lg:text-lg uppercase text-center">
+				papers
+			</div>
+			<div class="font-bold text-xl lg:text-lg text-center">
+				{{ papers }}
+			</div>
+		</a>
+<a
+			href='{% url "modules" %}'
+			id="modules"
+			class="grid rounded-lg bg-white text-black drop-shadow-lg h-64 w-full place-content-center">
+			<div class="grid w-full justify-center p-2">
+				<img
+					src="{{ MEDIA_URL }}icons/list-solid.svg"
+					width="80"
+					height="50" />
+			</div>
+			<div class="font-bold text-xl lg:text-lg uppercase text-center">
+				modules
+			</div>
+			<div class="font-bold text-xl lg:text-lg text-center">
+				{{ modules }}
+			</div>
+		</a>
+</div>
+{% else %}
+<div class="grid">Not enough Permisions</div>
+{% endif %} 
+{% endblock main %}

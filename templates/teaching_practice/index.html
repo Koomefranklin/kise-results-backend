@@ -1,0 +1,20 @@
+{% extends "teaching_practice/base_site.html" %} {% block main %}
+{% load static %}
+<div class="grid w-full h-full">
+	<div
+		class="w-full grid lg:grid-cols-2 md:grid-cols-2 gap-6 place-self-center font-bold px-4 lg:px-48">
+		<div class='grid rounded-lg text-xl drop-shadow-lg shadow-xl h-64 w-full place-content-center'>
+			All Students: <span class='text-center'>{{ students }}</span>
+		</div>
+		<div class='grid rounded-lg text-xl drop-shadow-lg shadow-xl h-64 w-full place-content-center'>
+			Assessed Students: <span class='text-center'>{{ letters }}</span>
+		</div>
+		<div class='grid rounded-lg text-xl drop-shadow-lg shadow-xl h-64 w-full place-content-center'>
+			All Sections: <span class='text-center'>{{ sections }}</span>
+		</div>
+		<div class='grid rounded-lg text-xl drop-shadow-lg shadow-xl h-64 w-full place-content-center'>
+			All Aspects: <span class='text-center'>{{ aspects }}</span>
+		</div>
+	</div>
+</div>
+{% endblock main %}

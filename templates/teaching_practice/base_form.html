@@ -1,0 +1,29 @@
+{% extends "teaching_practice/base_site.html" %} {% block main %}
+{% load static %}
+<div class="grid w-full h-full">
+	<div class="h-full flex place-items-center w-full">
+		<form
+			method="post"
+			class="grid gap-4 place-self-center shadow-2xl p-4 rounded-md w-5/6">
+			{% csrf_token %} {{ form.management_form }}
+			<div class="grid gap-4 grid-cols-2">{{ form.as_div }}</div>
+			<button
+				type="submit"
+				class="border w-fit grid rounded p-2 place-self-center shadow-lg bg-[#4caf50] font-bold">
+				Submit
+			</button>
+		</form>
+		
+		{% if aspects %}
+			<div>
+			{% for aspect in aspects %}
+				<p>{{aspect.name}}</p>
+			{% endfor %}
+				</div>
+		{% endif %}
+			
+		<script type="text/javascript" src="{% static 'admin/js/vendor/jquery/jquery.js' %}"></script>
+		{{ form.media }}
+	</div>
+</div>
+{% endblock main %}

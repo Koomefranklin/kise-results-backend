@@ -1,0 +1,30 @@
+{% extends 'results/base_site.html' %}
+
+{% block main %}
+  <div class="grid">
+    <table>
+      <thead class="uppercase">
+        <tr>
+          <th>sn</th>
+          <th colspan="2">student</th>
+          
+          {% for paper in papers %}
+            <th colspan="2">{{ paper.name }}</th>
+          {% endfor %}
+            
+        </tr>
+      </thead>
+      <tbody>
+        
+        {% if results %}
+          {% for result in results %}
+          <tr>{{ result.student }}</tr>
+          <tr>{{ result.cat1 }}</tr>
+          {% endfor %}
+        {% endif %}
+                
+      </tbody>
+    </table>
+  </div>
+{% endblock main %}
+  

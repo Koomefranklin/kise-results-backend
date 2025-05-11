@@ -1,0 +1,162 @@
+{% load i18n static %}
+
+<!DOCTYPE html>
+{% get_current_language as LANGUAGE_CODE %}{% get_current_language_bidi as LANGUAGE_BIDI %}
+<html lang="{{ LANGUAGE_CODE|default:'en-us' }}" dir="{{ LANGUAGE_BIDI|yesno:'rtl,ltr,auto' }}">
+<head>
+  <style>
+    body {
+        font-family: Arial, sans-serif;
+        font-size: 14px;
+    }
+    h1, h2, h3 {
+        color: #333;
+    }
+    table {
+        width: 100%;
+        border-collapse: collapse;
+        margin-top: 20px;
+    }
+    thead tr th, td {
+        border: 1px solid black;
+        padding: 8px;
+        text-align: left;
+    }
+    thead tr th {
+        background-color: #f2f2f2;
+    }
+    span {
+      text-decoration: input;
+    }
+    ul {
+      font-size: smaller;
+    }
+    .input {
+      color: blue;
+    }
+    .row {
+      display: flex;
+      width: full;
+      justify-content: space-between;
+      line-height: 1.6;
+    }
+    .center {
+      text-align: center;
+    }
+    .left {
+      text-align: left;
+    }
+    .right {
+      text-align: right;
+    }
+    .border {
+      border: 3px solid black;
+    }
+  </style>
+<title>{{ title }}</title>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<meta name="author" content="Koome Franklin"/>
+<meta name="color-scheme" content="dark light">
+<link rel="icon" type="image/x-icon" href="{{ MEDIA_URL }}icons/favicon.ico"/>
+{% block blockbots %}<meta name="robots" content="NONE,NOARCHIVE">{% endblock %}
+
+<link href="{% static 'fontawesomefree/css/all.min.css' %}" rel="stylesheet" type="text/css">
+</head>
+
+<body class='w-screen h-screen flex flex-col overflow-hidden'
+  data-admin-utc-offset="{% now 'Z' %}">
+<div class="grid w-full h-full px-4">
+	<div class="h-full grid  w-full">
+    
+    <div class='upper'>kenya institute of special education</div>
+    <table>
+      <tr>
+        <th class='left'>Tel: 0111055810,</th>
+        <th class='center' rowspan='4'><img src='{{ image_url }}' width="50"	height="50"></th>
+        <th class='right'>Kasarani, Thika Superhighway Exit 8</th>
+      </tr>
+      <tr>
+        <th class='left'>Cell: 0111055810</th>
+        <th class='right'>Off Kasarani-Mwiki Rd</th>
+      </tr>
+      <tr>
+        <th class='left'>Website: www.kise.ac.ke</th>
+        <th class='right'>P.O. Box 48413-00100</th>
+      </tr>
+      <tr>
+        <th class='left'>Email: info@kise.ac.ke.</th>
+        <th class='right'>NAIROBI, KENYA</th>
+      </tr>
+      <tr><th class='border' colspan='3'></th></tr>
+    </table>
+      <div class='upper'>
+      <div class=''>teaching practice assessment guide (competence based curriculum)</div>
+      <div class=''>PHYSICAL HEALTH EDUCATION ASSESSMENT GUIDE</div>
+    </div>
+    </div>
+    <div class='font-bold'>
+     <div class='row'>
+       <div class=''>Student's Name: <span class=''>{{ letter.student.full_name }}</span></div>
+        <div class=''>Department: <span class=''>{{ letter.department }}</span></div>
+        <div class=''>Student's Index No. <span class=''>{{ letter.student.index }}</span></div>
+     </div>
+      <div class='row'>
+        <div class=''>School: <span class='input'>{{ letter.school }}</span></div>
+        <div class=''>PP/Grade: <span class='input'>{{ letter.grade }}</span></div>
+        <div class=''>Learning Area: <span class='input'>{{ letter.learning_area }}</span></div>
+        <div class=''>Date: <span class='input'>{{ letter.created_at.date }}</span></div>
+      </div>
+    </div>
+    <div class='w-full'>
+      <table style="width: 100%; border-collapse: collapse; border: 1px solid black;">
+        <thead>
+          <tr>
+            <th style="border: 1px solid black;">#</th>
+            <th style="border: 1px solid black;">Aspects to Consider</th>
+            <th style="border: 1px solid black;">Score</th>
+            <th style="border: 1px solid black;">Assessor's Comments</th>
+          </tr>
+        </thead>
+        <tbody>
+            {% for section in sections %}
+            <tr>
+              <td style="border: 1px solid black;">{{ section.section.number }}</td>
+              <td style="border: 1px solid black;">
+                <strong>{{ section.section.name }} ({{ section.section.contribution }} marks)</strong>
+                <ul>
+                    {% for aspect in section.student_aspects.all %}
+                        <li>{{ aspect.aspect.name }} ({{ aspect.aspect.contribution }} marks)</li>
+                    {% endfor %}
+                </ul>
+              </td>
+              <td style="border: 1px solid black;">{{ section.section.contribution }}</td>
+              <td style="border: 1px solid black;">{{ section.comments }}</td>
+            </tr>
+            {% empty %}
+            <tr>
+                <td colspan="4" style="text-align: center; border: 1px solid black;">No data available</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+      </table>
+
+      <div class='row upper'>
+        <div class=''>Total Score: <span></span></div>
+        <div class=''>Letter Score: <span></span></div>
+      </div>
+    </div>
+    <div class='w-full font-bold'>
+      <div class=''><label>General comments and suggestions:</label> <textarea>{{ letter.comments }}</textarea></div>
+      <div class='row'>
+        <div class=''>Name of Assessor: <span class='input'>{{ letter.assessor }}</span></div>
+        <div class=''>Signature: <span class='input'></span></div>
+        <div class=''>Date: <span class='input'>{{ letter.updated_at.date }}</span></div>
+      </div>
+      <div class='text-center'>Location: <span class=''><a href='{{ letter.location.google_maps_url }}'>{{ letter.location.name }}</a></span></div>
+      <!-- <div>Generated using <a href='{% url "index" %}'>KISE Teaching Practice Assessment Tool</a></div> -->
+    </div>
+
+	</div>
+</div>
+</body>
+</html>

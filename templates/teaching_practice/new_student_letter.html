@@ -1,0 +1,47 @@
+{% extends "teaching_practice/base_site.html" %} 
+{% block extrahead %}
+  <script>
+    window.onload = function () {
+      if (navigator.geolocation) {
+        navigator.geolocation.getCurrentPosition(
+          (position) => {
+            // Get latitude and longitude
+            const latitude = position.coords.latitude;
+            const longitude = position.coords.longitude;
+
+            // Set the values in the form
+            document.getElementById('id_latitude').value = latitude;
+            document.getElementById('id_longitude').value = longitude;
+          },
+          (error) => {
+            console.error('Error obtaining location:', error);
+              alert('Unable to access your location. Please enable location permissions.');
+          }
+        );
+      } else {
+        console.log('Geolocation is not supported by this browser.');
+        alert('Geolocation is not supported by your browser.');
+      }
+    };
+  </script>
+{% endblock extrahead %}
+{% block main %}
+{% load static %}
+<div class="grid w-full h-full">
+	<div class="h-full grid place-items-center w-full">
+		<form
+			method="post"
+			class="grid gap-4 place-self-center shadow-2xl p-4 rounded-md w-5/6">
+			{% csrf_token %} {{ form.management_form }}
+			<div class="grid gap-4 grid-cols-2">{{ form.as_div }} {{ student_letter_form.as_div }} {{ location_form.as_div }}</div>
+			<button
+				type="submit"
+				class="border w-fit grid rounded p-4 place-self-center shadow-lg">
+				Submit
+			</button>
+		</form>
+		<script type="text/javascript" src="{% static 'admin/js/vendor/jquery/jquery.js' %}"></script>
+		{{ form.media }}
+	</div>
+</div>
+{% endblock main %}

@@ -1,0 +1,114 @@
+{% extends 'results/base_site.html' %} 
+{% block main %}
+<div class="grid w-full h-full place-self-start gap-1">
+	<div class="grid w-full gap-2">
+		{% if user.role == 'admin' %}
+		<div class='grid grid-flow-col'><div
+			class="grid border rounded-md shadow-lg w-fit p-2 font-bold place-self-end mx-2">
+			<a href='{% url "new_lecturer" %}'>New Lecturer</a>
+		</div></div>
+		{% endif %}
+		
+		
+		<table class="w-5/6 place-self-center border">
+			<form method="GET" action="{% url 'lecturers' %}" class='w-full'>  
+				<div class='flex w-5/6 h-fit place-self-center'>
+					{{ search_query.search_query }}
+					<button type="submit" class='rounded-md border p-2'>Search</button>
+				</div>
+			</form>
+			<thead class="border-b bg-gray-500 text-white p-2">
+				<tr class="">
+					<th class="border-r px-2">Full Name</th>
+					<th class="border-r px-2 text-">Username</th>
+					<th class="border-r px-2">Specializations
+          </th>
+					<th class="">Actions</th>
+				</tr>
+			</thead>
+
+			{% if page_obj %}
+			<tbody class="">
+				{% for lecturer in page_obj %}
+
+				<tr
+					class="border-b">
+					<td class="border-r px-2">
+						{{ lecturer.user.full_name }}
+					</td>
+					<td class="border-r px-2">{{ lecturer.user.username }}</td>
+					<td class="border-r px-2"> {% for specialization in lecturer.specializations.all %}
+                        {{ specialization }}<br>
+                    {% endfor %}
+            </td>
+					<td class="flex justify-between">
+						<a href='{% url "edit_lecturer" lecturer.pk %}'>
+							edit
+							<i class="fa-regular fa-pen-to-square text-[#4caf50]"></i>
+						</a>
+						
+						{% if user.role == 'admin' %}
+							
+							{% if lecturer.user.is_active %}
+								<form action="{% url 'deactivate_user' lecturer.user.id %}" method="post">
+									{% csrf_token %}
+									<button type="submit" class="bg-red-500 rounded p-2">Deactivate</button>
+								</form>
+							{% else %}
+									
+								<form action="{% url 'activate_user' lecturer.user.id %}" method="post">
+									{% csrf_token %}
+									<button type="submit" class="bg-green-500 rounded p-2">Activate</button>
+								</form>
+							{% endif %}
+								
+						{% endif %}
+							
+					</td>
+				</tr>
+				{% endfor %}
+			</tbody>
+			<tfoot class="bg-gray-500 text-white font-bold">
+				<tr class="">
+					<td colspan='8' class=''>
+						<p class='w-full grid grid-flow-col'>
+							<span class='text-left'>Showing {{ page_obj.object_list|length }} of {{ page_obj.paginator.count }} Lecturers</span>
+							<span class='text-right'>
+								{% if page_obj.has_previous %}
+								<a
+									class="px-2"
+									href="?page={{ page_obj.previous_page_number }}">
+									Previous
+								</a>
+								{% endif %}
+								PAGE: {{ page_obj.number }} of
+								<a
+									class="px-2"
+									href="?page={{ page_obj.paginator.num_pages }}">
+									{{ page_obj.paginator.num_pages }}
+								</a>
+								{% if page_obj.has_next %}
+								<a
+									class="px-2 bg-[#4caf50] rounded"
+									href="?page={{ page_obj.next_page_number }}">
+									Next
+								</a>
+								{% endif %}
+							</span>
+						</p>
+					</td>
+				</tr>
+			</tfoot>
+			{% else %}
+			<tr class="">
+				<td
+					colspan="9"
+					class="text-center">
+					No Lecturers Found
+				</td>
+			</tr>
+			{% endif %}
+		</table>
+	</div>
+</div>
+{% endblock main %}

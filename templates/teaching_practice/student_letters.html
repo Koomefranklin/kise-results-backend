@@ -1,0 +1,107 @@
+{% extends 'teaching_practice/base_site.html' %} 
+{% block main %}
+<div class="grid w-full h-full place-self-start gap-1">
+	<div class="flex flex-col w-full gap-2">
+		<form method="GET" action="{% url 'student_letters' %}" class='w-5/6 place-self-center'>  
+			<div class='flex h-fit'>
+				{{ search_query.search_query }}
+				<button type="submit" class='rounded-md border p-2'>Search</button>
+			</div>
+		</form>
+		<div class='grid gap-2 place-self-center text-left shadow-2xl p-2'>
+			<p class=''>Filter</p>
+			<button class=''><a href='{% url "student_letters" %}?filter_query=PHE'>PHE Assessments</a></button>
+			<button class=''><a href='{% url "student_letters" %}?filter_query=PHE'>General Assessments</a></button>
+			<button class=''><a href='{% url "student_letters" %}'>All Assessments</a></button>
+		</div>
+		<table class="w-5/6 place-self-center border">
+			<caption class=''>Student Letters</caption>
+			<thead class="border-b bg-gray-500 text-white p-2">
+				<tr class="">
+					
+					<th class="px-2">Full Name</th>
+					<th class="px-2">Assessment Number</th>
+					<th class="px-2">School</th>
+					<th class="px-2">Grade/Level</th>
+					<th class='px-2'>Learning Area</th>
+					<th class="px-2">Date</th>
+					<th class='px-2'>Time</th>
+					<th class='px-2'>Assessor</th>
+					<th class='px-2'>Assessment Type</th>
+					<th class="">Actions</th>
+				</tr>
+			</thead>
+
+			{% if page_obj %}
+			<tbody class="capitalize">
+				{% for letter in page_obj %}
+
+				<tr
+					class="{% cycle 'bg-gray-200 dark:text-black' 'bg-inherit' %} text-{% cycle 'bg-black' 'inherit' %} hover:bg-[#333] hover:text-white">
+					<td class="px-2">
+						<a href='{% url "edit_student_letter" letter.pk %}' class='w-full'>{{ letter.student.full_name }}</a>
+					</td>
+					<td class="px-2">{{ letter.student.index }}</td>
+					<td class="px-2">{{ letter.school }}</td>
+					<td class="px-2">{{ letter.grade }}</td>
+					<td class="px-2">{{ letter.learning_area }}</td>
+					<td class="px-2">{{ letter.created_at.date }}</td>
+					<td class="px-2">{{ letter.created_at.time }}</td>
+					<td class="px-2">{{ letter.assessor }}</td>
+					<td class="px-2">{{ letter.student_sections.first.section.assessment_type }}</td>
+					<td class="flex justify-between">
+						<a href='{% url "edit_student_letter" letter.id %}' title='View'>View</a>
+						
+					</td>
+				</tr>
+				{% endfor %}
+			</tbody>
+			<tfoot class="bg-gray-500 text-white font-bold">
+				<tr class="">
+					<td colspan='11' class=''>
+						<p class='w-full grid grid-flow-col'>
+							<span class='text-left'>Showing {{ page_obj.object_list|length }} of {{ page_obj.paginator.count }} Student Letters</span>
+							<span class='text-right'>
+								{% if page_obj.has_previous %}
+								<a
+									class="px-2"
+									href="?page={{ page_obj.previous_page_number }}">
+									Previous
+								</a>
+								{% endif %}
+								PAGE: {{ page_obj.number }} of
+								<a
+									class="px-2"
+									href="?page={{ page_obj.paginator.num_pages }}">
+									{{ page_obj.paginator.num_pages }}
+								</a>
+								{% if page_obj.has_next %}
+								<a
+									class="px-2 bg-[#4caf50] rounded"
+									href="?page={{ page_obj.next_page_number }}">
+									Next
+								</a>
+								{% endif %}
+							</span>
+						</p>
+					</td>
+				</tr>
+			</tfoot>
+			{% else %}
+			<tr class="">
+				<td
+					colspan="11"
+					class="text-center">
+					No Student Letters Found
+				</td>
+			</tr>
+			{% endif %}
+		</table>
+		
+		{% for sectio in letter.student_sections.all %}
+			{{section.section.name}}
+		{% endfor %}
+			
+	</div>
+</div>
+{% endblock main %}

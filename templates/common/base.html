@@ -1,0 +1,161 @@
+{% load i18n static %}
+{% load static tailwind_tags %}
+<!DOCTYPE html>
+{% get_current_language as LANGUAGE_CODE %}{% get_current_language_bidi as LANGUAGE_BIDI %}
+<html lang="{{ LANGUAGE_CODE|default:'en-us' }}" dir="{{ LANGUAGE_BIDI|yesno:'rtl,ltr,auto' }}">
+<head>
+<title>{% block title %}{% endblock %}</title>
+{% block extrahead %}{% endblock %}
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<meta name="author" content="Koome Franklin"/>
+<meta name="color-scheme" content="dark light">
+<link rel="icon" type="image/x-icon" href="{{ MEDIA_URL }}icons/favicon.ico"/>
+{% block blockbots %}<meta name="robots" content="NONE,NOARCHIVE">{% endblock %}
+{% tailwind_preload_css %}
+{% tailwind_css %}
+<link href="{% static 'fontawesomefree/css/all.min.css' %}" rel="stylesheet" type="text/css">
+</head>
+
+<body class='w-screen h-screen dark:bg-slate-900 flex flex-col overflow-hidden'
+  data-admin-utc-offset="{% now 'Z' %}">
+
+   <div class='sticky top-0 z-50 w-screen h-fit'>
+     <!-- Header -->
+    {% block header %}
+      <header id="header" class='w-full h-fit grid grid-flow-col p-2'>
+        <div id="branding" class='grid'>
+        {% block branding %}
+        <a href='{% url "common" %}' title='Home Page'>
+           <div id="main_logo">
+            <img
+              src="{{ MEDIA_URL }}icons/kise_logo.png"
+              width="50"
+              height="50" />
+          </div>
+        </a>
+        {% endblock %}
+        </div>
+        {% block usertools %}
+          
+          {% if user.is_authenticated %}
+            
+            <div id="user-tools" class='grid grid-flow-col justify-end gap-px self-center'>
+              {% block welcome-msg %}
+                  {% translate 'Welcome,' %}
+                  <strong class='uppercase'>{% firstof user.full_name user.get_username %}, {{ user.role }}</strong>.
+              {% endblock %}
+              {% block userlinks %}
+                  {% if user.has_usable_password %}
+                    <a href="{% url 'password-change' user.pk %}">{% translate 'Change password' %}</a> /
+                  {% endif %}
+                  <form id="logout-form" method="post" action="{% url 'logout' %}">
+                      {% csrf_token %}
+                      <button type="submit">{% translate 'Log out' %}</button>
+                  </form>
+              {% endblock %}
+            </div>
+
+          {% endif %}
+        {% endblock %}
+        {% block nav-global %}{% endblock %}
+      </header>
+    {% endblock %}
+    <!-- END Header -->
+
+    {% block nav-breadcrumbs %}
+      <nav aria-label="{% translate 'Breadcrumbs' %}" class='pl-3 w-full border-b bg-[#4caf50]'>
+        {% block breadcrumbs %}
+          <div class="w-full">
+            <a href="{% url 'common' %}">{% translate 'Home' %}</a>
+            {% if title %} &rsaquo; {{ title }}{% endif %}
+          </div>
+        {% endblock %}
+      </nav>
+      <div class='bg-[#ffcb05] min-h-2 w-full'></div>
+    {% endblock %}
+   </div>
+
+    <div class="flex w-full h-full overflow-y-auto p-3" id="main">
+       
+       {% if is_nav_enabled %}
+         <div class='flex flex-row'>
+          {% block nav-sidebar %}
+          {% endblock %}
+        </div>
+       {% endif %}
+        
+      <main id="content-start" class="h-full w-full p-4 overflow-auto mb-10" tabindex="-1">
+        
+        
+          
+        {% block messages %}
+          {% if messages %}
+            <ul class="grid w-full h-fit border-gray-500 border-2 text-white p-2 rounded-md">
+              {% for message in messages %}
+              <li{% if message.tags %} 
+              {}
+                class="w-full {% if message.tags == 'error' %}text-red-500{% elif message.tags == 'success' %}text-[#4caf50]{% elif message.tags == 'warning' %}text-yellow-500{% elif message.tags == 'info' %}text-black dark:text-white{% else %}text-inherit{% endif %}"
+                {% endif %}>
+                {{ message|safe }}
+              </li>
+            {% endfor %}</ul>
+          {% endif %}
+        {% endblock messages %}
+
+        <!-- Content -->
+        <div id="content" class="w-full h-full grid">
+          {% block pretitle %}{% endblock %}
+          {% block content_title %}{% if title %}{% endif %}{% endblock %}
+          {% block content_subtitle %}{% if subtitle %}<h2>{{ subtitle }}</h2>{% endif %}{% endblock %}
+          {% block main %}
+            {% block object-tools %}{% endblock %}
+            {{ main }}
+          {% endblock %}
+          {% block sidebar %}{% endblock %}
+          <br class="clear">
+        </div>
+        <!-- END Content -->
+      </main>
+    </div>
+    {% block footer %}<footer id="footer" class='sticky bottom-0 justify-center h-fit w-screen p-2 bg-black text-white text-center'>Developed by: Koome Franklin</footer>{% endblock %}
+
+{% if is_nav_enabled %}
+  <script>
+  'use strict';
+  {
+    const toggleNavSidebar = document.getElementById('toggle-nav-sidebar');
+    if (toggleNavSidebar !== null) {
+        const navSidebar = document.getElementById('nav-sidebar');
+        const main = document.getElementById('main');
+        const toggleIcon = document.getElementById('toggle_icon');
+        let navSidebarIsOpen = localStorage.getItem('django.admin.navSidebarIsOpen');
+        if (navSidebarIsOpen === null) {
+            navSidebarIsOpen = 'true';
+        }
+        main.classList.toggle('shifted', navSidebarIsOpen === 'true');
+        navSidebar.setAttribute('aria-expanded', navSidebarIsOpen);
+
+        toggleNavSidebar.addEventListener('click', function() {
+            // Toggle the sidebar open/closed
+            if (navSidebarIsOpen === 'true') {
+                navSidebarIsOpen = 'false';
+                navSidebar.style.display = 'none';
+                toggleIcon.className = 'fa-solid fa-caret-right fa-lg';
+            } else {
+                navSidebarIsOpen = 'true';
+                navSidebar.style.display = 'block';
+                toggleIcon.className = 'fa-solid fa-caret-left fa-lg';
+            }
+            localStorage.setItem('django.admin.navSidebarIsOpen', navSidebarIsOpen);
+            main.classList.toggle('shifted');
+            navSidebar.setAttribute('aria-expanded', navSidebarIsOpen);
+        });
+    }
+
+  }
+
+</script>
+{% endif %}
+  
+</body>
+</html>

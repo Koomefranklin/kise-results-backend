@@ -1,0 +1,13 @@
+{% extends "results/base_site.html" %} 
+  
+
+{% block main %}
+  <div class='grid w-full min-h-screen text-red-500'>
+    <div class='grid place-self-center font-bold uppercase text-2xl'>
+      error: this page does not exist!
+
+      <a href='{% url "common" %}' class='text-green-500 text-center'>Back Home</a>
+    </div>
+  </div>
+{% endblock main %}
+  
