@@ -294,7 +294,7 @@ class NewStudentLetterView(LoginRequiredMixin, View):
 		latitude = self.kwargs.get('latitude')
 		student_id = self.kwargs.get('student_id')
 		assessment_type = self.kwargs.get('assessment_type')
-		deadline = timezone.datetime.strptime('11:00', '%H:%M').time()
+		deadline = timezone.datetime.strptime('17:00', '%H:%M').time()
 		start_time = timezone.datetime.strptime('07:00', '%H:%M').time()
 		current_time = timezone.now().astimezone().time()
 

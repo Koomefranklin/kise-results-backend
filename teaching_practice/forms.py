@@ -119,7 +119,7 @@ class NewStudentLetter(forms.ModelForm):
   def __init__(self, *args, **kwargs):
     super(NewStudentLetter, self).__init__(*args, **kwargs)
     self.fields['late_submission'].widget = forms.Select(choices=[(False, 'No'), (True, 'Yes')])
-    deadline = timezone.datetime.strptime('11:00', '%H:%M').time()
+    deadline = timezone.datetime.strptime('17:00', '%H:%M').time()
     start_time = timezone.datetime.strptime('07:00', '%H:%M').time()
     current_time = timezone.now().astimezone().time()
     if not (current_time > start_time <= current_time <= deadline):
