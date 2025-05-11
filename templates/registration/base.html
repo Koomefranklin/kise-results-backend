@@ -30,7 +30,32 @@
     {% block main %}
       
     {% endblock main %}
+    
+    {% block reveal %}
+      <div class='flex place-self-center gap-2'>
+        <input type='checkbox' id='reveal' class='w-fit'>
+        <label for='reveal' class=''>Show Passwords</label>
+      </div>
+    {% endblock reveal %}
+      
     {% block footer %}<footer id="footer" class=' justify-center w-screen p-2 text white h-fit text-center'>Developed by: Koome Franklin</footer>{% endblock %}
   </div>
+  <script>
+    const revealPassword = document.getElementById('reveal');
+    const elements = document.getElementsByClassName('password-field');
+    const passwordFields = Array.from(elements);
+    revealPassword.addEventListener('change', function() {
+      if (revealPassword.checked === true) {
+        passwordFields.forEach(field => {
+          field.type = 'text';
+        });
+      }
+      else {
+        passwordFields.forEach(field => {
+          field.type = 'password';
+        });
+      }
+    });
+  </script>
 </body>
 </html>

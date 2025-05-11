@@ -9,7 +9,8 @@ def send_student_report(request, file, obj):
     student = obj.student.full_name
     email = obj.student.email
     regards = 'Regards, KISE TP'
-    subject, from_email, to = "KISE TEACHING PRACTICE ASSESSMENT REPORT", None, email
+    sender_email = 'TP Assessment Report <webform@kise.ac.ke>'
+    subject, from_email, to = "KISE TEACHING PRACTICE ASSESSMENT REPORT", sender_email, email
     text_content = f'Attached is the assessment report for {student}'
     msg = EmailMultiAlternatives(subject=subject, body=text_content, from_email=from_email, to=[to])
     msg.mixed_subtype = 'related'

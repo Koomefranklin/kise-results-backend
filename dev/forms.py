@@ -72,7 +72,6 @@ class CustomUserCreationForm(UserCreationForm):
 		for fieldname, field in self.fields.items():
 			self.fields[fieldname].widget.attrs['class'] = 'rounded border-2 w-5/6 grid'
 		for fieldname in ['password1', 'password2']:
-			self.fields[fieldname].widget.attrs['value'] = 'Kisedefault1'
 			self.fields[fieldname].widget.attrs['class'] = 'hidden'
 			self.fields[fieldname].label = ''
 			self.fields[fieldname].help_text = None
@@ -110,7 +109,7 @@ class CustomPasswordChangeForm(PasswordChangeForm):
 
     # Adding extra class in the html tags
     for fieldname, field in self.fields.items():
-      self.fields[fieldname].widget.attrs['class'] = 'rounded border-2 w-5/6 grid'
+      self.fields[fieldname].widget.attrs['class'] = 'rounded border-2 w-5/6 grid password-field'
 
 class NewStudent(forms.ModelForm):
 	class Meta:
