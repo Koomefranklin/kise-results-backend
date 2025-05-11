@@ -1,6 +1,10 @@
+from tracemalloc import start
 from dal_gm2m import fields
+from debugpy.common.timestamp import current
 from django import forms
 from dal import autocomplete
+from django.conf.locale import de
+from django.utils import timezone
 from platformdirs import user_cache_path
 from dev import views
 from dev.models import User
@@ -115,6 +119,12 @@ class NewStudentLetter(forms.ModelForm):
   def __init__(self, *args, **kwargs):
     super(NewStudentLetter, self).__init__(*args, **kwargs)
     self.fields['late_submission'].widget = forms.Select(choices=[(False, 'No'), (True, 'Yes')])
+    deadline = timezone.datetime.strptime('11:00', '%H:%M').time()
+    start_time = timezone.datetime.strptime('07:00', '%H:%M').time()
+    current_time = timezone.now().astimezone().time()
+    if not (current_time > start_time <= current_time <= deadline):
+      self.fields['late_submission'].widget.choices = [(True, 'Yes')]
+      self.fields['late_submission'].disabled = True
     for fieldname, field in self.fields.items():
       if fieldname != 'late_submission' and fieldname != 'reason':
         self.fields[fieldname].required = True

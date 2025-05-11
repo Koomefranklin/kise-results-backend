@@ -5,7 +5,7 @@
 		
     {% if user.is_staff %}
       <div class='grid place-self-center w-5/6'>
-        <h2 class='text-center font-bold'>Add Zonal Leaders</h2>
+        <h2 class='text-center font-bold'>Add Zonal Leader</h2>
       </div>
       <form method="post" class='flex gap-2 place-content-center'> 
         {% csrf_token %} 
@@ -19,8 +19,8 @@
 			<thead class="border-b bg-gray-500 text-white p-2">
 				<tr class="">
 					
-					<th class="px-2">Zone Name</th>
 					<th class="px-2">Leader</th>
+					<th class="px-2">Zone Name</th>
 					<!-- <th class="">Actions</th> -->
 				</tr>
 			</thead>

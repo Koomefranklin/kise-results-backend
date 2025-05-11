@@ -294,6 +294,9 @@ class NewStudentLetterView(LoginRequiredMixin, View):
 		latitude = self.kwargs.get('latitude')
 		student_id = self.kwargs.get('student_id')
 		assessment_type = self.kwargs.get('assessment_type')
+		deadline = timezone.datetime.strptime('11:00', '%H:%M').time()
+		start_time = timezone.datetime.strptime('07:00', '%H:%M').time()
+		current_time = timezone.now().astimezone().time()
 
 		if latitude and longitude:
 			try:
@@ -320,6 +323,10 @@ class NewStudentLetterView(LoginRequiredMixin, View):
 					student_letter = StudentLetter.objects.create(student=student_instance, assessor=self.request.user, location=location_instance)
 					
 			location_instance.save()
+			if not (current_time > start_time <= current_time <= deadline):
+				student_letter.late_submission = True
+				messages.error(self.request, f'You are Starting an assessment at {current_time} which seems not within class time. The system has marked this as a Late submission. Please provide a reason')
+				return redirect(f'{reverse_lazy("edit_student_details", kwargs={'student_letter': student_letter.pk})}')
 			messages.success(self.request, f'Location Created Successfully')
 			if assessment_type == 'General':
 				sections = Section.objects.filter(assessment_type='General')
