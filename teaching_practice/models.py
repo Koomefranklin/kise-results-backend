@@ -95,6 +95,7 @@ class Student(models.Model):
   index = models.CharField(blank=True, null=True, max_length=50, verbose_name='Assessment Number')
   email = models.EmailField(max_length=200, null=True, blank=True)
   period = models.DateField(null=True, blank=True)
+  created_by = models.ForeignKey(User, related_name='created_by', null=True, blank=True, on_delete=models.RESTRICT)
   created_at = models.DateTimeField(auto_now_add=True)
   updated_at = models.DateTimeField(auto_now=True)
 

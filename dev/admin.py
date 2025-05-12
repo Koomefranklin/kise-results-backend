@@ -8,6 +8,7 @@ from .forms import CatCombinationAdminForm, StudentAdminForm, LecturerAdminForm,
 class CustomUserAdmin(UserAdmin):
   model = User
   search_fields = ['full_name', 'username']
+  list_filter = ['is_staff', 'is_active', 'is_superuser', 'role', 'is_first_login']
   
   list_display = [
       'id',
@@ -15,6 +16,7 @@ class CustomUserAdmin(UserAdmin):
       'sex',
       'username',
       'is_staff',
+      'is_first_login',
   ]
   fieldsets = (
       (
@@ -95,6 +97,11 @@ class ResultAdmin(admin.ModelAdmin):
 class CatCombinationAdmin(admin.ModelAdmin):
   add_form = CatCombinationAdminForm 
 
+class TpStudentAdmin(admin.ModelAdmin):
+  list_display = ['full_name', 'index', 'created_by']
+  search_fields = ['full_name', 'index', 'created_by']
+  # list_filter = ['centre', 'course', 'specialization']
+
 
 
 class ModuleScoreAdmin(admin.ModelAdmin):
@@ -128,4 +135,4 @@ admin.site.register(tp.StudentLetter)
 admin.site.register(tp.Section)
 admin.site.register(tp.Aspect)
 admin.site.register(tp.SubSection)
-admin.site.register(tp.Student)
+admin.site.register(tp.Student, TpStudentAdmin)

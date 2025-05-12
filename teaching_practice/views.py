@@ -252,6 +252,18 @@ class NewStudentView(LoginRequiredMixin, CreateView):
 		context['title'] = 'New Student'
 		return context
 	
+	def post(self, request, *args, **kwargs):
+		form = self.get_form(self.get_form_class())
+		if form.is_valid:
+			instance = form.save(commit=False)
+			instance.created_by = self.request.user
+			instance.save()
+			self.object = instance
+			messages.success(self.request, f'Added {instance.full_name} Successfully')
+			return redirect(f'{reverse_lazy('students_tp')}?search_query={instance.full_name}')
+		else:
+			return self.form_invalid(form)
+	
 class EditStudentView(LoginRequiredMixin, UpdateView):
 	model = Student
 	form_class = StudentForm

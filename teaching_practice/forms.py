@@ -1,6 +1,5 @@
 from tracemalloc import start
 from dal_gm2m import fields
-from debugpy.common.timestamp import current
 from django import forms
 from dal import autocomplete
 from django.conf.locale import de
