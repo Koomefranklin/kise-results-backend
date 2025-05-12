@@ -338,7 +338,7 @@ class NewStudentLetterView(LoginRequiredMixin, View):
 			if not (current_time > start_time <= current_time <= deadline):
 				student_letter.late_submission = True
 				messages.error(self.request, f'You are Starting an assessment at {current_time} which seems not within class time. The system has marked this as a Late submission. Please provide a reason')
-				return redirect(f'{reverse_lazy("edit_student_details", kwargs={'student_letter': student_letter.pk})}')
+				# return redirect(f'{reverse_lazy("edit_student_details", kwargs={'student_letter': student_letter.pk})}')
 			messages.success(self.request, f'Location Created Successfully')
 			if assessment_type == 'General':
 				sections = Section.objects.filter(assessment_type='General')
@@ -352,7 +352,6 @@ class NewStudentLetterView(LoginRequiredMixin, View):
 				aspects = Aspect.objects.filter(Q(section=section) & Q(is_active=True))
 				for aspect in aspects:
 					student_aspect = StudentAspect.objects.create(student_section=student_section, aspect=aspect)
-
 			messages.success(self.request, f'Added {student_letter.student} Successfully')
 
 			return redirect(reverse_lazy('edit_student_details', kwargs={'student_letter': student_letter.pk}))

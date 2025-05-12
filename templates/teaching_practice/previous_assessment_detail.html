@@ -30,7 +30,7 @@
         </thead>
         <tbody>
             {% for section in sections %}
-            <tr>
+            <tr class="{% cycle 'bg-gray-200' 'bg-inherit' %} text-{% cycle 'bg-black' 'inherit' %} hover:bg-[#333] hover:text-white">
               <td style="border: 1px solid black;">{{ section.section.number }}</td>
               <td style="border: 1px solid black;">
                 <strong>{{ section.section.name }} ({{ section.section.contribution }} marks)</strong>
