@@ -102,8 +102,6 @@ class TpStudentAdmin(admin.ModelAdmin):
   search_fields = ['full_name', 'index', 'created_by']
   # list_filter = ['centre', 'course', 'specialization']
 
-
-
 class ModuleScoreAdmin(admin.ModelAdmin):
   list_display = ['student', 'module', 'take_away', 'discussion', 'paper']
   
@@ -111,6 +109,14 @@ class ModuleScoreAdmin(admin.ModelAdmin):
     module = ModuleScore.objects.get(pk=obj.pk).module
     paper = Module.objects.get(pk=module.pk).paper
     return paper
+  
+class StudentAspectAdmin(admin.ModelAdmin):
+  list_display = ['student_section', 'score', 'aspect']
+  search_fields = ['aspect__name']
+
+
+  def aspect(self, obj):
+    return obj.aspect.name
 
 admin.site.register(User, CustomUserAdmin)
 admin.site.register(Mode)
@@ -136,3 +142,4 @@ admin.site.register(tp.Section)
 admin.site.register(tp.Aspect)
 admin.site.register(tp.SubSection)
 admin.site.register(tp.Student, TpStudentAdmin)
+admin.site.register(tp.StudentAspect, StudentAspectAdmin)
