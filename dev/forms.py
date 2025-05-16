@@ -111,6 +111,14 @@ class CustomPasswordChangeForm(PasswordChangeForm):
     for fieldname, field in self.fields.items():
       self.fields[fieldname].widget.attrs['class'] = 'rounded border-2 w-5/6 grid password-field'
 
+class ResetPasswordForm(forms.Form):
+	username = forms.CharField(label='Username', widget=forms.TextInput(attrs={'placeholder':'Enter your username', 'class':'w-full h-fit p-2'}))
+
+class OTPVerificationForm(forms.Form):
+	otp = forms.IntegerField(label='OTP', widget=forms.TextInput(attrs={'placeholder':'Enter OTP from Email', 'class':'w-full h-fit p-2'}))
+	new_password = forms.CharField(label='New password', widget=forms.PasswordInput)
+	new_password2 = forms.CharField(label='Confirm new password', widget=forms.PasswordInput)
+
 class NewStudent(forms.ModelForm):
 	class Meta:
 		model = Student

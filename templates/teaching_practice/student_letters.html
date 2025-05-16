@@ -1,4 +1,5 @@
 {% extends 'teaching_practice/base_site.html' %} 
+{% load tz %}
 {% block main %}
 <div class="grid w-full h-full place-self-start gap-1">
 	<div class="flex flex-col w-full gap-2">
@@ -8,11 +9,13 @@
 				<button type="submit" class='rounded-md border p-2'>Search</button>
 			</div>
 		</form>
-		<div class='grid gap-2 place-self-center text-left shadow-2xl p-2'>
-			<p class=''>Filter</p>
-			<button class=''><a href='{% url "student_letters" %}?filter_query=PHE'>PHE Assessments</a></button>
-			<button class=''><a href='{% url "student_letters" %}?filter_query=PHE'>General Assessments</a></button>
-			<button class=''><a href='{% url "student_letters" %}'>All Assessments</a></button>
+		<div class='grid gap-2 place-self-center shadow-2xl p-2 '>
+			<p class='text-center border-b-2'>Filter</p>
+			<button class='text-left'><a href='{% url "student_letters" %}?filter_query=PHE'>PHE Assessments</a></button>
+			<button class='text-left'><a href='{% url "student_letters" %}?filter_query=PHE'>General Assessments</a></button>
+			<button class='text-left'><a href='{% url "student_letters" %}?filter_query=DL'>Distant Learning Assessments</a></button>
+			<button class='text-left'><a href='{% url "student_letters" %}?filter_query=FT'>Full Time Assessments</a></button>
+			<button class='text-left'><a href='{% url "student_letters" %}'>All Assessments</a></button>
 		</div>
 		<table class="w-5/6 place-self-center border">
 			<caption class=''>Student Letters</caption>
@@ -24,6 +27,7 @@
 					<th class="px-2">School</th>
 					<th class="px-2">Grade/Level</th>
 					<th class='px-2'>Learning Area</th>
+					<th class="px-2">Department</th>
 					<th class="px-2">Date</th>
 					<th class='px-2'>Time</th>
 					<th class='px-2'>Assessor</th>
@@ -45,6 +49,7 @@
 					<td class="px-2">{{ letter.school }}</td>
 					<td class="px-2">{{ letter.grade }}</td>
 					<td class="px-2">{{ letter.learning_area }}</td>
+					<td class="px-2">{{ letter.department }}</td>
 					<td class="px-2">{{ letter.created_at.date }}</td>
 					<td class="px-2">{{ letter.created_at.time }}</td>
 					<td class="px-2">{{ letter.assessor }}</td>

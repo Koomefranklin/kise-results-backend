@@ -4,7 +4,7 @@
 	<div class="h-full grid place-items-center w-full">
 		<form
 			method="post"
-			class="grid gap-4 place-self-center shadow-2xl p-4 rounded-md w-5/6">
+			class="grid gap-4 place-self-center shadow-2xl p-4 rounded-md">
 			{% csrf_token %} {{ formset.management_form }}
 			{% if errors %}
 				<span class=''>Fix the errors below before proceeding</span>
@@ -19,13 +19,13 @@
 			<table class='w-full place-self-center'>
 			<caption class='font-bold uppercase text-lg'>{{ section.section.name }} ({{ section.section.contribution }} Marks) for {{ section.student_letter.student.full_name }}</caption>
 			<thead class='border-b uppercase'>
-				<tr>
-					<th>aspect</th>
-					<th class=''>score</th>
+				<tr class=''>
 					<th>Max Score</th>
+					<th class=''>score</th>
+					<th>aspect</th>
 				</tr>
 			</thead>
-			<tbody>
+			<tbody class=''>
 				{% for form in formset %}
 					<tr class=''>
 						{% for field in form %}
@@ -35,7 +35,7 @@
 				{% endfor %}
 			</tbody>
 		</table>
-			<div class='w-full flex justify-between'>
+			<div class='w-full flex '>
 				<a href='{% url "edit_student_letter" letter.pk %}'>
 					<button 
 						type="button" 

@@ -11,7 +11,7 @@ from django.db.models.functions import Coalesce
 from .mixins import AdminMixin, AdminOrHeadMixin, AdminOrLecturerMixin, HoDMixin
 from .models import Deadline, Hod, ModuleScore, User, Student, Result, Mode, Lecturer, Specialization, Paper, TeamLeader, Module, CatCombination, IndexNumber, SitinCat, Centre
 from django.http.response import HttpResponse
-from .forms import CSVUploadForm, CustomPasswordChangeForm, CustomUserCreationForm, CustomUserChangeForm, GenerateResultsForm, NewCatCombination, NewDeadline, NewHoD, NewStudent, NewTeamLeader, UpdateCatCombination, UpdateDeadline, UpdateHoD, UpdateStudent, NewLecturer, UpdateLecturer, NewSpecialization, UpdateSpecialization, NewPaper, UpdatePaper, NewModule, UpdateModule, NewModuleScore, UpdateModuleScore, NewSitinCat, UpdateSitinCat, UpdateTeamLeader, SearchForm
+from .forms import CSVUploadForm, CustomPasswordChangeForm, CustomUserCreationForm, CustomUserChangeForm, GenerateResultsForm, NewCatCombination, NewDeadline, NewHoD, NewStudent, NewTeamLeader, ResetPasswordForm, UpdateCatCombination, UpdateDeadline, UpdateHoD, UpdateStudent, NewLecturer, UpdateLecturer, NewSpecialization, UpdateSpecialization, NewPaper, UpdatePaper, NewModule, UpdateModule, NewModuleScore, UpdateModuleScore, NewSitinCat, UpdateSitinCat, UpdateTeamLeader, SearchForm
 from itertools import chain
 from dal import autocomplete
 from django.urls import reverse_lazy
@@ -138,7 +138,7 @@ class UpdateUserPassword(LoginRequiredMixin, FormView):
 	
 class FirstTimePasswordChangeView(UpdateUserPassword):
 	template_name = 'registration/change_password_first.html'
-	success_url = '/'
+	success_url = reverse_lazy('students_tp')
 
 	def form_valid(self, form):
 		response = super().form_valid(form)
@@ -147,6 +147,27 @@ class FirstTimePasswordChangeView(UpdateUserPassword):
 		user.is_first_login = False
 		user.save()
 		return response
+	
+class ResetpaswordView(View):
+	def get(self, request):
+		context = {
+			'title': 'Reset Password',
+			'form': ResetPasswordForm(self.request.GET)
+		}
+		return render(request, 'registration/reset_password.html', context=context)
+
+	def post(self, request):
+		username = self.kwargs.get('username')
+		try:
+			user = User.objects.get(username=username)
+			email = user.email
+			if email is None:
+				messages.info(request, 'Your email is not added please contact Admin')
+				return redirect(reverse_lazy('login'))
+			else:
+				pass
+		except Exception as e:
+			print(e)
 
 class StudentsViewList(LoginRequiredMixin, ListView):
 	model = Student

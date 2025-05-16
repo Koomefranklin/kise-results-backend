@@ -17,6 +17,7 @@
 					<th class="px-2">Assessment Number</th>
 					<th class="px-2">School</th>
 					<th class="px-2">Grade/Level</th>
+					<th class='px-2'>Department</th>
 					<th class='px-2'>Learning Area</th>
 					<th class="px-2">Date</th>
 					<th class='px-2'>Time</th>
@@ -31,14 +32,15 @@
 				{% for letter in page_obj %}
 
 				<tr
-					class="{% cycle 'bg-gray-200' 'bg-inherit' %} text-{% cycle 'bg-black' 'inherit' %} hover:bg-[#333] hover:text-white">
+					class="{% cycle 'bg-gray-200 dark:text-black' 'bg-inherit' %} text-{% cycle 'bg-black' 'inherit' %} hover:bg-[#333] hover:text-white">
 					<td class="px-2">
 						<a href='{% url "previous_assessment_detail" letter.pk %}' class='w-full'>{{ letter.student.full_name }}</a>
 					</td>
 					<td class="px-2">{{ letter.student.index }}</td>
 					<td class="px-2">{{ letter.school }}</td>
-					<td class="px-2">{{ letter.student.grade }}</td>
-					<td class="px-2">{{ letter.student.learning_area }}</td>
+					<td class="px-2">{{ letter.grade }}</td>
+					<td class="px-2">{{ letter.department }}</td>
+					<td class="px-2">{{ letter.learning_area }}</td>
 					<td class="px-2">{{ letter.created_at.date }}</td>
 					<td class="px-2">{{ letter.created_at.time }}</td>
 					<td class="px-2">{{ letter.assessor }}</td>

@@ -13,8 +13,8 @@
             position: location,
             map: map,
         });
-    } -->
-</script>
+    } 
+</script>-->
 <div class="grid w-full h-full">
 	<div class="h-full grid place-items-center w-full">
 		<form
@@ -73,7 +73,7 @@
         {% endif %}
           
         <button type='button' class='p-2 border rounded-md shadow-lg bg-[#4caf50] font-bold text-white'>
-          <a href='{% url "pdf_report" letter.pk %}?regenerate=true' class=''>Regenerate PDF</a>
+          <a href='{% url "preview_assessment_detail" letter.pk %}' class=''>Preview</a>
         </button>
       </div>
 		</form>

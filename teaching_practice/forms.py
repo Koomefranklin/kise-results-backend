@@ -83,9 +83,13 @@ class NewStudentForm(forms.ModelForm):
   
   def __init__(self, *args, **kwargs):
     super(NewStudentForm, self).__init__(*args, **kwargs)
+    self.fields['index'].required = True
     for fieldname, field in self.fields.items():
-      self.fields[fieldname].widget.attrs['class'] = 'rounded border-2 w-5/6 grid p-2'
-    self.fields['full_name'].widget.attrs['class'] = 'rounded border-2 w-5/6 grid p-2'
+      if fieldname not in ['email', 'sex']:
+        self.fields[fieldname].widget.attrs['class'] = 'rounded border-2 w-5/6 grid p-2 uppercase'
+      else:
+        self.fields[fieldname].widget.attrs['class'] = 'rounded border-2 w-5/6 grid p-2'
+
 
 class StudentForm(forms.ModelForm):
   class Meta:
@@ -119,7 +123,7 @@ class NewStudentLetter(forms.ModelForm):
     super(NewStudentLetter, self).__init__(*args, **kwargs)
     self.fields['late_submission'].widget = forms.Select(choices=[(False, 'No'), (True, 'Yes')])
     deadline = timezone.datetime.strptime('17:00', '%H:%M').time()
-    start_time = timezone.datetime.strptime('07:00', '%H:%M').time()
+    start_time = timezone.datetime.strptime('05:00', '%H:%M').time()
     current_time = timezone.now().astimezone().time()
     if not (current_time > start_time <= current_time <= deadline):
       self.fields['late_submission'].widget.choices = [(True, 'Yes')]
@@ -132,7 +136,7 @@ class NewStudentLetter(forms.ModelForm):
 class UpdateStudentLetter(forms.ModelForm):
   class Meta:
     model = StudentLetter
-    fields = ['assessor', 'total_score', 'department', 'school', 'grade', 'learning_area', 'zone', 'late_submission', 'reason', 'location', 'comments']
+    fields = ['department', 'school', 'grade', 'learning_area', 'zone', 'late_submission', 'reason', 'location', 'assessor', 'total_score', 'comments']
   
   def __init__(self, *args, **kwargs):
     user = kwargs.pop('user', None)
@@ -184,7 +188,7 @@ class UpdateStudentAspect(forms.ModelForm):
   contribution = forms.IntegerField(disabled=True, required=False)
   class Meta:
     model = StudentAspect
-    fields = ['aspect', 'score']
+    fields = ['contribution', 'score', 'aspect']
 
   def __init__(self, *args, **kwargs):
     section = kwargs.pop('section', None)
@@ -192,9 +196,9 @@ class UpdateStudentAspect(forms.ModelForm):
     contribution = self.instance.aspect.contribution
     self.fields['contribution'].initial = contribution
     self.fields['aspect'].disabled = True
-    self.fields['aspect'].widget.attrs['class'] = 'p-4 mx-4 bg-transparent w-5/6 grid'
+    self.fields['aspect'].widget.attrs['class'] = 'p-4 mx-4 bg-transparent grid'
     self.fields['score'].widget.attrs['class'] = 'rounded border-2 grid p-2'
-    self.fields['contribution'].widget.attrs['class'] = 'bg-transparent grid p-2'
+    self.fields['contribution'].widget.attrs['class'] = 'bg-transparent grid p-2 w-5/6'
 
 class ZonalLeaderForm(forms.ModelForm):
   class Meta:
@@ -224,4 +228,4 @@ class SearchForm(forms.Form):
 	
 	def __init__(self, *args, **kwargs):
 		super(SearchForm, self).__init__(*args, **kwargs)
-		self.fields['search_query'].widget.attrs['class'] = 'w-full h-fit p-2'
+		self.fields['search_query'].widget.attrs['class'] = 'w-full h-fit p-2 rounded border-2'

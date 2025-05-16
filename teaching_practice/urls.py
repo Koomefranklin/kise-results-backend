@@ -30,6 +30,7 @@ urlpatterns = [
     path('aspect/<uuid:pk>/delete/', views.DeleteObject.as_view(), name='delete_aspect'),
     path('student-letter/<uuid:student>/previous/', views.PreviousAssessmentsView.as_view(), name='previous_assessments'),
     path('student-letter/previous/<uuid:pk>/', views.PreviousAssessmentDetailView.as_view(), name='previous_assessment_detail'),
+    path('student-letter/preview/<uuid:pk>/', views.PreviewStudentLetter.as_view(), name='preview_assessment_detail'),
     path('student/edit/<uuid:student_letter>/', views.EditStudentDetailsView.as_view(), name='edit_student_details'),
     path('zones/', views.ZonesViewList.as_view(), name='zones'),
     path('zonal_leader/', views.ZonalLeaderViewList.as_view(), name='zonal_leaders'),

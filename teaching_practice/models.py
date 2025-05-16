@@ -149,9 +149,13 @@ class StudentLetter(models.Model):
     KERICHO_B = 'KERICHO B', _('KERICHO B')
     SHANZU = 'SHANZU', _('SHANZU')
 
+  class DEPARTMENTS(models.TextChoices):
+    DL = 'DL', _('Distance Learning')
+    FT = 'FT', _('Full Time')
+
   id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
   student = models.ForeignKey(Student, on_delete=models.CASCADE)
-  department = models.CharField(max_length=50, null=True, blank=True)
+  department = models.CharField(max_length=50, null=True, blank=True, choices=DEPARTMENTS.choices, default=DEPARTMENTS.DL)
   school = models.CharField(max_length=200, null=True, blank=True)
   grade = models.CharField(null=True, blank=True, verbose_name='Grade/Level', max_length=50)
   learning_area = models.CharField(max_length=200, null=True, blank=True)

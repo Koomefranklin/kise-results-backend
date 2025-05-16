@@ -1,4 +1,5 @@
 from email import errors, message
+import email
 from turtle import st
 from django.conf import settings
 from django.conf.locale import fi
@@ -257,6 +258,11 @@ class NewStudentView(LoginRequiredMixin, CreateView):
 		if form.is_valid:
 			instance = form.save(commit=False)
 			instance.created_by = self.request.user
+			student_numbers = Student.objects.all().values_list('index', flat=True)
+			if instance.index in student_numbers:
+				student = Student.objects.get(index=instance.index)
+				messages.error(self.request, f'{instance.full_name} already exists')
+				return redirect(f'{reverse_lazy("students_tp")}?search_query={student.index}')
 			instance.save()
 			self.object = instance
 			messages.success(self.request, f'Added {instance.full_name} Successfully')
@@ -286,18 +292,20 @@ class StudentsViewList(LoginRequiredMixin, ListView):
 
 	def get_context_data(self, **kwargs):
 		user = self.request.user
+		searched = self.request.GET.get('search_query')
 		context = super().get_context_data(**kwargs)
 		context['is_nav_enabled'] = True
 		context['title'] = 'Students'
 		context['search_query'] = SearchForm(self.request.GET)
 		context['location_form'] = NewLocationForm(self.request.POST)
+		context['searched'] = True if searched else False
 		return context
 	
 	def get_queryset(self):
 		qs = Student.objects.all()
 		search_query = self.request.GET.get('search_query')
 		if search_query:
-			qs = qs.filter(full_name__icontains=search_query)
+			qs = qs.filter(Q(full_name__icontains=search_query) | Q(index__icontains=search_query) | Q(email__icontains=search_query))
 		return qs.order_by('full_name')
 
 class NewStudentLetterView(LoginRequiredMixin, View):
@@ -337,6 +345,7 @@ class NewStudentLetterView(LoginRequiredMixin, View):
 			location_instance.save()
 			if not (current_time > start_time <= current_time <= deadline):
 				student_letter.late_submission = True
+				student_letter.save()
 				messages.error(self.request, f'You are Starting an assessment at {current_time} which seems not within class time. The system has marked this as a Late submission. Please provide a reason')
 				# return redirect(f'{reverse_lazy("edit_student_details", kwargs={'student_letter': student_letter.pk})}')
 			messages.success(self.request, f'Location Created Successfully')
@@ -347,12 +356,18 @@ class NewStudentLetterView(LoginRequiredMixin, View):
 			else:
 				raise Http404('Invalid Assessment Type')
 
-			for section in sections:
-				student_section = StudentSection.objects.create(student_letter=student_letter, section=section)
-				aspects = Aspect.objects.filter(Q(section=section) & Q(is_active=True))
-				for aspect in aspects:
-					student_aspect = StudentAspect.objects.create(student_section=student_section, aspect=aspect)
-			messages.success(self.request, f'Added {student_letter.student} Successfully')
+			if sections.exists():
+				for section in sections:
+					student_section = StudentSection.objects.create(student_letter=student_letter, section=section)
+					aspects = Aspect.objects.filter(Q(section=section) & Q(is_active=True))
+					for aspect in aspects:
+						student_aspect = StudentAspect.objects.create(student_section=student_section, aspect=aspect)
+				messages.success(self.request, f'Added {student_letter.student} Successfully')
+			else:
+				student_name = student_letter.student.full_name
+				student_letter.delete()
+				messages.error(self.request, f'An error occured while creating the letter. Please try again')
+				return redirect(f'{reverse_lazy("students_tp")}?search_query={student_name}')
 
 			return redirect(reverse_lazy('edit_student_details', kwargs={'student_letter': student_letter.pk}))
 		except Exception as e:
@@ -362,7 +377,7 @@ class NewStudentLetterView(LoginRequiredMixin, View):
 class PreviousAssessmentsView(LoginRequiredMixin, ListView):
 	model = StudentLetter
 	template_name = 'teaching_practice/previous_assessments.html'
-	paginate_by = 5
+	paginate_by = 10
 
 	def get_context_data(self, **kwargs):
 		user = self.request.user
@@ -426,7 +441,7 @@ class EditStudentLetterView(LoginRequiredMixin, UpdateView):
 			for field in student._meta.get_fields():
 				if isinstance(field, Field):
 					value = getattr(student, field.name)
-					if value is None:
+					if value is None and field.name not in ['created_by', 'period']:
 						null_fields.append(field.name)
 			for field in student_letter._meta.get_fields():
 				if isinstance(field, Field):
@@ -497,15 +512,36 @@ class EditStudentDetailsView(LoginRequiredMixin, View):
 
 		if letter_form.is_valid() and student_form.is_valid():
 			letter = letter_form.save(commit=False)
-			if letter_form.cleaned_data['late_submission'] and letter_form.cleaned_data['reason'] is None:
+			if letter.late_submission and letter.reason is None:
 				messages.error(self.request, f'Please provide a reason for late submission')
-				return redirect(reverse_lazy('edit_student_details', kwargs={'student_letter': letter.pk}))
+				return redirect(self.get_success_url())
 			else:
 				letter.save()
 
 			student = student_form.save(commit=True)
 			messages.success(self.request, f'Updated {student.full_name} Successfully')
 			return redirect(reverse_lazy('edit_student_letter', kwargs={'pk': letter.pk}))
+		
+class PreviewStudentLetter(LoginRequiredMixin, DetailView):
+	model = StudentLetter
+	template_name = 'teaching_practice/previous_assessment_detail.html'
+
+	def get_object(self):
+		return get_object_or_404(StudentLetter, pk=self.kwargs.get('pk'))
+
+	def get_context_data(self, **kwargs):
+		user = self.request.user
+		student_letter = self.get_object()
+		student = student_letter.student
+		sections = StudentSection.objects.prefetch_related('student_aspects').filter(student_letter=student_letter).order_by('section__number')
+		context = super().get_context_data(**kwargs)
+		context['is_nav_enabled'] = True
+		context['title'] = f'{student.full_name}\'s Assessment Preview'
+		context['total'] = StudentLetter.objects.filter(student=student).aggregate(total_score=Avg('total_score'))
+		context['sections'] = sections
+		context['letter'] = student_letter
+		context['assessment_type'] = StudentSection.objects.filter(student_letter=student_letter).first().section.assessment_type
+		return context
 	
 class StudentLetterViewList(LoginRequiredMixin, ListView):
 	model = StudentLetter
@@ -532,6 +568,10 @@ class StudentLetterViewList(LoginRequiredMixin, ListView):
 				qs = qs.filter(Q(student_sections__section__assessment_type='PHE')).distinct()
 			elif filter_query == 'General':
 				qs = qs.filter(Q(student_sections__section__assessment_type='General'))
+			elif filter_query == 'DL':
+				qs = qs.filter(Q(department='DL'))
+			elif filter_query == 'FT':
+				qs = qs.filter(Q(department='FT'))
 		if search_query:
 			qs = qs.filter(Q(student__full_name__icontains=search_query) | Q(student__index__icontains=search_query) | Q(school__icontains=search_query) | Q(grade__icontains=search_query) | Q(learning_area__icontains=search_query) | Q(zone__icontains=search_query) | Q(assessor__full_name__icontains=search_query))
 		return qs.order_by('student')
@@ -763,8 +803,10 @@ class GeneratePDF(LoginRequiredMixin, WeasyTemplateResponseMixin, DetailView):
 		with tempfile.NamedTemporaryFile(suffix='.pdf', delete=False) as tmpfile:
 			tmpfile.write(response.content)
 			tmpfile.seek(0)
-
-		send_student_report(self.request, tmpfile.name, self.get_object())
+		
+		report_type = self.kwargs.get('type')
+		if report_type != 'regenerate':
+			send_student_report(self.request, tmpfile.name, self.get_object())
 
 		return response
 	

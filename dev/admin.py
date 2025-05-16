@@ -99,7 +99,7 @@ class CatCombinationAdmin(admin.ModelAdmin):
 
 class TpStudentAdmin(admin.ModelAdmin):
   list_display = ['full_name', 'index', 'created_by']
-  search_fields = ['full_name', 'index', 'created_by']
+  search_fields = ['full_name', 'index', 'created_by__full_name']
   # list_filter = ['centre', 'course', 'specialization']
 
 class ModuleScoreAdmin(admin.ModelAdmin):
@@ -117,6 +117,10 @@ class StudentAspectAdmin(admin.ModelAdmin):
 
   def aspect(self, obj):
     return obj.aspect.name
+  
+class St1udentLetterAdmin(admin.ModelAdmin):
+  list_display = ['student', 'assessor']
+  search_fields = ['pk','student__full_name', 'assessor__full_name']
 
 admin.site.register(User, CustomUserAdmin)
 admin.site.register(Mode)
@@ -137,7 +141,7 @@ admin.site.register(Deadline)
 admin.site.register(Hod)
 
 admin.site.register(tp.Location)
-admin.site.register(tp.StudentLetter)
+admin.site.register(tp.StudentLetter, St1udentLetterAdmin)
 admin.site.register(tp.Section)
 admin.site.register(tp.Aspect)
 admin.site.register(tp.SubSection)
