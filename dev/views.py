@@ -2,21 +2,25 @@ from typing import Any
 from django.db.models.query import QuerySet
 from django.http import HttpResponseRedirect
 from django.shortcuts import get_object_or_404, render, redirect
+from django.utils import timezone
 from django.views import View
 from django.views.generic import ListView, CreateView, FormView, UpdateView
 from django.db.models import Q, Avg, F, ExpressionWrapper, FloatField, Value
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.contrib.auth.decorators import login_required
 from django.db.models.functions import Coalesce
+
+from teaching_practice.mailer import send_otp
 from .mixins import AdminMixin, AdminOrHeadMixin, AdminOrLecturerMixin, HoDMixin
-from .models import Deadline, Hod, ModuleScore, User, Student, Result, Mode, Lecturer, Specialization, Paper, TeamLeader, Module, CatCombination, IndexNumber, SitinCat, Centre
+from .models import Deadline, Hod, ModuleScore, ResetPasswordOtp, User, Student, Result, Mode, Lecturer, Specialization, Paper, TeamLeader, Module, CatCombination, IndexNumber, SitinCat, Centre
 from django.http.response import HttpResponse
-from .forms import CSVUploadForm, CustomPasswordChangeForm, CustomUserCreationForm, CustomUserChangeForm, GenerateResultsForm, NewCatCombination, NewDeadline, NewHoD, NewStudent, NewTeamLeader, ResetPasswordForm, UpdateCatCombination, UpdateDeadline, UpdateHoD, UpdateStudent, NewLecturer, UpdateLecturer, NewSpecialization, UpdateSpecialization, NewPaper, UpdatePaper, NewModule, UpdateModule, NewModuleScore, UpdateModuleScore, NewSitinCat, UpdateSitinCat, UpdateTeamLeader, SearchForm
+from .forms import CSVUploadForm, CustomPasswordChangeForm, CustomUserCreationForm, CustomUserChangeForm, GenerateResultsForm, NewCatCombination, NewDeadline, NewHoD, NewStudent, NewTeamLeader, OTPVerificationForm, ResetPasswordForm, UpdateCatCombination, UpdateDeadline, UpdateHoD, UpdateStudent, NewLecturer, UpdateLecturer, NewSpecialization, UpdateSpecialization, NewPaper, UpdatePaper, NewModule, UpdateModule, NewModuleScore, UpdateModuleScore, NewSitinCat, UpdateSitinCat, UpdateTeamLeader, SearchForm
 from itertools import chain
 from dal import autocomplete
 from django.urls import reverse_lazy
 from django.contrib import messages
 import csv
+from django.utils.crypto import get_random_string
 
 # Create your views here.
 @login_required
@@ -148,26 +152,79 @@ class FirstTimePasswordChangeView(UpdateUserPassword):
 		user.save()
 		return response
 	
-class ResetpaswordView(View):
-	def get(self, request):
-		context = {
-			'title': 'Reset Password',
-			'form': ResetPasswordForm(self.request.GET)
-		}
-		return render(request, 'registration/reset_password.html', context=context)
+class ResetpaswordRequestView(FormView):
+	form_class = ResetPasswordForm
+	template_name = 'registration/reset_password.html'
 
-	def post(self, request):
+	def get_success_url(self):
+		return reverse_lazy('reset_password')
+	
+	def get_context_data(self, **kwargs):
+		context = super().get_context_data(**kwargs)
+		context['title'] = 'Reset Password'
+		context['stage'] = 'request'
+		return context
+
+	def form_valid(self, form):
+		# response = super().form_valid(form)
+		username = form.cleaned_data['username']
+		user = User.objects.get(username=username)
+
+		user.set_unusable_password()
+		user.save()
+		otp = get_random_string(6)
+		obj, created = ResetPasswordOtp.objects.get_or_create(user=user, defaults={'otp': otp})
+		if not created:
+			expiry = obj.expiry
+			print(expiry)
+			print(timezone.now())
+
+			if expiry < timezone.now():
+				print(otp)
+				obj.delete()
+				otp = get_random_string(6)
+				obj = ResetPasswordOtp.objects.create(user=user, otp=otp)
+
+		send_otp(self.request, obj)
+		return redirect(reverse_lazy('reset_password', kwargs={'username': username}))
+
+class ResetPasswordView(FormView):
+	form_class = OTPVerificationForm
+	template_name = 'registration/reset_password.html'
+	success_url = reverse_lazy('login')
+
+	def get_context_data(self, **kwargs):
+		context = super().get_context_data(**kwargs)
+		context['title'] = 'Reset Password'
+		context['stage'] = 'reset'
+		return context
+	
+	def form_valid(self, form):
+		response = super().form_valid(form)
 		username = self.kwargs.get('username')
+		otp = form.cleaned_data['otp']
+		password = form.cleaned_data['new_password']
 		try:
-			user = User.objects.get(username=username)
-			email = user.email
-			if email is None:
-				messages.info(request, 'Your email is not added please contact Admin')
-				return redirect(reverse_lazy('login'))
+			otp_obj = ResetPasswordOtp.objects.get(user__username=username)
+			user = otp_obj.user
+			generated_otp = otp_obj.otp
+			otp_expiry = otp_obj.expiry
+			if otp_expiry < timezone.now():
+				otp_obj.delete()
+				messages.error(self.request, 'OTP expired. Request a new one')
+				raise ResetPasswordOtp.DoesNotExist()
 			else:
-				pass
-		except Exception as e:
-			print(e)
+				if otp == generated_otp:
+					user.set_password(password)
+					user.save()
+					otp_obj.delete()
+					messages.success(self.request, 'Password Reset Successful')
+				else:
+					messages.error(self.request, 'Invalid OTP')
+					return self.form_invalid(self.get_form_class())
+		except ResetPasswordOtp.DoesNotExist:
+			return self.form_invalid(self.get_form_class())
+		return response
 
 class StudentsViewList(LoginRequiredMixin, ListView):
 	model = Student

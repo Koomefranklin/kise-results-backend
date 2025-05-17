@@ -1,6 +1,7 @@
 from django.db import models
 from django.contrib.auth.models import AbstractUser
 import uuid
+from django.utils import timezone
 from django.utils.translation import gettext_lazy as _
 from django.core.validators import MinValueValidator, MaxValueValidator
 
@@ -38,14 +39,17 @@ class User(AbstractUser):
   
 class ResetPasswordOtp(models.Model):
   id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
-  user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='user_otp')
+  user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='user_otp')
   otp = models.CharField(max_length=6)
   created_at = models.DateTimeField(auto_now_add=True)
-  updated_at = models.DateTimeField(auto_now=True)
+  expiry = models.DateTimeField()
+
+  def save(self, *args, **kwargs):
+    self.expiry = timezone.now() + timezone.timedelta(minutes=15)
+    return super().save(*args, **kwargs)
 
   def __str__(self):
-    return f'{self.user} : {self.otp}'
-
+    return f'{self.user}'
   
 class Mode(models.Model):
   class MODE(models.TextChoices):

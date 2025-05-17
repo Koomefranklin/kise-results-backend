@@ -194,11 +194,14 @@ class UpdateStudentAspect(forms.ModelForm):
     section = kwargs.pop('section', None)
     super(UpdateStudentAspect, self).__init__(*args, **kwargs)
     contribution = self.instance.aspect.contribution
+    name = self.instance.aspect.name
     self.fields['contribution'].initial = contribution
     self.fields['aspect'].disabled = True
     self.fields['aspect'].widget.attrs['class'] = 'p-4 mx-4 bg-transparent grid'
     self.fields['score'].widget.attrs['class'] = 'rounded border-2 grid p-2'
     self.fields['contribution'].widget.attrs['class'] = 'bg-transparent grid p-2 w-5/6'
+    self.fields['contribution'].widget.attrs['title'] = f'Max score for {name}'
+    self.fields['score'].widget.attrs['title'] = f'Score for {name}'
 
 class ZonalLeaderForm(forms.ModelForm):
   class Meta:

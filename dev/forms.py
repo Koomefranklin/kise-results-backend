@@ -112,12 +112,37 @@ class CustomPasswordChangeForm(PasswordChangeForm):
       self.fields[fieldname].widget.attrs['class'] = 'rounded border-2 w-5/6 grid password-field'
 
 class ResetPasswordForm(forms.Form):
-	username = forms.CharField(label='Username', widget=forms.TextInput(attrs={'placeholder':'Enter your username', 'class':'w-full h-fit p-2'}))
+	username = forms.CharField(label='Username', widget=forms.TextInput(attrs={'placeholder':'Enter your username', 'class':'w-full h-fit p-2 lowercase'}))
+
+	def clean_username(self):
+		username = self.cleaned_data.get('username')
+		try:
+			email = User.objects.get(username=username).email
+			if not email:
+				raise forms.ValidationError('Your Email is not registered. Contact ICT')
+		except User.DoesNotExist:
+			raise forms.ValidationError('Username Does not exist')
+		return username
 
 class OTPVerificationForm(forms.Form):
-	otp = forms.IntegerField(label='OTP', widget=forms.TextInput(attrs={'placeholder':'Enter OTP from Email', 'class':'w-full h-fit p-2'}))
+	otp = forms.CharField(label='OTP', widget=forms.TextInput(attrs={'placeholder':'Enter OTP from Email', 'class':'w-full h-fit p-2'}))
 	new_password = forms.CharField(label='New password', widget=forms.PasswordInput)
 	new_password2 = forms.CharField(label='Confirm new password', widget=forms.PasswordInput)
+
+	def clean(self):
+		cleaned_data = super().clean()
+		password1 = cleaned_data.get('new_password')
+		password2 = cleaned_data.get('new_password2')
+		if password1 != password2:
+			raise forms.ValidationError('Password Do not Match')
+		return cleaned_data
+	
+	def __init__(self, *args, **kwargs):
+		super(OTPVerificationForm, self).__init__(*args, **kwargs)
+		for fieldname in ['new_password', 'new_password2']:
+			self.fields[fieldname].widget.attrs['class'] = 'rounded border-2 w-5/6 grid password-field'
+		self.fields['otp'].widget.attrs['class'] = 'rounded border-2 w-5/6 grid'
+	
 
 class NewStudent(forms.ModelForm):
 	class Meta:

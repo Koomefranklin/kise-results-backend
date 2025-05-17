@@ -1,3 +1,29 @@
 from django.contrib import admin
 
+from teaching_practice.models import Aspect, Location, Section, Student, StudentAspect, StudentLetter, SubSection
+
 # Register your models here.
+class StudentAspectAdmin(admin.ModelAdmin):
+  list_display = ['student_section', 'score', 'aspect']
+  search_fields = ['aspect__name']
+
+
+  def aspect(self, obj):
+    return obj.aspect.name
+  
+class StudentLetterAdmin(admin.ModelAdmin):
+  list_display = ['student', 'assessor']
+  search_fields = ['pk','student__full_name', 'assessor__full_name']
+
+class TpStudentAdmin(admin.ModelAdmin):
+  list_display = ['full_name', 'index', 'created_by']
+  search_fields = ['full_name', 'index', 'created_by__full_name']
+  # list_filter = ['centre', 'course', 'specialization']
+
+admin.site.register(Location)
+admin.site.register(StudentLetter, StudentLetterAdmin)
+admin.site.register(Section)
+admin.site.register(Aspect)
+admin.site.register(SubSection)
+admin.site.register(Student, TpStudentAdmin)
+admin.site.register(StudentAspect, StudentAspectAdmin)

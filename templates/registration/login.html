@@ -11,32 +11,20 @@
 {% endblock head %}
   
 {% block main %} 
-{% if form.errors and not form.non_field_errors %}
-<p class="text-sm text-red-500">
-  {% blocktranslate count counter=form.errors.items|length %}Please correct the error below.{% plural %}Please correct
-  the errors below.{% endblocktranslate %}
-</p>
-{% endif %}
-
-{% if form.non_field_errors %}
-{% for error in form.non_field_errors %}
-<p class="text-sm text-red-500">
-  {{ error }}
-</p>
-{% endfor %}
-{% endif %}
-  <form class="grid gap-4" method="post">
-    {% csrf_token %}
-    <div class="grid gap-4 grid-flow-col p-2">
-      <p class='text-sm text-red-500'>{{ form.username.errors }}</p>
-      {{ form.username.label_tag }} {{ form.username }}
-    </div>
-    <div class="grid gap-4 grid-flow-col p-2">
-      <p class='text-sm text-red-500'>{{ form.password.errors }}</p>
-      {{ form.password.label_tag }} {{ form.password }}
-      <input type="hidden" name="next" value="{{ next }}">
-    </div>
-    <button class="text-center border drop-shadow-lg p-2 bg-green-400 place-self-center rounded-md" type="submit">Login</button>
-  </form>
+  <div class='place-self-center'>
+    <form class="grid gap-4" method="post">
+      {% csrf_token %}
+      <div class="grid gap-4 grid-flow-col p-2">
+        <p class='text-sm text-red-500'>{{ form.username.errors }}</p>
+        <div class='flex gap-2'>{{ form.username.label_tag }} {{ form.username }}</div>
+      </div>
+      <div class="grid gap-4 grid-flow-col p-2">
+        <p class='text-sm text-red-500'>{{ form.password.errors }}</p>
+        <div class='flex gap-2'>{{ form.password.label_tag }} {{ form.password }}</div>
+        <input type="hidden" name="next" value="{{ next }}">
+      </div>
+      <p>Forgot Password? <a href='{% url "request_otp" %}' title='Reset Password'>Reset</a></p>
+      <button class="text-center border drop-shadow-lg p-2 bg-green-400 place-self-center rounded-md" type="submit">Login</button>
+    </form>
 </div>
 {% endblock main %}
