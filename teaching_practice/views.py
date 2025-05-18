@@ -575,6 +575,36 @@ class StudentLetterViewList(LoginRequiredMixin, ListView):
 		if search_query:
 			qs = qs.filter(Q(student__full_name__icontains=search_query) | Q(student__index__icontains=search_query) | Q(school__icontains=search_query) | Q(grade__icontains=search_query) | Q(learning_area__icontains=search_query) | Q(zone__icontains=search_query) | Q(assessor__full_name__icontains=search_query))
 		return qs.order_by('student')
+	
+class InvalidStudentLetterViewList(LoginRequiredMixin, ListView):
+	model = StudentLetter
+	template_name = 'teaching_practice/student_letters.html'
+	context_object_name = 'studentletters'
+	paginate_by = 50
+
+	def get_context_data(self, **kwargs):
+		user = self.request.user
+		context = super().get_context_data(**kwargs)
+		context['is_nav_enabled'] = True
+		context['title'] = 'Invalid Student Letters'
+		context['search_query'] = SearchForm(self.request.GET)
+		return context
+	
+	def get_queryset(self):
+		if self.request.user.is_superuser:
+			qs = StudentLetter.objects.prefetch_related('student_sections').filter(student_sections__section__assessment_type=None)
+			
+		search_query = self.request.GET.get('search_query')
+		if search_query:
+			qs = qs.filter(Q(student__full_name__icontains=search_query) | Q(student__index__icontains=search_query) | Q(school__icontains=search_query) | Q(grade__icontains=search_query) | Q(learning_area__icontains=search_query) | Q(zone__icontains=search_query) | Q(assessor__full_name__icontains=search_query))
+		return qs.order_by('student')
+
+class DeleteStudentLetterView(LoginRequiredMixin, View):
+	def post(self, request, letter_id, *args, **kwargs):
+		letter = StudentLetter.objects.get(pk=letter_id)
+		letter.delete()
+		messages.success(request, f'Deleted the Student letter {letter.student.full_name}')
+		return HttpResponseRedirect(self.request.get_full_path())
 
 class NewStudentSectionView(LoginRequiredMixin, CreateView):
 	model = StudentSection

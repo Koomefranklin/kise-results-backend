@@ -90,6 +90,17 @@
 						
 				</th>
 			</tr>	
+			
+			{% if user.is_superuser %}
+				<tr class='py-6 h-10'>
+					<th
+						scope='row'
+						id='invalid'
+						class='flex'>
+						<a href='{% url "invalid_assessments" %}'>Invalid Assessments</a></th>
+				</tr>
+			{% endif %}
+				
 				
 		</tbody>
 	</table>
