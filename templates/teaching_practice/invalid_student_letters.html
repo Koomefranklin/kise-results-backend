@@ -51,7 +51,10 @@
 					<td class="px-2">{{ letter.student_sections.first.section.get_assessment_type_display }}</td>
 					<td class="flex justify-between">
 						<a href='{% url "edit_student_letter" letter.id %}' title='View'>View</a>
-						<a href='{% url "delete_letter" letter.id %}'>Delete</a>
+						<form action='{% url "delete_letter" letter.id %}' method='post'>
+							{% csrf_token %}
+							<button type='submit'>Delete</button>
+						</form>
 						
 					</td>
 				</tr>
