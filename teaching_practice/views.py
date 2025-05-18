@@ -578,7 +578,7 @@ class StudentLetterViewList(LoginRequiredMixin, ListView):
 	
 class InvalidStudentLetterViewList(LoginRequiredMixin, ListView):
 	model = StudentLetter
-	template_name = 'teaching_practice/student_letters.html'
+	template_name = 'teaching_practice/invalid_student_letters.html'
 	context_object_name = 'studentletters'
 	paginate_by = 50
 
