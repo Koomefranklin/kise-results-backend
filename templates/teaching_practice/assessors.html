@@ -1,0 +1,86 @@
+{% extends 'teaching_practice/base_site.html' %} 
+{% block main %}
+<div class="grid w-full h-full place-self-start gap-1">
+	<div class="flex flex-col w-full gap-2">
+		<form method="GET" action="{% url 'assessors' %}" class='w-5/6 place-self-center'>  
+			<div class='flex '>
+				{{ search_query.search_query }}
+				<button type="submit" class='rounded-md border p-2 bg-gray-300'>Search</button>
+			</div>
+		</form>
+			
+		<table class="w-5/6 place-self-center border">
+			<caption class=''>Assessors</caption>
+			<thead class=" bg-gray-500 text-white p-2">
+				<tr class="">
+					<th class=" px-2">Full Name</th>
+					<th class=''>Sex</th>
+					<th class="">Actions</th>
+				</tr>
+			</thead>
+
+			{% if page_obj %}
+			<form method='post' id='form'>
+				{% csrf_token %}
+			</form>
+			<tbody class="capitalize">
+				{% for assessor in page_obj %}
+
+				<tr
+					class="{% cycle 'bg-gray-200 dark:text-black' 'bg-inherit' %} text-{% cycle 'bg-black' 'inherit' %} hover:bg-[#333] hover:text-white">
+					<td class=" px-2">
+						<a href='{% url "assessor_assessments" assessor.pk  %}'>{{ assessor.full_name }}</a>
+					</td>
+					<td class=''>
+						{{ assessor.sex }}
+					</td>
+					<td class="flex justify-around">
+						<button type='button' class='text-[#4caf50] font-bold'><a href='{% url "assessor_assessments" assessor.pk %}'>Assessments</a></button>
+					</td>
+				</tr>
+				{% endfor %}
+			</tbody>
+			<tfoot class="bg-gray-500 text-white font-bold">
+				<tr class="">
+					<td colspan='8' class=''>
+						<p class='w-full grid grid-flow-col'>
+							<span class='text-left'>Showing {{ page_obj.object_list|length }} of {{ page_obj.paginator.count }} Assessors</span>
+							<span class='text-right'>
+								{% if page_obj.has_previous %}
+								<a
+									class="px-2"
+									href="?page={{ page_obj.previous_page_number }}">
+									Previous
+								</a>
+								{% endif %}
+								PAGE: {{ page_obj.number }} of
+								<a
+									class="px-2"
+									href="?page={{ page_obj.paginator.num_pages }}">
+									{{ page_obj.paginator.num_pages }}
+								</a>
+								{% if page_obj.has_next %}
+								<a
+									class="px-2 bg-[#4caf50] rounded"
+									href="?page={{ page_obj.next_page_number }}">
+									Next
+								</a>
+								{% endif %}
+							</span>
+						</p>
+					</td>
+				</tr>
+			</tfoot>
+			{% else %}
+			<tr class="">
+				<td
+					colspan="2"
+					class="text-center">
+					No Assessors Found
+				</td>
+			</tr>
+			{% endif %}
+		</table>
+	</div>
+</div>
+{% endblock main %}

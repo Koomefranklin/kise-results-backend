@@ -44,9 +44,9 @@
 					<td class="px-2">{{ letter.school }}</td>
 					<td class="px-2">{{ letter.grade }}</td>
 					<td class="px-2">{{ letter.learning_area }}</td>
-					<td class="px-2">{{ letter.department }}</td>
+					<td class="px-2">{{ letter.student.department }}</td>
 					<td class="px-2">{{ letter.created_at.date }}</td>
-					<td class="px-2">{{ letter.created_at.time }}</td>
+					<td class="px-2">{{ letter.created_at|localtime|time }}</td>
 					<td class="px-2">{{ letter.assessor }}</td>
 					<td class="px-2">{{ letter.student_sections.first.section.get_assessment_type_display }}</td>
 					<td class="flex justify-between">

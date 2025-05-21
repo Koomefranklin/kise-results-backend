@@ -88,12 +88,17 @@ class Student(models.Model):
   class Sex(models.TextChoices):
     MALE = 'M', _('Male')
     FEMALE = 'F', _('Female')
+  
+  class DEPARTMENTS(models.TextChoices):
+    DL = 'DL', _('Distance Learning')
+    FT = 'FT', _('Full Time')
 
   id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
   full_name = models.CharField(max_length=200)
   sex = models.CharField(max_length=2, choices=Sex.choices)
   index = models.CharField(blank=True, null=True, max_length=50, verbose_name='Assessment Number')
   email = models.EmailField(max_length=200, null=True, blank=True)
+  department = models.CharField(max_length=50, null=True, blank=True, choices=DEPARTMENTS.choices)
   period = models.DateField(null=True, blank=True)
   created_by = models.ForeignKey(User, related_name='created_by', null=True, blank=True, on_delete=models.RESTRICT)
   created_at = models.DateTimeField(auto_now_add=True)
@@ -101,6 +106,14 @@ class Student(models.Model):
 
   def __str__(self):
     return self.full_name
+  
+  class Meta:
+    ordering = ['index', 'full_name']
+  
+  def save(self, *args, **kwargs):
+    self.index = self.index.upper()
+    self.full_name = self.full_name.upper()
+    super().save(*args, **kwargs)
 
 class Location(gis_models.Model):
   name = models.CharField(max_length=255, blank=True)
@@ -126,7 +139,6 @@ class Location(gis_models.Model):
   def save(self, *args, **kwargs):
     if not self.name and self.point:
       self.address = f'{self.point.y}, {self.point.x}'
-      print(self.address)
       try:
         geolocator = Nominatim(user_agent="geoapi")
         location = geolocator.reverse((self.point.y, self.point.x), language='en')  # (latitude, longitude)
@@ -149,13 +161,8 @@ class StudentLetter(models.Model):
     KERICHO_B = 'KERICHO B', _('KERICHO B')
     SHANZU = 'SHANZU', _('SHANZU')
 
-  class DEPARTMENTS(models.TextChoices):
-    DL = 'DL', _('Distance Learning')
-    FT = 'FT', _('Full Time')
-
   id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
-  student = models.ForeignKey(Student, on_delete=models.CASCADE)
-  department = models.CharField(max_length=50, null=True, blank=True, choices=DEPARTMENTS.choices, default=DEPARTMENTS.DL)
+  student = models.ForeignKey(Student, on_delete=models.CASCADE, related_name='letters')
   school = models.CharField(max_length=200, null=True, blank=True)
   grade = models.CharField(null=True, blank=True, verbose_name='Grade/Level', max_length=50)
   learning_area = models.CharField(max_length=200, null=True, blank=True)

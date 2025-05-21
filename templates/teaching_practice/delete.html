@@ -1,0 +1,29 @@
+{% extends 'teaching_practice/base_site.html' %} 
+{% block main %}
+<div class="grid w-full h-full place-self-start gap-1">
+ Are you sure you want to delete:<br>
+ {% if obj %}
+  
+  {% for item in obj %}
+    {{ item.full_name }}<br>
+    
+    {% if item.letters.all %}
+      <div class=''>Letters</div>
+      {% for letter in item.letters.all %}
+        {{ letter.assessor.full_name }}: {{ letter.comments }}: {{ letter.created_at.date }}<br>
+      {% endfor %}
+    {% endif %}
+      
+    {% if link %}
+    <form action='{% url link item.pk %}' method='post'>
+      {% csrf_token %}
+      <button type='submit'>Delete</button>
+    </form>
+  {% endif %}
+  {% endfor %}
+    
+ {% endif %}
+  
+    
+</div>
+{% endblock main %}

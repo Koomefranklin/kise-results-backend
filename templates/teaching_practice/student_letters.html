@@ -9,13 +9,46 @@
 				<button type="submit" class='rounded-md border p-2'>Search</button>
 			</div>
 		</form>
-		<div class='grid gap-2 place-self-center shadow-2xl p-2 '>
-			<p class='text-center border-b-2'>Filter</p>
-			<button class='text-left'><a href='{% url "student_letters" %}?filter_query=PHE'>PHE Assessments</a></button>
-			<button class='text-left'><a href='{% url "student_letters" %}?filter_query=PHE'>General Assessments</a></button>
-			<button class='text-left'><a href='{% url "student_letters" %}?filter_query=DL'>Distant Learning Assessments</a></button>
-			<button class='text-left'><a href='{% url "student_letters" %}?filter_query=FT'>Full Time Assessments</a></button>
-			<button class='text-left'><a href='{% url "student_letters" %}'>All Assessments</a></button>
+		<div class='flex flex-col place-self-center shadow-2xl sticky'>
+			<p class='text-center'>Filter (Leave Blank if not used)</p>
+			<form action='{% url "student_letters" %}' method='get' class='flex flex-row gap-2'>
+				
+				{% if filter_form %}
+					{{ filter_form.errors }}
+					<div class='flex flex-col'>
+						{{ filter_form.department.label }}
+						{{ filter_form.department }}
+					</div>
+					<div class='flex flex-col'>
+						{{ filter_form.zone.label }}
+						{{ filter_form.zone }}
+					</div>
+					<div class='flex flex-col'>
+						From:
+						<div class='flex flex-row'>
+							{{ filter_form.from_date }}
+							{{ filter_form.from_time }}
+						</div>
+					</div>
+					<div class='flex flex-col'>
+						To:
+						<div class='flex flex-row'>
+							{{ filter_form.to_date }}
+							{{ filter_form.to_time }}
+						</div>
+					</div>
+					<div class='flex flex-col'>
+						{{ filter_form.assessment_type.label }}
+						{{ filter_form.assessment_type }}
+					</div>
+					<div class='flex flex-col'>
+						{{ filter_form.assessor.label }}
+						{{ filter_form.assessor }}
+					</div>
+					<button type='submit' class='rounded-md px-2 border'>Filter</button>
+				{% endif %}
+				
+			</form>
 		</div>
 		<table class="w-5/6 place-self-center border">
 			<caption class=''>Student Letters</caption>
@@ -49,14 +82,13 @@
 					<td class="px-2">{{ letter.school }}</td>
 					<td class="px-2">{{ letter.grade }}</td>
 					<td class="px-2">{{ letter.learning_area }}</td>
-					<td class="px-2">{{ letter.department }}</td>
+					<td class="px-2">{{ letter.student.department }}</td>
 					<td class="px-2">{{ letter.created_at.date }}</td>
-					<td class="px-2">{{ letter.created_at.time }}</td>
+					<td class="px-2">{{ letter.created_at|localtime|time }}</td>
 					<td class="px-2">{{ letter.assessor }}</td>
 					<td class="px-2">{{ letter.student_sections.first.section.get_assessment_type_display }}</td>
 					<td class="flex justify-between">
 						<a href='{% url "edit_student_letter" letter.id %}' title='View'>View</a>
-						
 					</td>
 				</tr>
 				{% endfor %}

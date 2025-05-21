@@ -3,11 +3,18 @@
 <div class="grid w-full h-full place-self-start gap-1">
 	<div class="flex flex-col w-full gap-2">
 		<form method="GET" action="{% url 'students_tp' %}" class='w-5/6 place-self-center'>  
+			<p class=''>Search using the Assessment Number or part of the name</p>
 			<div class='flex '>
 				{{ search_query.search_query }}
 				<button type="submit" class='rounded-md border p-2 bg-gray-300'>Search</button>
 			</div>
 		</form>
+		
+		{% if user.is_superuser %}
+			<a href='{% url "students_tp" %}?filter_query=index'>Duplicates by index</a>
+			<a href='{% url "students_tp" %}?filter_query=full_name'>Duplicates by name</a>
+		{% endif %}
+			
 		
 		{% if searched %}
 			<div class='grid border p-2 w-fit place-self-end'><a href='{% url "new_student_tp" %}'><i class="fa-solid fa-plus text-[#4caf50] font-extrabold"></i> Add Student</a></div>
@@ -20,6 +27,7 @@
 					<th class=" px-2">Full Name</th>
 					<th class=''>Sex</th>
 					<th class=''>Assessment Number</th>
+					<th class=''>Department</th>
 					<th class="">Actions</th>
 				</tr>
 			</thead>
@@ -42,10 +50,19 @@
 					<td class=''>
 						{{ student.index }}
 					</td>
+					<td class=''>{{ student.department }}</td>
 					<td class="flex justify-around">
 						<button type='button' class='text-[#4caf50] font-bold' onclick="sendLocation('{{ student.pk }}', 'General')">New General Assessment</button>
 						<button type='button' class='text-[#4caf50] font-bold' onclick="sendLocation('{{ student.pk }}', 'PHE')">New PHE Assessment</button>
 						<button type='button' class='text-[#4caf50] font-bold'><a href='{% url "previous_assessments" student.pk %}' class='text-[#4caf50] font-bold'>Previous Assessments</a></button>
+						
+						{% if user.is_superuser %}
+							<form action='{% url "delete_student" student.pk %}' method='get'>
+								{% csrf_token %}
+								<button type='submit'>Delete</button>
+							</form>
+						{% endif %}
+							
 					</td>
 				</tr>
 				{% endfor %}

@@ -1,12 +1,8 @@
-from email import errors, message
-import email
-from turtle import st
+import datetime
 from django.conf import settings
-from django.conf.locale import fi
 from django.core.exceptions import PermissionDenied
 from django.shortcuts import get_object_or_404, render, redirect
 from dal import autocomplete
-from django.template import context
 from django.template.context_processors import media
 from django.utils import timezone
 from django.views.generic.base import View
@@ -14,10 +10,11 @@ from django.urls import reverse_lazy
 from dev.forms import CustomUserCreationForm
 from dev.models import User
 from teaching_practice.mailer import send_student_report
-from .forms import NewAspect, NewLocationForm, NewSection, NewStudentAspect, NewStudentForm, NewStudentLetter, NewStudentSection, NewSubSection, SearchForm, StudentForm, UpdateAspect, UpdateSection, UpdateStudentAspect, UpdateStudentLetter, UpdateStudentSection, StudentAspectFormSet, UpdateSubSection, ZonalLeaderForm
+from teaching_practice.mixins import AdminMixin
+from .forms import FilterAssessmentsForm, NewAspect, NewLocationForm, NewSection, NewStudentAspect, NewStudentForm, NewStudentLetter, NewStudentSection, NewSubSection, SearchForm, StudentForm, UpdateAspect, UpdateSection, UpdateStudentAspect, UpdateStudentLetter, UpdateStudentSection, StudentAspectFormSet, UpdateSubSection, ZonalLeaderForm
 from .models import Student, Section, StudentAspect, StudentLetter, StudentSection, Aspect, Location, SubSection, ZonalLeader
 from django.views.generic import ListView, CreateView, FormView, UpdateView, DeleteView, DetailView
-from django.db.models import Q, Avg, F, ExpressionWrapper, FloatField, Value
+from django.db.models import Q, Avg, F, Count, ExpressionWrapper, FloatField, Value
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.contrib import messages
 from django.contrib.gis.geos import Point
@@ -40,10 +37,28 @@ class StudentAutocomplete(autocomplete.Select2QuerySetView):
 class LecturerAutocomplete(autocomplete.Select2QuerySetView):
 	def get_queryset(self):
 		user = self.request.user
-		qs = User.objects.filter(Q(is_active=True) | Q(role='lecturer'))
+		qs = User.objects.filter(Q(is_active=True) & Q(role='lecturer'))
 		if self.q:
 			qs = qs.filter(Q(full_name__icontains=self.q))
 		return qs
+	
+class AssessorsViewList(LoginRequiredMixin, AdminMixin, ListView):
+	model = User
+	template_name = 'teaching_practice/assessors.html'
+	paginate_by = 50
+
+	def get_queryset(self):
+		qs = User.objects.filter(Q(role='lecturer') & Q(is_active=True))
+		if search_query := self.request.GET.get('search_query'):
+			qs = qs.filter(full_name__icontains=search_query)
+		return qs
+
+	def get_context_data(self, **kwargs):
+		context = super().get_context_data(**kwargs)
+		context['is_nav_enabled'] = True
+		context['title'] = 'Assessors'
+		context['search_query'] = SearchForm(self.request.GET)
+		return context
 
 class IndexPage(LoginRequiredMixin, ListView):
 	model = User
@@ -56,7 +71,7 @@ class IndexPage(LoginRequiredMixin, ListView):
 	def get_context_data(self, **kwargs):
 		user = self.request.user
 		students = Student.objects.all()
-		letters = StudentLetter.objects.all()
+		letters = StudentLetter.objects.distinct('student')
 		sections = Section.objects.all()
 		aspects = Aspect.objects.all()
 
@@ -266,7 +281,7 @@ class NewStudentView(LoginRequiredMixin, CreateView):
 			instance.save()
 			self.object = instance
 			messages.success(self.request, f'Added {instance.full_name} Successfully')
-			return redirect(f'{reverse_lazy('students_tp')}?search_query={instance.full_name}')
+			return redirect(f'{reverse_lazy('students_tp')}?search_query={instance.index}')
 		else:
 			return self.form_invalid(form)
 	
@@ -306,7 +321,31 @@ class StudentsViewList(LoginRequiredMixin, ListView):
 		search_query = self.request.GET.get('search_query')
 		if search_query:
 			qs = qs.filter(Q(full_name__icontains=search_query) | Q(index__icontains=search_query) | Q(email__icontains=search_query))
-		return qs.order_by('full_name')
+		if filter_query := self.request.GET.get('filter_query'):
+			duplicates = qs.values(filter_query).annotate(dup_count=Count(filter_query)).filter(dup_count__gt=1)
+			duplicate_ids = [item[filter_query] for item in duplicates]
+			if filter_query == 'index':
+				qs = qs.filter(index__in=duplicate_ids)
+			else:
+				qs = qs.filter(full_name__in=duplicate_ids)
+		return qs.order_by('index')
+
+class DeleteStudent(LoginRequiredMixin, View):
+	def get(self, request, student_id, *args, **kwargs):
+		student = Student.objects.get(pk=student_id)
+		letters = Student.objects.prefetch_related('letters').filter(pk=student_id)
+		context = {
+			'link': 'delete_student',
+			'obj': letters
+		}
+		
+		return(render(request, 'teaching_practice/delete.html', context=context))
+
+	def post(self, request, student_id, *args, **kwargs):
+		student = Student.objects.get(pk=student_id)
+		student.delete()
+		messages.success(request, f'Student {student.full_name} Deleted')
+		return redirect(f'{reverse_lazy('students_tp')}?filter_query=index')
 
 class NewStudentLetterView(LoginRequiredMixin, View):
 	def post(self, request, *args, **kwargs):
@@ -414,6 +453,23 @@ class PreviousAssessmentDetailView(LoginRequiredMixin, DetailView):
 		context['letter'] = student_letter
 		context['assessment_type'] = StudentSection.objects.filter(student_letter=student_letter).first().section.assessment_type
 		return context
+	
+class AssessorAssessmentsListView(LoginRequiredMixin, AdminMixin, ListView):
+	model = StudentLetter
+	template_name  = 'teaching_practice/previous_assessments.html'
+	paginate_by = 50
+
+	def get_context_data(self, **kwargs):
+		assessor = self.kwargs.get('assessor')		
+		context = super().get_context_data(**kwargs)
+		context['is_nav_enabled'] = True
+		context['title'] = f'{User.objects.get(pk=assessor).full_name}\'s Assessments'
+		return context
+	
+	def get_queryset(self):
+		assessor = self.kwargs.get('assessor')
+		student_letters = StudentLetter.objects.filter(assessor=assessor)
+		return student_letters
 
 class EditStudentLetterView(LoginRequiredMixin, UpdateView):
 	model = StudentLetter
@@ -514,7 +570,7 @@ class EditStudentDetailsView(LoginRequiredMixin, View):
 			letter = letter_form.save(commit=False)
 			if letter.late_submission and letter.reason is None:
 				messages.error(self.request, f'Please provide a reason for late submission')
-				return redirect(self.get_success_url())
+				return redirect(reverse_lazy('edit_student_details'), kwargs={'student_letter': letter.pk})
 			else:
 				letter.save()
 
@@ -533,7 +589,7 @@ class PreviewStudentLetter(LoginRequiredMixin, DetailView):
 		user = self.request.user
 		student_letter = self.get_object()
 		student = student_letter.student
-		sections = StudentSection.objects.prefetch_related('student_aspects').filter(student_letter=student_letter).order_by('section__number')
+		sections = StudentSection.objects.prefetch_related('student_aspects').filter(student_letter=student_letter).order_by('section')
 		context = super().get_context_data(**kwargs)
 		context['is_nav_enabled'] = True
 		context['title'] = f'{student.full_name}\'s Assessment Preview'
@@ -555,6 +611,7 @@ class StudentLetterViewList(LoginRequiredMixin, ListView):
 		context['is_nav_enabled'] = True
 		context['title'] = 'Student Letters'
 		context['search_query'] = SearchForm(self.request.GET)
+		context['filter_form'] = FilterAssessmentsForm(self.request.GET, user=self.request.user)
 		return context
 	
 	def get_queryset(self):
@@ -563,18 +620,31 @@ class StudentLetterViewList(LoginRequiredMixin, ListView):
 		else:
 			qs = StudentLetter.objects.prefetch_related('student_sections').filter(assessor=self.request.user)
 		search_query = self.request.GET.get('search_query')
-		if filter_query := self.request.GET.get('filter_query'):
-			if filter_query == 'PHE':
-				qs = qs.filter(Q(student_sections__section__assessment_type='PHE')).distinct()
-			elif filter_query == 'General':
-				qs = qs.filter(Q(student_sections__section__assessment_type='General'))
-			elif filter_query == 'DL':
-				qs = qs.filter(Q(department='DL'))
-			elif filter_query == 'FT':
-				qs = qs.filter(Q(department='FT'))
+		if department := self.request.GET.get('department'):
+			qs = qs.filter(Q(student__department=department))
+		if zone := self.request.GET.get('zone'):
+			qs = qs.filter(Q(zone=zone))
+		if assessment_type := self.request.GET.get('assessment_type'):
+			qs = qs.filter(Q(student_sections__section__assessment_type=assessment_type)).distinct()
+		if assessor := self.request.GET.get('assessor'):
+			qs = qs.filter(Q(assessor__pk=assessor))
+		if from_date := self.request.GET.get('from_date'):
+			if  from_time := self.request.GET.get('from_time'):
+				from_time = datetime.time(from_time)
+			else:
+				from_time = datetime.time(00,00)
+			timezone_aware_from_time = timezone.make_aware(datetime.datetime.combine(datetime.datetime.strptime(from_date, '%Y-%m-%d'), from_time))
+			qs = qs.filter(created_at__gt=timezone_aware_from_time)
+		if to_date := self.request.GET.get('to_date'):
+			if  to_time := self.request.GET.get('to_time'):
+				to_time = datetime.time(to_time)
+			else:
+				to_time = datetime.time(00,00)
+			timezone_aware_to_time = timezone.make_aware(datetime.datetime.combine(datetime.datetime.strptime(to_date, '%Y-%m-%d'), to_time))
+			qs = qs.filter(created_at__lt=timezone_aware_to_time)
 		if search_query:
 			qs = qs.filter(Q(student__full_name__icontains=search_query) | Q(student__index__icontains=search_query) | Q(school__icontains=search_query) | Q(grade__icontains=search_query) | Q(learning_area__icontains=search_query) | Q(zone__icontains=search_query) | Q(assessor__full_name__icontains=search_query))
-		return qs.order_by('student')
+		return qs.order_by('-created_at')
 	
 class InvalidStudentLetterViewList(LoginRequiredMixin, ListView):
 	model = StudentLetter
@@ -604,7 +674,7 @@ class DeleteStudentLetterView(LoginRequiredMixin, View):
 		letter = StudentLetter.objects.get(pk=letter_id)
 		letter.delete()
 		messages.success(request, f'Deleted the Student letter {letter.student.full_name}')
-		return HttpResponseRedirect(self.request.get_full_path())
+		return redirect(reverse_lazy('invalid_assessments'))
 
 class NewStudentSectionView(LoginRequiredMixin, CreateView):
 	model = StudentSection
@@ -639,6 +709,7 @@ class EditStudentSectionView(LoginRequiredMixin, UpdateView):
 		context['aspects'] = student_aspects
 		context['section'] = section
 		context['pk'] = student_section
+		context['can_edit'] = section.student_letter.assessor == self.request.user
 		return context
 	
 	def form_valid(self, form):
@@ -721,6 +792,7 @@ class EditStudentAspectView(LoginRequiredMixin, View):
 			'section': student_section,
 			'letter': student_letter,
 			'formset': formset,
+			'can_edit': student_letter.assessor == self.request.user,
 		}
 
 		return render(request, self.template_name, context)
@@ -740,34 +812,38 @@ class EditStudentAspectView(LoginRequiredMixin, View):
 			'section': student_section,
 			'letter': student_letter,
 			'formset': formset,
+			'can_edit': student_letter.assessor == self.request.user,
 		}
 
 		if formset.is_valid():
 			errors = []
-			for form in formset:
-				if form.cleaned_data:
-					score = form.cleaned_data.get('score')
-					aspect = form.cleaned_data.get('aspect')
-					threshold = Aspect.objects.get(pk=aspect.pk).contribution
-					
-					if score > threshold:
-						errors.append(f"'{aspect.name}' score of '{score}' exceeds the maximum ({threshold})")
-					if score < 0:
-						errors.append(f"'{aspect.name}' score of '{score}' cannot be negative")
+			if student_letter.assessor == self.request.user:
+				for form in formset:
+					if form.cleaned_data:
+						score = form.cleaned_data.get('score')
+						aspect = form.cleaned_data.get('aspect')
+						threshold = Aspect.objects.get(pk=aspect.pk).contribution
+						
+						if score > threshold:
+							errors.append(f"'{aspect.name}' score of '{score}' exceeds the maximum ({threshold})")
+						if score < 0:
+							errors.append(f"'{aspect.name}' score of '{score}' cannot be negative")
 
-			if len(errors) == 0:
-				formset.save()
-				student_aspects = StudentAspect.objects.filter(student_section=student_section)
-				sum = 0
-				for aspect in student_aspects:
-					sum += aspect.score
-				student_section.score = sum
-				student_section.save()
-				return redirect(self.get_success_url())
-			
+				if len(errors) == 0:
+					formset.save()
+					student_aspects = StudentAspect.objects.filter(student_section=student_section)
+					sum = 0
+					for aspect in student_aspects:
+						sum += aspect.score
+					student_section.score = sum
+					student_section.save()
+					return redirect(self.get_success_url())
+				
+				else:
+					context['errors']= errors
+					return render(request, self.template_name, context)
 			else:
-				context['errors']= errors
-				return render(request, self.template_name, context)
+				messages.error(request, 'You do not have permission to edit this')
 
 		return render(request, self.template_name, context)
 
@@ -848,10 +924,10 @@ class ZonesViewList(LoginRequiredMixin, ListView):
 
 	def get_queryset(self):
 		user = self.request.user
-		zonal_leaders = ZonalLeader.objects.all().values_list('assessor', flat=True)
+		zonal_leaders = ZonalLeader.objects.all().values_list('assessor__pk', flat=True)
 		if user.is_staff:
 			qs = StudentLetter.objects.all()
-		elif user in zonal_leaders:
+		elif user.pk in zonal_leaders:
 			zone = ZonalLeader.objects.get(assessor=user)
 			qs = StudentLetter.objects.filter(zone=zone)
 		else:
@@ -863,10 +939,12 @@ class ZonesViewList(LoginRequiredMixin, ListView):
 
 	def get_context_data(self, **kwargs):
 		user = self.request.user
+		zone = ZonalLeader.objects.filter(assessor=user).first()
 		context = super().get_context_data(**kwargs)
 		context['is_nav_enabled'] = True
 		context['title'] = 'Zonal Leader'
 		context['search_query'] = SearchForm(self.request.GET)
+		context['zone'] = zone
 		return context
 	
 class ZonalLeaderViewList(LoginRequiredMixin, CreateView):
@@ -898,4 +976,3 @@ class DeleteObject(LoginRequiredMixin, DeleteView):
 	def get_object(self, queryset = None):
 		
 		return super().get_object(queryset)
-		

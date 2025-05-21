@@ -1,4 +1,5 @@
 {% extends 'teaching_practice/base_site.html' %} 
+{% load tz %}
 {% block main %}
 <div class="grid w-full h-full place-self-start gap-1">
 	<div class="flex flex-col w-full gap-2">
@@ -9,7 +10,7 @@
 			</div>
 		</form>
 		<table class="w-5/6 place-self-center border">
-			<caption class=''>Student Letters</caption>
+			<caption class=''>Student Letters for {{ zone.zone_name }}</caption>
 			<thead class="border-b bg-gray-500 text-white p-2">
 				<tr class="">
 					
@@ -40,7 +41,7 @@
 					<td class="px-2">{{ letter.grade }}</td>
 					<td class="px-2">{{ letter.learning_area }}</td>
 					<td class="px-2">{{ letter.created_at.date }}</td>
-					<td class="px-2">{{ letter.created_at.time }}</td>
+					<td class="px-2">{{ letter.created_at|localtime|time }}</td>
 					<td class="px-2">{{ letter.assessor }}</td>
 					<!-- <td class="px-2">{{ letter.location.name }}</td> -->
 					<td class="flex justify-between">

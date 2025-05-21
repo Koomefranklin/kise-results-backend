@@ -81,7 +81,7 @@
 					<a
 						href='{% url "zones" %}'
 						class="font-bold uppercase">
-						Zones
+						Zone Assessments
 					</a>
 					
 					{% if user.is_staff %}
@@ -89,7 +89,18 @@
 					{% endif %}
 						
 				</th>
-			</tr>	
+			</tr>
+			
+			{% if user.is_staff %}
+			<tr class='py-6 h-10'>
+				<th
+					scope='row'
+					id='assessors'
+					class='flex'>
+					<a href='{% url "assessors" %}'>Assessors</a></th>
+			</tr>
+			{% endif %}
+				
 			
 			{% if user.is_superuser %}
 				<tr class='py-6 h-10'>

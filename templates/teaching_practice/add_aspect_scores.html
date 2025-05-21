@@ -35,7 +35,7 @@
 				{% endfor %}
 			</tbody>
 		</table>
-			<div class='w-full flex '>
+			<div class='w-full flex gap-2'>
 				<a href='{% url "edit_student_letter" letter.pk %}'>
 					<button 
 						type="button" 
@@ -43,11 +43,15 @@
 						Back to Sections
 					</button>
 				</a>
-				<button
-					type="submit"
-					class="border-[#ff] w-fit grid rounded p-2 place-self-center shadow-lg bg-[#4caf50] font-bold">
-					Save and Continue
-				</button>
+				
+				{% if can_edit %}
+					<button
+						type="submit"
+						class="border-[#ff] w-fit grid rounded p-2 place-self-center shadow-lg bg-[#4caf50] font-bold">
+						Save and Continue
+					</button>
+				{% endif %}
+					
 			</div>
 		</form>
 		<script type="text/javascript" src="{% static 'admin/js/vendor/jquery/jquery.js' %}"></script>
