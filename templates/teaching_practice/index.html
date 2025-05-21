@@ -2,19 +2,28 @@
 {% load static %}
 <div class="grid w-full h-full">
 	<div
-		class="w-full grid lg:grid-cols-2 md:grid-cols-2 gap-6 place-self-center font-bold px-4 lg:px-48">
-		<div class='grid rounded-lg text-xl drop-shadow-lg shadow-xl h-64 w-full place-content-center'>
-			All Students: <span class='text-center'>{{ students }}</span>
-		</div>
-		<div class='grid rounded-lg text-xl drop-shadow-lg shadow-xl h-64 w-full place-content-center'>
-			Assessed Students: <span class='text-center'>{{ letters }}</span>
-		</div>
-		<div class='grid rounded-lg text-xl drop-shadow-lg shadow-xl h-64 w-full place-content-center'>
-			All Sections: <span class='text-center'>{{ sections }}</span>
-		</div>
-		<div class='grid rounded-lg text-xl drop-shadow-lg shadow-xl h-64 w-full place-content-center'>
-			All Aspects: <span class='text-center'>{{ aspects }}</span>
-		</div>
+		class="w-full grid lg:grid-cols-3 md:grid-cols-2 gap-6 place-self-center font-bold px-4 lg:px-48 text-left">
+		<a href='students_tp' class='grid gap-2 rounded-lg text-xl drop-shadow-lg shadow-xl w-full place-content-center min-h-40'>
+			<div class='flex gap-2 w-full justify-start'>All Students: <span class='font-bolder'>{{ students }}</span></div>
+		</a>
+		<a href='{% url "student_letters" %}' class='grid gap-2 rounded-lg text-xl drop-shadow-lg shadow-xl w-full place-content-center min-h-40'>
+			<div class='flex gap-2 w-full justify-start'>Assessed Students: <span class='font-bolder'>{{ letters }}</span></div>
+		</a>
+		<a href='{% url "student_letters" %}' class='grid gap-2 rounded-lg text-xl drop-shadow-lg shadow-xl w-full place-content-center min-h-40'>
+			<div class='flex gap-2 w-full justify-start'>All initiated Assessments: <span class='font-bolder'>{{ initiated_assessments }}</span></div>
+		</a>
+		<a href='{% url "student_letters" %}' class='grid gap-2 rounded-lg text-xl drop-shadow-lg shadow-xl w-full place-content-center min-h-40'>
+			<div class='flex gap-2 w-full justify-start'>Completed Assessments: <span class='font-bolder'>{{ completed_assessments }}</span></div>
+		</a>
+		<a href='{% url "incomplete_assessments" %}' class='grid gap-2 rounded-lg text-xl drop-shadow-lg shadow-xl w-full place-content-center min-h-40'>
+			<div class='flex gap-2 w-full justify-start'>Incomplete Assessments: <span class='font-bolder'>{{ pending_assessments }}</span></div>
+		</a>
+		<a href='{% url "sections" %}' class='grid gap-2 rounded-lg text-xl drop-shadow-lg shadow-xl w-full place-content-center min-h-40'>
+			<div class='flex gap-2 w-full justify-start'>All Sections: <span class='font-bolder'>{{ sections }}</span></div>
+		</a>
+		<a href='{% url "aspects" %}' class='grid gap-2 rounded-lg text-xl drop-shadow-lg shadow-xl w-full place-content-center min-h-40'>
+			<div class='flex gap-2 w-full justify-start'>All Aspects: <span class='font-bolder'>{{ aspects }}</span></div>
+		</a>
 	</div>
 </div>
 {% endblock main %}

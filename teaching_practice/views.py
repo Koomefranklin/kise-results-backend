@@ -1,6 +1,6 @@
 import datetime
 from django.conf import settings
-from django.core.exceptions import PermissionDenied
+from django.core.exceptions import MultipleObjectsReturned, PermissionDenied
 from django.shortcuts import get_object_or_404, render, redirect
 from dal import autocomplete
 from django.template.context_processors import media
@@ -70,8 +70,20 @@ class IndexPage(LoginRequiredMixin, ListView):
 	
 	def get_context_data(self, **kwargs):
 		user = self.request.user
-		students = Student.objects.all()
-		letters = StudentLetter.objects.distinct('student')
+		zonal_leaders = ZonalLeader.objects.all().values_list('assessor', flat=True)
+		students = Student.objects.exclude(full_name__icontains='test')
+		if user.is_staff:
+			initiated_assessments = StudentLetter.objects.all()
+		else:
+			if user.pk in zonal_leaders:
+				initiated_assessments = StudentLetter.objects.filter(assessor=user)
+			else:
+				initiated_assessments = StudentLetter.objects.filter(assessor=user)
+
+		period_students = students
+		letters = initiated_assessments.distinct('student')
+		completed_assessments = initiated_assessments.exclude(comments=None)
+		pending_assessments = initiated_assessments.filter(comments=None)
 		sections = Section.objects.all()
 		aspects = Aspect.objects.all()
 
@@ -79,12 +91,15 @@ class IndexPage(LoginRequiredMixin, ListView):
 		context['is_nav_enabled'] = True
 		context['title'] = 'Teaching Practice Home'
 		context['letters'] = letters.count()
+		context['initiated_assessments'] = initiated_assessments.count()
 		context['students'] = students.count()
 		context['sections'] = sections.count()
 		context['aspects'] = aspects.count()
+		context['completed_assessments'] = completed_assessments.count()
+		context['pending_assessments'] = pending_assessments.count()
 		return context
 
-class NewSectionView(LoginRequiredMixin, CreateView):
+class NewSectionView(LoginRequiredMixin, AdminMixin, CreateView):
 	model = Section
 	form_class = NewSection
 	template_name = 'teaching_practice/base_form.html'
@@ -112,7 +127,7 @@ class NewSectionView(LoginRequiredMixin, CreateView):
 		else:
 			return self.form_invalid(form)
 
-class EditsectionView(LoginRequiredMixin, UpdateView):
+class EditsectionView(LoginRequiredMixin, AdminMixin, UpdateView):
 	model = Section
 	form_class = UpdateSection
 	template_name = 'teaching_practice/base_form.html'
@@ -145,7 +160,7 @@ class SectionViewlist(LoginRequiredMixin, ListView):
 		context['search_query'] = SearchForm(self.request.GET)
 		return context
 	
-class NewSubSectionView(LoginRequiredMixin, CreateView):
+class NewSubSectionView(LoginRequiredMixin, AdminMixin, CreateView):
 	model = SubSection
 	form_class = NewSubSection
 	template_name = 'teaching_practice/base_form.html'
@@ -158,7 +173,7 @@ class NewSubSectionView(LoginRequiredMixin, CreateView):
 		context['title'] = 'New Sub-Section'
 		return context
 
-class EditSubSectionView(LoginRequiredMixin, UpdateView):
+class EditSubSectionView(LoginRequiredMixin, AdminMixin, UpdateView):
 	model = SubSection
 	form_class = UpdateSubSection
 	template_name = 'teaching_practice/base_form.html'
@@ -192,7 +207,7 @@ class SubSectionViewlist(LoginRequiredMixin, ListView):
 		context['search_query'] = SearchForm(self.request.GET)
 		return context
 
-class NewAspectView(LoginRequiredMixin, CreateView):
+class NewAspectView(LoginRequiredMixin, AdminMixin, CreateView):
 	model = Aspect
 	form_class = NewAspect
 	template_name = 'teaching_practice/base_form.html'
@@ -221,7 +236,7 @@ class NewAspectView(LoginRequiredMixin, CreateView):
 		else:
 			return self.form_invalid(form)
 
-class EditAspectView(LoginRequiredMixin, UpdateView):
+class EditAspectView(LoginRequiredMixin, AdminMixin, UpdateView):
 	model = Aspect
 	form_class = UpdateAspect
 	template_name = 'teaching_practice/base_form.html'
@@ -273,15 +288,17 @@ class NewStudentView(LoginRequiredMixin, CreateView):
 		if form.is_valid:
 			instance = form.save(commit=False)
 			instance.created_by = self.request.user
-			student_numbers = Student.objects.all().values_list('index', flat=True)
+			instance.period = datetime.date(2025,5,12) # New students for May 2025
+			student_numbers = Student.objects.exclude(full_name__icontains='test').values_list('index', flat=True)
 			if instance.index in student_numbers:
 				student = Student.objects.get(index=instance.index)
 				messages.error(self.request, f'{instance.full_name} already exists')
 				return redirect(f'{reverse_lazy("students_tp")}?search_query={student.index}')
-			instance.save()
-			self.object = instance
-			messages.success(self.request, f'Added {instance.full_name} Successfully')
-			return redirect(f'{reverse_lazy('students_tp')}?search_query={instance.index}')
+			else:
+				instance.save()
+				self.object = instance
+				messages.success(self.request, f'Added {instance.full_name} Successfully')
+				return redirect(f'{reverse_lazy('students_tp')}?search_query={instance.index}')
 		else:
 			return self.form_invalid(form)
 	
@@ -354,8 +371,8 @@ class NewStudentLetterView(LoginRequiredMixin, View):
 		student_id = self.kwargs.get('student_id')
 		assessment_type = self.kwargs.get('assessment_type')
 		deadline = timezone.datetime.strptime('17:00', '%H:%M').time()
-		start_time = timezone.datetime.strptime('07:00', '%H:%M').time()
-		current_time = timezone.now().astimezone().time()
+		start_time = timezone.datetime.strptime('08:00', '%H:%M').time()
+		current_time = timezone.datetime.now().astimezone().time()
 
 		if latitude and longitude:
 			try:
@@ -373,9 +390,8 @@ class NewStudentLetterView(LoginRequiredMixin, View):
 				assessor=self.request.user, defaults={'location':location_instance})
 			if not created:
 				previous_assessment_type = StudentSection.objects.filter(student_letter=student_letter).first().section.assessment_type
-				creation_time = student_letter.updated_at
-				current_time = timezone.now()
-				time_difference = current_time - creation_time
+				creation_time = student_letter.created_at
+				time_difference = timezone.now() - creation_time
 				if time_difference.days < 7 and assessment_type == previous_assessment_type:
 					return redirect(reverse_lazy('edit_student_letter', kwargs={'pk': student_letter.pk}))
 				else:
@@ -409,6 +425,9 @@ class NewStudentLetterView(LoginRequiredMixin, View):
 				return redirect(f'{reverse_lazy("students_tp")}?search_query={student_name}')
 
 			return redirect(reverse_lazy('edit_student_details', kwargs={'student_letter': student_letter.pk}))
+		except MultipleObjectsReturned:
+			messages.error(self.request, f'The Assessment already exist pick it from ones below')
+			return redirect(f'{reverse_lazy("student_letters")}?search_query={student_instance.full_name}')
 		except Exception as e:
 			messages.error(self.request, f'Error: {e}')
 			return redirect(f'{reverse_lazy("student_letters")}?search_query={student_instance.full_name}')
@@ -574,9 +593,17 @@ class EditStudentDetailsView(LoginRequiredMixin, View):
 			else:
 				letter.save()
 
-			student = student_form.save(commit=True)
-			messages.success(self.request, f'Updated {student.full_name} Successfully')
-			return redirect(reverse_lazy('edit_student_letter', kwargs={'pk': letter.pk}))
+				student = student_form.save(commit=True)
+				messages.success(self.request, f'Updated {student.full_name} Successfully')
+				return redirect(reverse_lazy('edit_student_letter', kwargs={'pk': letter.pk}))
+		else:
+			context = {
+				'student_form': StudentForm(instance=student_instance),
+				'form': NewStudentLetter(instance=student_letter_instance),
+				'is_nav_enabled': True,
+				'title': f'Edit {student_letter_instance}\'s Details',
+			}
+			return render(request, 'teaching_practice/student_details.html', context=context)
 		
 class PreviewStudentLetter(LoginRequiredMixin, DetailView):
 	model = StudentLetter
@@ -649,7 +676,6 @@ class StudentLetterViewList(LoginRequiredMixin, ListView):
 class InvalidStudentLetterViewList(LoginRequiredMixin, ListView):
 	model = StudentLetter
 	template_name = 'teaching_practice/invalid_student_letters.html'
-	context_object_name = 'studentletters'
 	paginate_by = 50
 
 	def get_context_data(self, **kwargs):
@@ -663,6 +689,31 @@ class InvalidStudentLetterViewList(LoginRequiredMixin, ListView):
 	def get_queryset(self):
 		if self.request.user.is_superuser:
 			qs = StudentLetter.objects.prefetch_related('student_sections').filter(student_sections__section__assessment_type=None)
+			
+		search_query = self.request.GET.get('search_query')
+		if search_query:
+			qs = qs.filter(Q(student__full_name__icontains=search_query) | Q(student__index__icontains=search_query) | Q(school__icontains=search_query) | Q(grade__icontains=search_query) | Q(learning_area__icontains=search_query) | Q(zone__icontains=search_query) | Q(assessor__full_name__icontains=search_query))
+		return qs.order_by('student')
+	
+class IncompleteAssessmentsListView(LoginRequiredMixin, ListView):
+	model = StudentLetter
+	template_name = 'teaching_practice/invalid_student_letters.html'
+	paginate_by = 50
+
+	def get_context_data(self, **kwargs):
+		user = self.request.user
+		context = super().get_context_data(**kwargs)
+		context['is_nav_enabled'] = True
+		context['title'] = 'Incomplete Assessments'
+		context['search_query'] = SearchForm(self.request.GET)
+		return context
+	
+	def get_queryset(self):
+		letters = StudentLetter.objects.prefetch_related('student_sections').filter(Q(comments=None)).exclude(student__full_name__icontains='test')
+		if self.request.user.is_staff:
+			qs = letters
+		else:
+			qs = letters.filter(assessor=self.request.user)
 			
 		search_query = self.request.GET.get('search_query')
 		if search_query:

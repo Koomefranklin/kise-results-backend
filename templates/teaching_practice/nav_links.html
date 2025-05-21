@@ -13,6 +13,18 @@
 			<tr class="py-6 border-b h-10">
 				<th
 					scope="row"
+					id="dashboard"
+					class="flex justify-between">
+					<a
+						href='{% url "index" %}'
+						class="font-bold uppercase">
+						Dashboard
+					</a>
+				</th>
+			</tr>
+			<tr class="py-6 border-b h-10">
+				<th
+					scope="row"
 					id="sections"
 					class="flex justify-between">
 					<a
@@ -90,9 +102,16 @@
 						
 				</th>
 			</tr>
+			<tr class='py-6 h-10 border-b'>
+				<th
+					scope='row'
+					id='invalid'
+					class='flex'>
+					<a href='{% url "incomplete_assessments" %}'>Incomplete Assessments</a></th>
+			</tr>
 			
 			{% if user.is_staff %}
-			<tr class='py-6 h-10'>
+			<tr class='py-6 h-10 border-b'>
 				<th
 					scope='row'
 					id='assessors'

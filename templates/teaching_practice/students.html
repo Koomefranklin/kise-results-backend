@@ -27,6 +27,7 @@
 					<th class=" px-2">Full Name</th>
 					<th class=''>Sex</th>
 					<th class=''>Assessment Number</th>
+					<th class=''>Period</th>
 					<th class=''>Department</th>
 					<th class="">Actions</th>
 				</tr>
@@ -50,6 +51,7 @@
 					<td class=''>
 						{{ student.index }}
 					</td>
+					<td class=''>{{ student.period|date:"F Y" }}</td>
 					<td class=''>{{ student.department }}</td>
 					<td class="flex justify-around">
 						<button type='button' class='text-[#4caf50] font-bold' onclick="sendLocation('{{ student.pk }}', 'General')">New General Assessment</button>

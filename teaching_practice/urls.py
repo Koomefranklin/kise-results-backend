@@ -39,4 +39,5 @@ urlpatterns = [
     path('zonal_leader/', views.ZonalLeaderViewList.as_view(), name='zonal_leaders'),
     path('assessor/', views.AssessorsViewList.as_view(), name='assessors'),
     path('assessor/<uuid:assessor>/assessments/', views.AssessorAssessmentsListView.as_view(), name='assessor_assessments'),
+    path('student-letter/incomplete/', views.IncompleteAssessmentsListView.as_view(), name='incomplete_assessments'),
 ]
