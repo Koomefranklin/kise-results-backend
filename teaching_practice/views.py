@@ -12,7 +12,7 @@ from dev.models import User
 from teaching_practice.mailer import send_student_report
 from teaching_practice.mixins import AdminMixin
 from .forms import FilterAssessmentsForm, NewAspect, NewLocationForm, NewSection, NewStudentAspect, NewStudentForm, NewStudentLetter, NewStudentSection, NewSubSection, SearchForm, StudentForm, UpdateAspect, UpdateSection, UpdateStudentAspect, UpdateStudentLetter, UpdateStudentSection, StudentAspectFormSet, UpdateSubSection, ZonalLeaderForm
-from .models import Student, Section, StudentAspect, StudentLetter, StudentSection, Aspect, Location, SubSection, ZonalLeader
+from .models import Period, Student, Section, StudentAspect, StudentLetter, StudentSection, Aspect, Location, SubSection, ZonalLeader
 from django.views.generic import ListView, CreateView, FormView, UpdateView, DeleteView, DetailView
 from django.db.models import Q, Avg, F, Count, ExpressionWrapper, FloatField, Value
 from django.contrib.auth.mixins import LoginRequiredMixin
@@ -41,6 +41,13 @@ class LecturerAutocomplete(autocomplete.Select2QuerySetView):
 		if self.q:
 			qs = qs.filter(Q(full_name__icontains=self.q))
 		return qs
+	
+class NewPeriodView(LoginRequiredMixin, CreateView):
+	model = Period
+	template_name = 'teaching_practice/base_form.html'
+	success_url = reverse_lazy('periods')
+
+	
 	
 class AssessorsViewList(LoginRequiredMixin, AdminMixin, ListView):
 	model = User
