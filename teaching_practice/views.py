@@ -11,7 +11,7 @@ from dev.forms import CustomUserCreationForm
 from dev.models import User
 from teaching_practice.mailer import send_student_report
 from teaching_practice.mixins import AdminMixin
-from .forms import FilterAssessmentsForm, NewAspect, NewLocationForm, NewSection, NewStudentAspect, NewStudentForm, NewStudentLetter, NewStudentSection, NewSubSection, SearchForm, StudentForm, UpdateAspect, UpdateSection, UpdateStudentAspect, UpdateStudentLetter, UpdateStudentSection, StudentAspectFormSet, UpdateSubSection, ZonalLeaderForm
+from .forms import FilterAssessmentsForm, NewAspect, NewLocationForm, NewSection, NewStudentAspect, NewStudentForm, NewStudentLetter, NewStudentSection, NewSubSection, PeriodForm, SearchForm, StudentForm, UpdateAspect, UpdateSection, UpdateStudentAspect, UpdateStudentLetter, UpdateStudentSection, StudentAspectFormSet, UpdateSubSection, ZonalLeaderForm
 from .models import Period, Student, Section, StudentAspect, StudentLetter, StudentSection, Aspect, Location, SubSection, ZonalLeader
 from django.views.generic import ListView, CreateView, FormView, UpdateView, DeleteView, DetailView
 from django.db.models import Q, Avg, F, Count, ExpressionWrapper, FloatField, Value
@@ -42,12 +42,58 @@ class LecturerAutocomplete(autocomplete.Select2QuerySetView):
 			qs = qs.filter(Q(full_name__icontains=self.q))
 		return qs
 	
-class NewPeriodView(LoginRequiredMixin, CreateView):
+class NewPeriodView(LoginRequiredMixin, AdminMixin, CreateView):
 	model = Period
-	template_name = 'teaching_practice/base_form.html'
+	template_name = 'teaching_practice/periods.html'
+	form_class = PeriodForm
+	success_url = reverse_lazy('new_period')
+
+	def get_context_data(self, **kwargs):
+		periods = Period.objects.all()
+		context = super().get_context_data(**kwargs)
+		context['title'] = 'New Period'
+		context['is_nav_enabled'] = True
+		context['periods'] = periods
+		return context
+
+	def post(self, request, *args, **kwargs):
+		form = self.get_form(self.get_form_class())
+		if form.is_valid:
+			instance = form.save(commit=False)
+			instance.created_by = self.request.user
+			instance.save()
+			messages.success(request, f'Period {instance.period} created successfuly')
+			self.object = instance
+			return HttpResponseRedirect(self.get_success_url())
+		else:
+			return self.form_invalid(form)
+
+class EditPeriodView(LoginRequiredMixin, AdminMixin, UpdateView):
+	model = Period
+	template_name = 'teaching_practice/periods.html'
+	form_class = PeriodForm
 	success_url = reverse_lazy('periods')
 
+	def get_context_data(self, **kwargs):
+		periods = Period.objects.all()
+		current_period = Period.objects.get(pk=self.kwargs.get('pk'))
+		context = super().get_context_data(**kwargs)
+		context['title'] = f'Edit Period {current_period.period}'
+		context['is_nav_enabled'] = True
+		context['periods'] = periods
+		return context
 	
+	def post(self, request, *args, **kwargs):
+		form = self.get_form(self.get_form_class())
+		if form.is_valid:
+			instance = form.save(commit=False)
+			instance.updated_by = self.request.user
+			instance.save()
+			messages.success(request, f'Period {instance.period} updated successfuly')
+			self.object = instance
+			return HttpResponseRedirect(self.get_success_url())
+		else:
+			return self.form_invalid(form)
 	
 class AssessorsViewList(LoginRequiredMixin, AdminMixin, ListView):
 	model = User

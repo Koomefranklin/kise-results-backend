@@ -4,6 +4,8 @@ from . import views
 urlpatterns = [
     path('student-autocomplete/', views.StudentAutocomplete.as_view(), name='student-autocomplete'),
     path('lecturer-autocomplete/', views.LecturerAutocomplete.as_view(), name='lecturer-autocomplete'),
+    path('period/', views.NewPeriodView.as_view(), name='new_period'),
+    path('period/<uuid:pk>/edit', views.EditPeriodView.as_view(), name='edit_period'),
     path('', views.IndexPage.as_view(), name='index'),
     path('student-letter/new/<uuid:student_id>/<str:longitude>/<str:latitude>/<str:assessment_type>/', views.NewStudentLetterView.as_view(), name='new_student_letter'),
     path('student/', views.StudentsViewList.as_view(), name='students_tp'),

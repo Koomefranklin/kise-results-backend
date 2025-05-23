@@ -25,6 +25,18 @@
 			<tr class="py-6 border-b h-10">
 				<th
 					scope="row"
+					id="period"
+					class="flex justify-between">
+					<a
+						href='{% url "new_period" %}'
+						class="font-bold uppercase">
+						Assessment Periods
+					</a>
+				</th>
+			</tr>
+			<tr class="py-6 border-b h-10">
+				<th
+					scope="row"
 					id="sections"
 					class="flex justify-between">
 					<a
@@ -32,7 +44,7 @@
 						class="font-bold uppercase">
 						Sections
 					</a>
-					{% if user.role == 'admin' %}
+					{% if user.is_staff %}
 						<a href='{% url "new_section" %}'><i class="fa-solid fa-plus text-[#4caf50] font-extrabold"></i> Add</a>
 					{% endif %}
 				</th>

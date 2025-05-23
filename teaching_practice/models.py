@@ -31,13 +31,13 @@ class ZonalLeader(models.Model):
   def __str__(self):
     return self.zone_name
   
-class Period(models.model):
+class Period(models.Model):
   id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
   period = models.DateField()
   is_active = models.BooleanField(default=False)
   created_by = models.ForeignKey(User, on_delete=models.PROTECT, related_name='creator')
   created_at = models.DateTimeField(auto_now_add=True)
-  updated_by = models.ForeignKey(User, on_delete=models.PROTECT, related_name='updator')
+  updated_by = models.ForeignKey(User, on_delete=models.PROTECT, related_name='updator', null=True, blank=True)
   updated_at = models.DateTimeField(auto_now=True)
 
   def __str__(self):
@@ -52,7 +52,7 @@ class Period(models.model):
     super().save(*args, **kwargs)
   
   class Meta:
-    ordering = ['status', 'period']
+    ordering = ['is_active', 'period']
 
 class Section(models.Model):
   class AssessmentType(models.TextChoices):

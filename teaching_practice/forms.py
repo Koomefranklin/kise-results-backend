@@ -7,9 +7,18 @@ from django.utils import timezone
 from platformdirs import user_cache_path
 from dev import views
 from dev.models import User
-from .models import Location, Student, Section, StudentAspect, StudentLetter, StudentSection, Aspect, SubSection, ZonalLeader
+from .models import Location, Period, Student, Section, StudentAspect, StudentLetter, StudentSection, Aspect, SubSection, ZonalLeader
 from django.utils.translation import gettext_lazy as _
 from django.db.models import Q
+
+class PeriodForm(forms.ModelForm):
+  class Meta:
+    model = Period
+    fields = ['period', 'is_active']
+
+  def __init__(self, *args, **kwargs):
+    super(PeriodForm, self).__init__(*args, **kwargs)
+    self.fields['period'].widget = forms.DateInput(attrs={'class': 'rounded border-2 w-5/6 grid', 'type': 'date'})
 
 class NewSection(forms.ModelForm):
   class Meta:
