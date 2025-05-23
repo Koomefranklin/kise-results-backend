@@ -47,12 +47,12 @@ class Period(models.Model):
     periods = Period.objects.exclude(pk=self.id)
     if self.is_active:
       for period in periods:
-        period.active = False
+        period.is_active = False
         period.save()
     super().save(*args, **kwargs)
   
   class Meta:
-    ordering = ['is_active', 'period']
+    ordering = ['-is_active', 'period']
 
 class Section(models.Model):
   class AssessmentType(models.TextChoices):
@@ -122,7 +122,7 @@ class Student(models.Model):
   index = models.CharField(blank=True, null=True, max_length=50, verbose_name='Assessment Number')
   email = models.EmailField(max_length=200, null=True, blank=True)
   department = models.CharField(max_length=50, null=True, blank=True, choices=DEPARTMENTS.choices)
-  period = models.DateField(null=True, blank=True)
+  period = models.ForeignKey(Period, on_delete=models.RESTRICT, null=True, blank=True)
   created_by = models.ForeignKey(User, related_name='created_by', null=True, blank=True, on_delete=models.RESTRICT)
   created_at = models.DateTimeField(auto_now_add=True)
   updated_at = models.DateTimeField(auto_now=True)

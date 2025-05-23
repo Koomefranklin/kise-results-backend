@@ -34,7 +34,7 @@
 				{% for period in periods %}
 
 				<tr
-					class="{% cycle 'bg-gray-200 dark:text-black' 'bg-inherit' %} text-{% cycle 'bg-black' 'inherit' %} hover:bg-[#333] hover:text-white">
+					class="{% if 'period.is_active' %} bg-[#4caf50]{% endif %} {% cycle 'bg-gray-200 dark:text-black' 'bg-inherit' %} text-{% cycle 'bg-black' 'inherit' %} hover:bg-[#333] hover:text-white">
 					<td class="px-2">{{ period.period|date:"F Y" }}</td>
 					<td class="px-2">{{ period.is_active }}</td>
           <td class='px-2'>{{ period.created_by }}</td>

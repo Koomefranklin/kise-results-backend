@@ -72,7 +72,7 @@ class EditPeriodView(LoginRequiredMixin, AdminMixin, UpdateView):
 	model = Period
 	template_name = 'teaching_practice/periods.html'
 	form_class = PeriodForm
-	success_url = reverse_lazy('periods')
+	success_url = reverse_lazy('new_period')
 
 	def get_context_data(self, **kwargs):
 		periods = Period.objects.all()
@@ -83,13 +83,13 @@ class EditPeriodView(LoginRequiredMixin, AdminMixin, UpdateView):
 		context['periods'] = periods
 		return context
 	
-	def post(self, request, *args, **kwargs):
-		form = self.get_form(self.get_form_class())
+	def form_valid(self, form):
+		
 		if form.is_valid:
 			instance = form.save(commit=False)
 			instance.updated_by = self.request.user
 			instance.save()
-			messages.success(request, f'Period {instance.period} updated successfuly')
+			messages.success(self.request, f'Period {instance.period} updated successfuly')
 			self.object = instance
 			return HttpResponseRedirect(self.get_success_url())
 		else:
@@ -341,7 +341,7 @@ class NewStudentView(LoginRequiredMixin, CreateView):
 		if form.is_valid:
 			instance = form.save(commit=False)
 			instance.created_by = self.request.user
-			instance.period = datetime.date(2025,5,12) # New students for May 2025
+			instance.period = Period.objects.get(is_active=True)
 			student_numbers = Student.objects.exclude(full_name__icontains='test').values_list('index', flat=True)
 			if instance.index in student_numbers:
 				student = Student.objects.get(index=instance.index)
@@ -559,7 +559,6 @@ class EditStudentLetterView(LoginRequiredMixin, UpdateView):
 	
 	def form_valid(self, form):
 		if form.is_valid():
-			form.instance.assessor = self.request.user
 			response = super().form_valid(form)
 			student_letter = self.get_object()
 			sections = StudentSection.objects.filter(student_letter=student_letter)
