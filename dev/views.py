@@ -10,7 +10,7 @@ from django.contrib.auth.mixins import LoginRequiredMixin
 from django.contrib.auth.decorators import login_required
 from django.db.models.functions import Coalesce
 
-from teaching_practice.mailer import send_otp
+from teaching_practice.mailer import send_error, send_otp
 from .mixins import AdminMixin, AdminOrHeadMixin, AdminOrLecturerMixin, HoDMixin
 from .models import Deadline, Hod, ModuleScore, ResetPasswordOtp, User, Student, Result, Mode, Lecturer, Specialization, Paper, TeamLeader, Module, CatCombination, IndexNumber, SitinCat, Centre
 from django.http.response import HttpResponse
@@ -1233,3 +1233,7 @@ def custom_403_view(request, exception):
 
 def custom_404_view(request, exception):
 	return render(request, 'errors/404.html', status=404, context={'title': 404})
+
+def custom_500_view(request):
+	send_error(request, getattr(request, 'exception', None))
+	return render(request, 'errors/500.html', status=500, context={'title': 'Server error'})

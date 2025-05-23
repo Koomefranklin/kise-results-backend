@@ -10,7 +10,7 @@ from django.urls import reverse_lazy
 from dev.forms import CustomUserCreationForm
 from dev.models import User
 from teaching_practice.mailer import send_student_report
-from teaching_practice.mixins import AdminMixin
+from teaching_practice.mixins import ActivePeriodMixin, AdminMixin
 from .forms import FilterAssessmentsForm, NewAspect, NewLocationForm, NewSection, NewStudentAspect, NewStudentForm, NewStudentLetter, NewStudentSection, NewSubSection, PeriodForm, SearchForm, StudentForm, UpdateAspect, UpdateSection, UpdateStudentAspect, UpdateStudentLetter, UpdateStudentSection, StudentAspectFormSet, UpdateSubSection, ZonalLeaderForm
 from .models import Period, Student, Section, StudentAspect, StudentLetter, StudentSection, Aspect, Location, SubSection, ZonalLeader
 from django.views.generic import ListView, CreateView, FormView, UpdateView, DeleteView, DetailView
@@ -22,9 +22,20 @@ from django.http import Http404, HttpResponse, HttpResponseRedirect
 from django_weasyprint import WeasyTemplateResponseMixin
 import tempfile
 from django.db.models.fields import Field
+from django.contrib.admin.models import LogEntry, ADDITION, CHANGE, DELETION
+from django.contrib.contenttypes.models import ContentType
 
 
 # Create your views here.
+
+def log_custom_action(user, obj, action=CHANGE):
+	LogEntry.objects.log_action(
+		user_id=user.pk,
+		content_type_id=ContentType.objects.get_for_model(obj).pk,
+		object_id=obj.pk,
+		object_repr=str(obj),
+		action_flag=action,
+	)
 
 class StudentAutocomplete(autocomplete.Select2QuerySetView):
 	def get_queryset(self):
@@ -62,6 +73,7 @@ class NewPeriodView(LoginRequiredMixin, AdminMixin, CreateView):
 			instance = form.save(commit=False)
 			instance.created_by = self.request.user
 			instance.save()
+			log_custom_action(self.request.user, instance, ADDITION)
 			messages.success(request, f'Period {instance.period} created successfuly')
 			self.object = instance
 			return HttpResponseRedirect(self.get_success_url())
@@ -89,6 +101,7 @@ class EditPeriodView(LoginRequiredMixin, AdminMixin, UpdateView):
 			instance = form.save(commit=False)
 			instance.updated_by = self.request.user
 			instance.save()
+			log_custom_action(self.request.user, instance, CHANGE)
 			messages.success(self.request, f'Period {instance.period} updated successfuly')
 			self.object = instance
 			return HttpResponseRedirect(self.get_success_url())
@@ -284,6 +297,7 @@ class NewAspectView(LoginRequiredMixin, AdminMixin, CreateView):
 			instance = form.save(commit=False)
 			instance.created_by = self.request.user
 			instance.save()
+			log_custom_action(self.request.user, instance, ADDITION)
 			self.object = instance
 			return HttpResponseRedirect(self.get_success_url())
 		else:
@@ -323,7 +337,7 @@ class AspectViewList(LoginRequiredMixin, ListView):
 			qs = qs.filter(Q(name__icontains=search_query) | Q(section__name__icontains=search_query))
 		return qs.order_by('section')
 	
-class NewStudentView(LoginRequiredMixin, CreateView):
+class NewStudentView(LoginRequiredMixin, ActivePeriodMixin, CreateView):
 	model = Student
 	form_class = NewStudentForm
 	template_name = 'teaching_practice/base_form.html'
@@ -349,13 +363,14 @@ class NewStudentView(LoginRequiredMixin, CreateView):
 				return redirect(f'{reverse_lazy("students_tp")}?search_query={student.index}')
 			else:
 				instance.save()
+				log_custom_action(self.request.user, instance, ADDITION)
 				self.object = instance
 				messages.success(self.request, f'Added {instance.full_name} Successfully')
 				return redirect(f'{reverse_lazy('students_tp')}?search_query={instance.index}')
 		else:
 			return self.form_invalid(form)
 	
-class EditStudentView(LoginRequiredMixin, UpdateView):
+class EditStudentView(LoginRequiredMixin, ActivePeriodMixin, UpdateView):
 	model = Student
 	form_class = StudentForm
 	template_name = 'teaching_practice/base_form.html'
@@ -417,7 +432,7 @@ class DeleteStudent(LoginRequiredMixin, View):
 		messages.success(request, f'Student {student.full_name} Deleted')
 		return redirect(f'{reverse_lazy('students_tp')}?filter_query=index')
 
-class NewStudentLetterView(LoginRequiredMixin, View):
+class NewStudentLetterView(LoginRequiredMixin, ActivePeriodMixin, View):
 	def post(self, request, *args, **kwargs):
 		longitude = self.kwargs.get('longitude')
 		latitude = self.kwargs.get('latitude')
@@ -449,11 +464,14 @@ class NewStudentLetterView(LoginRequiredMixin, View):
 					return redirect(reverse_lazy('edit_student_letter', kwargs={'pk': student_letter.pk}))
 				else:
 					student_letter = StudentLetter.objects.create(student=student_instance, assessor=self.request.user, location=location_instance)
+					log_custom_action(self.request.user, student_letter, ADDITION)
 					
 			location_instance.save()
+			log_custom_action(self.request.user, location_instance, ADDITION)
 			if not (current_time > start_time <= current_time <= deadline):
 				student_letter.late_submission = True
 				student_letter.save()
+				log_custom_action(self.request.user, student_letter, ADDITION)
 				messages.error(self.request, f'You are Starting an assessment at {current_time} which seems not within class time. The system has marked this as a Late submission. Please provide a reason')
 				# return redirect(f'{reverse_lazy("edit_student_details", kwargs={'student_letter': student_letter.pk})}')
 			messages.success(self.request, f'Location Created Successfully')
@@ -543,7 +561,7 @@ class AssessorAssessmentsListView(LoginRequiredMixin, AdminMixin, ListView):
 		student_letters = StudentLetter.objects.filter(assessor=assessor)
 		return student_letters
 
-class EditStudentLetterView(LoginRequiredMixin, UpdateView):
+class EditStudentLetterView(LoginRequiredMixin, ActivePeriodMixin, UpdateView):
 	model = StudentLetter
 	form_class = UpdateStudentLetter
 	template_name = 'teaching_practice/update_student_letter.html'
@@ -610,7 +628,7 @@ class EditStudentLetterView(LoginRequiredMixin, UpdateView):
 		context['can_edit'] = student_letter_instance.assessor == self.request.user
 		return context
 	
-class EditStudentDetailsView(LoginRequiredMixin, View):
+class EditStudentDetailsView(LoginRequiredMixin, ActivePeriodMixin, View):
 	model = StudentLetter
 	form_class = NewStudentLetter
 	template_name = 'teaching_practice/student_details.html'
@@ -791,7 +809,7 @@ class NewStudentSectionView(LoginRequiredMixin, CreateView):
 		context['is_nav_enabled'] = True
 		return context
 
-class EditStudentSectionView(LoginRequiredMixin, UpdateView):
+class EditStudentSectionView(LoginRequiredMixin, ActivePeriodMixin, UpdateView):
 	model = StudentSection
 	form_class = UpdateStudentSection
 	template_name = 'teaching_practice/student_section_scores.html'
@@ -838,7 +856,7 @@ class EditStudentSectionView(LoginRequiredMixin, UpdateView):
 				return redirect(reverse_lazy('edit_student_aspects', kwargs={'pk': next_section}))
 		return response
 
-class StudentSectionsViewList(LoginRequiredMixin, ListView):
+class StudentSectionsViewList(LoginRequiredMixin, ActivePeriodMixin, ListView):
 	model = StudentSection
 	template_name = 'teaching_practice/student_sections.html'
 	context_object_name = 'studentsections'
@@ -858,7 +876,7 @@ class StudentSectionsViewList(LoginRequiredMixin, ListView):
 		context['search_query'] = SearchForm(self.request.GET)
 		return context
 
-class NewStudentAspectView(LoginRequiredMixin, CreateView):
+class NewStudentAspectView(LoginRequiredMixin, ActivePeriodMixin, CreateView):
 	model = StudentAspect
 	form_class = NewStudentAspect
 	template_name = 'teaching_practice/base_form.html'
@@ -874,7 +892,7 @@ class NewStudentAspectView(LoginRequiredMixin, CreateView):
 		# context['title'] = 
 		return context
 
-class EditStudentAspectView(LoginRequiredMixin, View):
+class EditStudentAspectView(LoginRequiredMixin, ActivePeriodMixin, View):
 	model = StudentAspect
 	template_name = 'teaching_practice/add_aspect_scores.html'
 	

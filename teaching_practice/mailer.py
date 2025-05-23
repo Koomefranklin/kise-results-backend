@@ -35,7 +35,7 @@ def send_otp(request, obj):
     Use the following OTP to verify and reset your password<br>
     This OTP will expire in 15 minutes.
     <strong>{otp}</strong> 
-    site url: {reverse_lazy('common')}<br>
+    site url: {request.scheme}://{request.get_host}{request.path}<br>
     """
     subject = 'Password Reset Request for TP Assessment module'
     msg = EmailMultiAlternatives(subject=subject, from_email=sender_mail, to=[email])
@@ -47,3 +47,22 @@ def send_otp(request, obj):
     with open('error.log', '+a') as error_file:
       error_file.write(f'{timezone.localtime(timezone.now())}: Error: {e}\n')
     messages.error(request, f'Error sending OTP to  {email}.')
+
+def send_error(request, exception):
+  try:
+    sender_mail = 'Results Server Error <webform@kise.ac.ke>'
+    admin_mail = ['fkoome@kise.ac.ke']
+    html_content = f"""
+    
+    <strong>An error {exception} occured in the site</strong><br>
+    site url: {request.scheme}://{request.get_host}{request.path}<br>
+    """
+    subject = 'Server Error'
+    msg = EmailMultiAlternatives(subject=subject, from_email=sender_mail, to=admin_mail)
+    msg.mixed_subtype = 'related'
+    msg.attach_alternative(html_content, 'text/html')
+    msg.send()
+  except Exception as e:
+    with open('error.log', '+a') as error_file:
+      error_file.write(f'{timezone.localtime(timezone.now())}: Error: {e}\n')
+

@@ -27,6 +27,7 @@ urlpatterns = [
 ]
 handler403 = 'dev.views.custom_403_view'
 handler404 = 'dev.views.custom_404_view'
+handler500 = 'dev.views.custom_500_view'
 
 if settings.DEBUG:
     urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

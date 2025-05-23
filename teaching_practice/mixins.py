@@ -16,13 +16,12 @@ class AdminMixin:
       raise PermissionDenied
     return super().dispatch(request, *args, **kwargs)
   
-class ActivePeriodMixin:
-  model = Period          
+class ActivePeriodMixin:      
   lookup_field = 'is_active'
 
-def dispatch(self, request, *args, **kwargs):
+  def dispatch(self, request, *args, **kwargs):
 
-  if not self.model.objects.filter(**{self.lookup_field: True}).exists():
-    raise PermissionDenied("Action not allowed at this Period")
-  
-  return super().dispatch(request, *args, **kwargs)
+    if not Period.objects.filter(**{self.lookup_field: True}).exists():
+      raise PermissionDenied("Action not allowed at this Period")
+    
+    return super().dispatch(request, *args, **kwargs)
