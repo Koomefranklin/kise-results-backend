@@ -429,6 +429,7 @@ class DeleteStudent(LoginRequiredMixin, View):
 	def post(self, request, student_id, *args, **kwargs):
 		student = Student.objects.get(pk=student_id)
 		student.delete()
+		log_custom_action(self.request.user, student, DELETION)
 		messages.success(request, f'Student {student.full_name} Deleted')
 		return redirect(f'{reverse_lazy('students_tp')}?filter_query=index')
 
@@ -790,10 +791,11 @@ class IncompleteAssessmentsListView(LoginRequiredMixin, ListView):
 			qs = qs.filter(Q(student__full_name__icontains=search_query) | Q(student__index__icontains=search_query) | Q(school__icontains=search_query) | Q(grade__icontains=search_query) | Q(learning_area__icontains=search_query) | Q(zone__icontains=search_query) | Q(assessor__full_name__icontains=search_query))
 		return qs.order_by('student')
 
-class DeleteStudentLetterView(LoginRequiredMixin, View):
+class DeleteStudentLetterView(LoginRequiredMixin, AdminMixin, View):
 	def post(self, request, letter_id, *args, **kwargs):
 		letter = StudentLetter.objects.get(pk=letter_id)
 		letter.delete()
+		log_custom_action(request.user, letter, DELETION)
 		messages.success(request, f'Deleted the Student letter {letter.student.full_name}')
 		return redirect(reverse_lazy('invalid_assessments'))
 

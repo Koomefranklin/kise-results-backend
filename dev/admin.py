@@ -104,6 +104,11 @@ class ModuleScoreAdmin(admin.ModelAdmin):
     module = ModuleScore.objects.get(pk=obj.pk).module
     paper = Module.objects.get(pk=module.pk).paper
     return paper
+  
+class LogEntryAdmin(admin.ModelAdmin):
+  list_display = ['action_time', 'user', 'content_type', 'object_id', 'object_repr', 'action_flag']
+  search_fields = ['user__username', 'content_type__model', 'object_repr']
+  list_filter = ['action_time', 'user', 'content_type']
 
 admin.site.register(User, CustomUserAdmin)
 admin.site.register(Mode)
@@ -123,4 +128,4 @@ admin.site.register(SitinCat)
 admin.site.register(Deadline)
 admin.site.register(Hod)
 admin.site.register(ResetPasswordOtp)
-admin.site.register(LogEntry)
+admin.site.register(LogEntry, LogEntryAdmin)

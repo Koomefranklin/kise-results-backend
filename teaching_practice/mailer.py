@@ -34,8 +34,7 @@ def send_otp(request, obj):
     A password reset request was submiteed for {name}<br>
     Use the following OTP to verify and reset your password<br>
     This OTP will expire in 15 minutes.
-    <strong>{otp}</strong> 
-    site url: {request.scheme}://{request.get_host}{request.path}<br>
+    <strong>{otp}</strong> <br>
     """
     subject = 'Password Reset Request for TP Assessment module'
     msg = EmailMultiAlternatives(subject=subject, from_email=sender_mail, to=[email])
@@ -55,7 +54,9 @@ def send_error(request, exception):
     html_content = f"""
     
     <strong>An error {exception} occured in the site</strong><br>
-    site url: {request.scheme}://{request.get_host}{request.path}<br>
+     url: {request.scheme}://{request.get_host}{request.path}<br>
+     user: {request.user.full_name if request.user.is_authenticated else 'Anonymous'}<br>
+     time: {timezone.localtime(timezone.now())}<br>
     """
     subject = 'Server Error'
     msg = EmailMultiAlternatives(subject=subject, from_email=sender_mail, to=admin_mail)
