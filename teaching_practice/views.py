@@ -355,10 +355,11 @@ class NewStudentView(LoginRequiredMixin, ActivePeriodMixin, CreateView):
 		if form.is_valid:
 			instance = form.save(commit=False)
 			instance.created_by = self.request.user
-			instance.period = Period.objects.get(is_active=True)
-			student_numbers = Student.objects.exclude(full_name__icontains='test').values_list('index', flat=True)
-			if instance.index in student_numbers:
-				student = Student.objects.get(index=instance.index)
+			active_period=Period.objects.get(is_active=True)
+			instance.period = active_period
+			student_numbers = Student.objects.filter(period=active_period).exclude(full_name__icontains='test').values_list('index', flat=True)
+			if (instance.index).strip(' ') in student_numbers:
+				student = Student.objects.get(Q(index=instance.index) & Q(period=active_period))
 				messages.error(self.request, f'{instance.full_name} already exists')
 				return redirect(f'{reverse_lazy("students_tp")}?search_query={student.index}')
 			else:
@@ -402,10 +403,11 @@ class StudentsViewList(LoginRequiredMixin, ListView):
 		return context
 	
 	def get_queryset(self):
-		qs = Student.objects.all()
+		active_period = Period.objects.get(is_active=True)
+		qs = Student.objects.filter(period=active_period)
 		search_query = self.request.GET.get('search_query')
 		if search_query:
-			qs = qs.filter(Q(full_name__icontains=search_query) | Q(index__icontains=search_query) | Q(email__icontains=search_query))
+			qs = qs.filter(Q(full_name__icontains=search_query) | Q(index__icontains=search_query.strip(' ')) | Q(email__icontains=search_query))
 		if filter_query := self.request.GET.get('filter_query'):
 			duplicates = qs.values(filter_query).annotate(dup_count=Count(filter_query)).filter(dup_count__gt=1)
 			duplicate_ids = [item[filter_query] for item in duplicates]
@@ -720,6 +722,8 @@ class StudentLetterViewList(LoginRequiredMixin, ListView):
 		search_query = self.request.GET.get('search_query')
 		if department := self.request.GET.get('department'):
 			qs = qs.filter(Q(student__department=department))
+		if specialization := self.request.GET.get('specialization'):
+			qs = qs.filter(Q(student__specialization=specialization))
 		if zone := self.request.GET.get('zone'):
 			qs = qs.filter(Q(zone=zone))
 		if assessment_type := self.request.GET.get('assessment_type'):
@@ -777,15 +781,39 @@ class IncompleteAssessmentsListView(LoginRequiredMixin, ListView):
 		context['is_nav_enabled'] = True
 		context['title'] = 'Incomplete Assessments'
 		context['search_query'] = SearchForm(self.request.GET)
+		context['filter_form'] = FilterAssessmentsForm(self.request.GET, user=self.request.user)
 		return context
 	
 	def get_queryset(self):
-		letters = StudentLetter.objects.prefetch_related('student_sections').filter(Q(comments=None)).exclude(student__full_name__icontains='test')
+		letters = StudentLetter.objects.prefetch_related('student_sections').filter(Q(comments=None) | Q(total_score=0)).exclude(student__full_name__icontains='test')
 		if self.request.user.is_staff:
 			qs = letters
 		else:
 			qs = letters.filter(assessor=self.request.user)
-			
+		if department := self.request.GET.get('department'):
+			qs = qs.filter(Q(student__department=department))
+		if specialization := self.request.GET.get('specialization'):
+			qs = qs.filter(Q(student__specialization=specialization))
+		if zone := self.request.GET.get('zone'):
+			qs = qs.filter(Q(zone=zone))
+		if assessment_type := self.request.GET.get('assessment_type'):
+			qs = qs.filter(Q(student_sections__section__assessment_type=assessment_type)).distinct()
+		if assessor := self.request.GET.get('assessor'):
+			qs = qs.filter(Q(assessor__pk=assessor))
+		if from_date := self.request.GET.get('from_date'):
+			if  from_time := self.request.GET.get('from_time'):
+				from_time = datetime.time(from_time)
+			else:
+				from_time = datetime.time(00,00)
+			timezone_aware_from_time = timezone.make_aware(datetime.datetime.combine(datetime.datetime.strptime(from_date, '%Y-%m-%d'), from_time))
+			qs = qs.filter(created_at__gt=timezone_aware_from_time)
+		if to_date := self.request.GET.get('to_date'):
+			if  to_time := self.request.GET.get('to_time'):
+				to_time = datetime.time(to_time)
+			else:
+				to_time = datetime.time(00,00)
+			timezone_aware_to_time = timezone.make_aware(datetime.datetime.combine(datetime.datetime.strptime(to_date, '%Y-%m-%d'), to_time))
+			qs = qs.filter(created_at__lt=timezone_aware_to_time)	
 		search_query = self.request.GET.get('search_query')
 		if search_query:
 			qs = qs.filter(Q(student__full_name__icontains=search_query) | Q(student__index__icontains=search_query) | Q(school__icontains=search_query) | Q(grade__icontains=search_query) | Q(learning_area__icontains=search_query) | Q(zone__icontains=search_query) | Q(assessor__full_name__icontains=search_query))
@@ -891,7 +919,6 @@ class NewStudentAspectView(LoginRequiredMixin, ActivePeriodMixin, CreateView):
 		section = Section.objects.get(pk=student_section.section)
 		context = super().get_context_data(**kwargs)
 		context['is_nav_enabled'] = True
-		# context['title'] = 
 		return context
 
 class EditStudentAspectView(LoginRequiredMixin, ActivePeriodMixin, View):
@@ -1055,6 +1082,30 @@ class ZonesViewList(LoginRequiredMixin, ListView):
 			qs = StudentLetter.objects.filter(zone=zone)
 		else:
 			raise PermissionDenied
+		if department := self.request.GET.get('department'):
+			qs = qs.filter(Q(student__department=department))
+		if specialization := self.request.GET.get('specialization'):
+			qs = qs.filter(Q(student__specialization=specialization))
+		if zone := self.request.GET.get('zone'):
+			qs = qs.filter(Q(zone=zone))
+		if assessment_type := self.request.GET.get('assessment_type'):
+			qs = qs.filter(Q(student_sections__section__assessment_type=assessment_type)).distinct()
+		if assessor := self.request.GET.get('assessor'):
+			qs = qs.filter(Q(assessor__pk=assessor))
+		if from_date := self.request.GET.get('from_date'):
+			if  from_time := self.request.GET.get('from_time'):
+				from_time = datetime.time(from_time)
+			else:
+				from_time = datetime.time(00,00)
+			timezone_aware_from_time = timezone.make_aware(datetime.datetime.combine(datetime.datetime.strptime(from_date, '%Y-%m-%d'), from_time))
+			qs = qs.filter(created_at__gt=timezone_aware_from_time)
+		if to_date := self.request.GET.get('to_date'):
+			if  to_time := self.request.GET.get('to_time'):
+				to_time = datetime.time(to_time)
+			else:
+				to_time = datetime.time(00,00)
+			timezone_aware_to_time = timezone.make_aware(datetime.datetime.combine(datetime.datetime.strptime(to_date, '%Y-%m-%d'), to_time))
+			qs = qs.filter(created_at__lt=timezone_aware_to_time)
 		search_query = self.request.GET.get('search_query')
 		if search_query:
 			qs = qs.filter(Q(student__full_name__icontains=search_query) | Q(student__index__icontains=search_query) | Q(school__icontains=search_query) | Q(grade__icontains=search_query) | Q(learning_area__icontains=search_query) | Q(zone__icontains=search_query) | Q(assessor__icontains=search_query))
@@ -1067,6 +1118,7 @@ class ZonesViewList(LoginRequiredMixin, ListView):
 		context['is_nav_enabled'] = True
 		context['title'] = 'Zonal Leader'
 		context['search_query'] = SearchForm(self.request.GET)
+		context['filter_form'] = FilterAssessmentsForm(self.request.GET, user=self.request.user)
 		context['zone'] = zone
 		return context
 	

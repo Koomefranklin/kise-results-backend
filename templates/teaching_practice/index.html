@@ -3,7 +3,7 @@
 <div class="grid w-full h-full">
 	<div
 		class="w-full grid lg:grid-cols-3 md:grid-cols-2 gap-6 place-self-center font-bold px-4 lg:px-48 text-left">
-		<a href='students_tp' class='grid gap-2 rounded-lg text-xl drop-shadow-lg shadow-xl w-full place-content-center min-h-40'>
+		<a href='{% url "students_tp" %}' class='grid gap-2 rounded-lg text-xl drop-shadow-lg shadow-xl w-full place-content-center min-h-40'>
 			<div class='flex gap-2 w-full justify-start'>All Students: <span class='font-bolder'>{{ students }}</span></div>
 		</a>
 		<a href='{% url "student_letters" %}' class='grid gap-2 rounded-lg text-xl drop-shadow-lg shadow-xl w-full place-content-center min-h-40'>

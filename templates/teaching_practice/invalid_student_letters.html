@@ -3,14 +3,15 @@
 {% block main %}
 <div class="grid w-full h-full place-self-start gap-1">
 	<div class="flex flex-col w-full gap-2">
-		<form method="GET" action="{% url 'student_letters' %}" class='w-5/6 place-self-center'>  
+		<form method="GET" action="{% url 'incomplete_assessments' %}" class='w-5/6 place-self-center'>  
 			<div class='flex h-fit'>
 				{{ search_query.search_query }}
 				<button type="submit" class='rounded-md border p-2'>Search</button>
 			</div>
 		</form>
+		{% include 'teaching_practice/filter_assessments.html' with filter_url='incomplete_assessments' %}
 		<div class='grid gap-2 place-self-center shadow-2xl p-2 '>
-			<button class='text-left'><a href='{% url "student_letters" %}'>All Assessments</a></button>
+			<button class='text-left'><a href='{% url "incomplete_assessments" %}'>Clear filters</a></button>
 		</div>
 		<table class="w-5/6 place-self-center border">
 			<caption class=''>{{ tittle }}</caption>

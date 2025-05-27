@@ -93,6 +93,7 @@ class Specialization(models.Model):
   id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
   course = models.ForeignKey(Course, on_delete=models.CASCADE, related_name='course_specialization')
   code = models.IntegerField()
+  short_name = models.CharField(max_length=10, unique=True, null=True, blank=True)
   name = models.CharField(max_length=50)
   mode = models.ForeignKey(Mode, on_delete=models.CASCADE, related_name='specialization_mode')
   created_at = models.DateTimeField(auto_now_add=True)

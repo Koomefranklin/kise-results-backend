@@ -1,3 +1,4 @@
+from tokenize import Special
 from tracemalloc import start
 from dal_gm2m import fields
 from django import forms
@@ -6,7 +7,7 @@ from django.conf.locale import de
 from django.utils import timezone
 from platformdirs import user_cache_path
 from dev import views
-from dev.models import User
+from dev.models import Specialization, User
 from .models import Location, Period, Student, Section, StudentAspect, StudentLetter, StudentSection, Aspect, SubSection, ZonalLeader
 from django.utils.translation import gettext_lazy as _
 from django.db.models import Q
@@ -90,7 +91,7 @@ class UpdateAspect(forms.ModelForm):
 class NewStudentForm(forms.ModelForm):
   class Meta:
     model = Student
-    fields = ['full_name', 'sex', 'index', 'email', 'department']
+    fields = ['full_name', 'sex', 'index', 'email', 'department', 'specialization']
   
   def __init__(self, *args, **kwargs):
     super(NewStudentForm, self).__init__(*args, **kwargs)
@@ -105,7 +106,7 @@ class NewStudentForm(forms.ModelForm):
 class StudentForm(forms.ModelForm):
   class Meta:
     model = Student
-    fields = ['full_name', 'sex', 'index', 'email', 'department']
+    fields = ['full_name', 'sex', 'index', 'email', 'department', 'specialization']
 
   def __init__(self, *args, **kwargs):
     super(StudentForm, self).__init__(*args, **kwargs)
@@ -242,6 +243,7 @@ class FilterAssessmentsForm(forms.Form):
   ]
 
   department = forms.ChoiceField(widget=forms.Select(), choices=DEPARTMENTS)
+  specialization = forms.ModelChoiceField(queryset=Specialization.objects.all(), required=False)
   zone = forms.ChoiceField(widget=forms.Select(), choices=ZONES)
   from_date = forms.DateField(widget=forms.DateInput(attrs={'type': 'date'}), initial=timezone.now().date())
   from_time = forms.TimeField(widget=forms.TimeInput(attrs={'type': 'time'}), initial=timezone.now().time())
@@ -252,9 +254,13 @@ class FilterAssessmentsForm(forms.Form):
 
   def __init__(self, *args, **kwargs):
     user = kwargs.pop('user', None)
+    zonal_leaaders = ZonalLeader.objects.all().values_list('assessor__pk', flat=True)
     super(FilterAssessmentsForm, self).__init__(*args, **kwargs)
     if user.is_staff:
       self.fields['assessor'].queryset = User.objects.filter(Q(role='lecturer') & Q(is_active=True))
+    elif user.pk in zonal_leaaders:
+      self.fields['assessor'].queryset = User.objects.filter(Q(role='lecturer') & Q(user__is_active=True))
+      # self.fields['zone'].
     else:
       self.fields['assessor'].queryset = User.objects.filter(pk=user.pk)
     for fieldname, field in self.fields.items():

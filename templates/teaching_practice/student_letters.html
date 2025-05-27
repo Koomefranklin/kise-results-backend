@@ -9,47 +9,7 @@
 				<button type="submit" class='rounded-md border p-2'>Search</button>
 			</div>
 		</form>
-		<div class='flex flex-col place-self-center shadow-2xl sticky'>
-			<p class='text-center'>Filter (Leave Blank if not used)</p>
-			<form action='{% url "student_letters" %}' method='get' class='flex flex-row gap-2'>
-				
-				{% if filter_form %}
-					{{ filter_form.errors }}
-					<div class='flex flex-col'>
-						{{ filter_form.department.label }}
-						{{ filter_form.department }}
-					</div>
-					<div class='flex flex-col'>
-						{{ filter_form.zone.label }}
-						{{ filter_form.zone }}
-					</div>
-					<div class='flex flex-col'>
-						From:
-						<div class='flex flex-row'>
-							{{ filter_form.from_date }}
-							{{ filter_form.from_time }}
-						</div>
-					</div>
-					<div class='flex flex-col'>
-						To:
-						<div class='flex flex-row'>
-							{{ filter_form.to_date }}
-							{{ filter_form.to_time }}
-						</div>
-					</div>
-					<div class='flex flex-col'>
-						{{ filter_form.assessment_type.label }}
-						{{ filter_form.assessment_type }}
-					</div>
-					<div class='flex flex-col'>
-						{{ filter_form.assessor.label }}
-						{{ filter_form.assessor }}
-					</div>
-					<button type='submit' class='rounded-md px-2 border'>Filter</button>
-				{% endif %}
-				
-			</form>
-		</div>
+		{% include 'teaching_practice/filter_assessments.html' with filter_url='student_letters' %}
 		<table class="w-5/6 place-self-center border">
 			<caption class=''>Student Letters</caption>
 			<thead class="border-b bg-gray-500 text-white p-2">

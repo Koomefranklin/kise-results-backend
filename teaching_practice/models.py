@@ -1,5 +1,5 @@
 from django.db import models
-from dev.models import User
+from dev.models import Specialization, User
 import uuid
 from django.contrib.gis.db import models as gis_models
 from django.contrib.gis.geos import Point
@@ -122,6 +122,7 @@ class Student(models.Model):
   index = models.CharField(blank=True, null=True, max_length=50, verbose_name='Assessment Number')
   email = models.EmailField(max_length=200, null=True, blank=True)
   department = models.CharField(max_length=50, null=True, blank=True, choices=DEPARTMENTS.choices)
+  specialization = models.ForeignKey(Specialization, on_delete=models.RESTRICT, null=True, blank=True)
   period = models.ForeignKey(Period, on_delete=models.RESTRICT, null=True, blank=True)
   created_by = models.ForeignKey(User, related_name='created_by', null=True, blank=True, on_delete=models.RESTRICT)
   created_at = models.DateTimeField(auto_now_add=True)
@@ -134,8 +135,8 @@ class Student(models.Model):
     ordering = ['index', 'full_name']
   
   def save(self, *args, **kwargs):
-    self.index = self.index.upper()
-    self.full_name = self.full_name.upper()
+    self.index = self.index.upper().strip(' ') if self.index else None
+    self.full_name = self.full_name.upper().strip()
     super().save(*args, **kwargs)
 
 class Location(gis_models.Model):
