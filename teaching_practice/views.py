@@ -9,7 +9,7 @@ from django.views.generic.base import View
 from django.urls import reverse_lazy
 from dev.forms import CustomUserCreationForm
 from dev.models import User
-from teaching_practice.mailer import send_student_report
+from teaching_practice.mailer import request_deletion, send_student_report
 from teaching_practice.mixins import ActivePeriodMixin, AdminMixin
 from .forms import FilterAssessmentsForm, NewAspect, NewLocationForm, NewSection, NewStudentAspect, NewStudentForm, NewStudentLetter, NewStudentSection, NewSubSection, PeriodForm, SearchForm, StudentForm, UpdateAspect, UpdateSection, UpdateStudentAspect, UpdateStudentLetter, UpdateStudentSection, StudentAspectFormSet, UpdateSubSection, ZonalLeaderForm
 from .models import Period, Student, Section, StudentAspect, StudentLetter, StudentSection, Aspect, Location, SubSection, ZonalLeader
@@ -1142,6 +1142,15 @@ class ZonalLeaderViewList(LoginRequiredMixin, CreateView):
 		context['is_nav_enabled'] = True
 		context['title'] = 'Zonal Leaders'
 		return context
+	
+class RequestDeletionView(LoginRequiredMixin, View):
+	def post(self, *args, **kwargs):
+		obj_id = self.kwargs.get('pk')
+		path = self.kwargs.get('path')
+		print(path)
+		request_deletion(self.request, obj_id, path)
+		messages.success(self.request, 'Your request for deletion has been sent successfully. The admin will review it and take action if necessary.')
+		return redirect(path)
 	
 class DeleteObject(LoginRequiredMixin, DeleteView):
 	model = Aspect

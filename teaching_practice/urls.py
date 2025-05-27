@@ -42,4 +42,5 @@ urlpatterns = [
     path('assessor/', views.AssessorsViewList.as_view(), name='assessors'),
     path('assessor/<uuid:assessor>/assessments/', views.AssessorAssessmentsListView.as_view(), name='assessor_assessments'),
     path('student-letter/incomplete/', views.IncompleteAssessmentsListView.as_view(), name='incomplete_assessments'),
+    path('request-deletion/<uuid:pk>/<path:path>/', views.RequestDeletionView.as_view(), name='request_deletion'),
 ]

@@ -5,6 +5,8 @@ from django.urls import reverse_lazy
 from django.utils import timezone
 from django.contrib import messages
 
+admin_mail = ['fkoome@kise.ac.ke']
+
 def send_student_report(request, file, obj):
   try:
     student = obj.student.full_name
@@ -35,6 +37,7 @@ def send_otp(request, obj):
     Use the following OTP to verify and reset your password<br>
     This OTP will expire in 15 minutes.
     <strong>{otp}</strong> <br>
+    <a href="{request.build_absolute_uri(reverse_lazy('reset_password'))}">Proceed to resetL</a><br>
     """
     subject = 'Password Reset Request for TP Assessment module'
     msg = EmailMultiAlternatives(subject=subject, from_email=sender_mail, to=[email])
@@ -49,12 +52,11 @@ def send_otp(request, obj):
 
 def send_error(request, exception):
   try:
-    sender_mail = 'Results Server Error <webform@kise.ac.ke>'
-    admin_mail = ['fkoome@kise.ac.ke']
+    sender_mail = 'TP Assessment <webform@kise.ac.ke>'
     html_content = f"""
     
     <strong>An error {exception} occured in the site</strong><br>
-     url: {request.scheme}://{request.get_host}{request.path}<br>
+     url: {request.build_absolute_uri()}<br>
      user: {request.user.full_name if request.user.is_authenticated else 'Anonymous'}<br>
      time: {timezone.localtime(timezone.now())}<br>
     """
@@ -67,3 +69,21 @@ def send_error(request, exception):
     with open('error.log', '+a') as error_file:
       error_file.write(f'{timezone.localtime(timezone.now())}: Error: {e}\n')
 
+def request_deletion(request, obj_id, path):
+  try:
+    user = request.user.full_name
+    sender_mail = 'TP Assessment <webform@kise.ac.ke>'
+    html_content = f"""
+    A request for deletion of object {obj_id} from {path} was made by {user}<br>
+    Please review the request and take appropriate action.<br>
+    """
+    subject = 'Deletion Request for TP Assessment module'
+    msg = EmailMultiAlternatives(subject=subject, from_email=sender_mail, to=admin_mail)
+    msg.mixed_subtype = 'related'
+    msg.attach_alternative(html_content, 'text/html')
+    msg.send()
+    messages.success(request, f'Deletion request sent to {admin_mail}')
+  except Exception as e:
+    with open('error.log', '+a') as error_file:
+      error_file.write(f'{timezone.localtime(timezone.now())}: Error: {e}\n')
+    messages.error(request, f'Error sending deletion request to {admin_mail}.')

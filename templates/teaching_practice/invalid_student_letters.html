@@ -52,10 +52,19 @@
 					<td class="px-2">{{ letter.student_sections.first.section.get_assessment_type_display }}</td>
 					<td class="flex justify-between gap-2">
 						<a href='{% url "edit_student_letter" letter.id %}' title='View'>View</a>
-						<form action='{% url "delete_letter" letter.id %}' method='post'>
-							{% csrf_token %}
-							<button type='submit'>Delete</button>
-						</form>
+						
+						{% if user.is_superuser %}
+							<form action='{% url "delete_letter" letter.id %}' method='post'>
+								{% csrf_token %}
+								<button type='submit'>Delete</button>
+							</form>
+						{% else %}
+							<form action='{% url "request_deletion" letter.pk request.build_absolute_uri %}' title='Request Deletion' method='post'>
+								{% csrf_token %}
+								<button type='submit' class='font-bold'>Request Deletion</button>
+							</form>
+						{% endif %}
+							
 						
 					</td>
 				</tr>
