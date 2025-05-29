@@ -259,7 +259,7 @@ class FilterAssessmentsForm(forms.Form):
     if user.is_staff:
       self.fields['assessor'].queryset = User.objects.filter(Q(role='lecturer') & Q(is_active=True))
     elif user.pk in zonal_leaaders:
-      self.fields['assessor'].queryset = User.objects.filter(Q(role='lecturer') & Q(user__is_active=True))
+      self.fields['assessor'].queryset = User.objects.filter(Q(role='lecturer') & Q(is_active=True))
       # self.fields['zone'].
     else:
       self.fields['assessor'].queryset = User.objects.filter(pk=user.pk)

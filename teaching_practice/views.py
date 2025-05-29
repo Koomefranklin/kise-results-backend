@@ -357,7 +357,9 @@ class NewStudentView(LoginRequiredMixin, ActivePeriodMixin, CreateView):
 			instance.created_by = self.request.user
 			active_period=Period.objects.get(is_active=True)
 			instance.period = active_period
-			student_numbers = Student.objects.filter(period=active_period).exclude(full_name__icontains='test').values_list('index', flat=True)
+			students = Student.objects.filter(period=active_period).exclude(full_name__icontains='test')
+			student_numbers = students.values_list('index', flat=True)
+			student_names = students.values_list('full_name', flat=True)
 			if (instance.index).strip(' ') in student_numbers:
 				student = Student.objects.get(Q(index=instance.index) & Q(period=active_period))
 				messages.error(self.request, f'{instance.full_name} already exists')
@@ -745,7 +747,7 @@ class StudentLetterViewList(LoginRequiredMixin, ListView):
 			timezone_aware_to_time = timezone.make_aware(datetime.datetime.combine(datetime.datetime.strptime(to_date, '%Y-%m-%d'), to_time))
 			qs = qs.filter(created_at__lt=timezone_aware_to_time)
 		if search_query:
-			qs = qs.filter(Q(student__full_name__icontains=search_query) | Q(student__index__icontains=search_query) | Q(school__icontains=search_query) | Q(grade__icontains=search_query) | Q(learning_area__icontains=search_query) | Q(zone__icontains=search_query) | Q(assessor__full_name__icontains=search_query))
+			qs = qs.filter(Q(pk__icontains=search_query) | Q(student__full_name__icontains=search_query) | Q(student__index__icontains=search_query) | Q(school__icontains=search_query) | Q(grade__icontains=search_query) | Q(learning_area__icontains=search_query) | Q(zone__icontains=search_query) | Q(assessor__full_name__icontains=search_query))
 		return qs.order_by('-created_at')
 	
 class InvalidStudentLetterViewList(LoginRequiredMixin, ListView):

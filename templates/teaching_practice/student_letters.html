@@ -25,6 +25,7 @@
 					<th class='px-2'>Time</th>
 					<th class='px-2'>Assessor</th>
 					<th class='px-2'>Assessment Type</th>
+					<th class='px-2'>Score</th>
 					<th class="">Actions</th>
 				</tr>
 			</thead>
@@ -47,12 +48,27 @@
 					<td class="px-2">{{ letter.created_at|localtime|time }}</td>
 					<td class="px-2">{{ letter.assessor }}</td>
 					<td class="px-2">{{ letter.student_sections.first.section.get_assessment_type_display }}</td>
+					<td class='px-2'>{{ letter.total_score }}</td>
 					<td class="flex justify-between">
 						<a href='{% url "edit_student_letter" letter.id %}' title='View'>View</a>
-						<form action='{% url "request_deletion" letter.pk request.build_absolute_uri %}' title='Request Deletion' method='post'>
-							{% csrf_token %}
-							<button type='submit' class='font-bold'>Request Deletion</button>
-						</form>
+						
+						{% if user.is_superuser %}
+							<form action='{% url "delete_letter" letter.id %}' method='post'>
+								{% csrf_token %}
+								<button type='submit'>Delete</button>
+							</form>
+						{% endif %}
+							
+						{% if letter.assessor == user %}
+							<a href='{% url "edit_student_letter" letter.id %}' title='Edit'>Edit</a>
+							{% if not user.is_staff %}
+								<form action='{% url "request_deletion" letter.pk request.build_absolute_uri %}' title='Request Deletion' method='post'>
+									{% csrf_token %}
+									<button type='submit' class='font-bold'>Request Deletion</button>
+								</form>
+							{% endif %}
+						{% endif %}
+							
 					</td>
 				</tr>
 				{% endfor %}
