@@ -72,9 +72,12 @@ def send_error(request, exception):
 def request_deletion(request, obj_id, path):
   try:
     user = request.user.full_name
+    method = request.method
     sender_mail = 'TP Assessment <webform@kise.ac.ke>'
     html_content = f"""
     A request for deletion of object {obj_id} from {path} was made by {user}<br>
+    The request was made using the {method} method.<br>
+    data: {request.POST if method == 'POST' else request.GET}<br>
     Please review the request and take appropriate action.<br>
     """
     subject = 'Deletion Request for TP Assessment module'
