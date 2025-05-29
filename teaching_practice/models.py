@@ -197,6 +197,7 @@ class StudentLetter(models.Model):
   location = models.ForeignKey(Location, on_delete=models.CASCADE)
   late_submission = models.BooleanField(default=False)
   reason = models.CharField(max_length=255, blank=True, null=True, verbose_name='Reason for late submission')
+  to_delete = models.BooleanField(default=False, verbose_name='Request for deletion')
   created_at = models.DateTimeField(auto_now_add=True)
   updated_at = models.DateTimeField(auto_now=True)
 

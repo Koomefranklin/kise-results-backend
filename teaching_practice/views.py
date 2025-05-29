@@ -1149,7 +1149,9 @@ class RequestDeletionView(LoginRequiredMixin, View):
 	def post(self, *args, **kwargs):
 		obj_id = self.kwargs.get('pk')
 		path = self.kwargs.get('path')
-		print(path)
+		letter = StudentLetter.objects.get(pk=obj_id)
+		letter.to_delete = True
+		letter.save()
 		request_deletion(self.request, obj_id, path)
 		messages.success(self.request, 'Your request for deletion has been sent successfully. The admin will review it and take action if necessary.')
 		return redirect(path)
