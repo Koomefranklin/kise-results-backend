@@ -59,10 +59,17 @@
 								<button type='submit'>Delete</button>
 							</form>
 						{% else %}
+						
+						{% if letter.to_delete %}
+							<form action='{% url "cancel_deletion" letter.pk request.build_absolute_uri %}' title='Cancel Deletion' method='post'>
+								{% csrf_token %}
+								<button type='submit' class='font-bold'>Cancel Deletion</button>
+							{% else %}
 							<form action='{% url "request_deletion" letter.pk request.build_absolute_uri %}' title='Request Deletion' method='post'>
 								{% csrf_token %}
 								<button type='submit' class='font-bold'>Request Deletion</button>
 							</form>
+							{% endif %}
 						{% endif %}
 							
 						

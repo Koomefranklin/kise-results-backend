@@ -28,7 +28,6 @@ urlpatterns = [
     path('student-section/new/', views.NewStudentSectionView.as_view(), name='new_student_section'),
     path('student-section/<uuid:pk>/edit/', views.EditStudentSectionView.as_view(), name='edit_student_section'),
     path('student-section/', views.StudentSectionsViewList.as_view(), name='student_sections'),
-    path('student-aspect/new/', views.NewStudentAspectView.as_view(), name='new_student_aspect'),
     path('student-score/<uuid:pk>/edit/', views.EditStudentAspectView.as_view(), name='edit_student_aspects'),
     path('student-aspect/', views.StudentAspectsViewList.as_view(), name='student_aspects'),
     path('student-letter/report/<uuid:pk>/', views.GeneratePDF.as_view(), name='pdf_report'),
@@ -43,4 +42,6 @@ urlpatterns = [
     path('assessor/<uuid:assessor>/assessments/', views.AssessorAssessmentsListView.as_view(), name='assessor_assessments'),
     path('student-letter/incomplete/', views.IncompleteAssessmentsListView.as_view(), name='incomplete_assessments'),
     path('request-deletion/<uuid:pk>/<path:path>/', views.RequestDeletionView.as_view(), name='request_deletion'),
+    path('assessments/to-delete/', views.PendingDeletionView.as_view(), name='pending_deletion'),
+    path('cancel-deletion/<uuid:pk>/', views.CancelDeletionView.as_view(), name='cancel_deletion'),
 ]

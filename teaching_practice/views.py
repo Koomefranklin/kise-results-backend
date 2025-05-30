@@ -138,13 +138,14 @@ class IndexPage(LoginRequiredMixin, ListView):
 		user = self.request.user
 		zonal_leaders = ZonalLeader.objects.all().values_list('assessor', flat=True)
 		students = Student.objects.exclude(full_name__icontains='test')
+		all_assessments = StudentLetter.objects.filter(to_delete=False)
 		if user.is_staff:
-			initiated_assessments = StudentLetter.objects.all()
+			initiated_assessments = all_assessments
 		else:
 			if user.pk in zonal_leaders:
-				initiated_assessments = StudentLetter.objects.filter(assessor=user)
+				initiated_assessments = all_assessments.filter(assessor=user)
 			else:
-				initiated_assessments = StudentLetter.objects.filter(assessor=user)
+				initiated_assessments = all_assessments.filter(assessor=user)
 
 		period_students = students
 		letters = initiated_assessments.distinct('student')
@@ -522,7 +523,7 @@ class PreviousAssessmentsView(LoginRequiredMixin, ListView):
 	
 	def get_queryset(self):
 		student = self.kwargs.get('student')
-		qs = StudentLetter.objects.filter(student__pk=student)
+		qs = StudentLetter.objects.filter(Q(to_delete=False) & Q(student__pk=student))
 		search_query = self.request.GET.get('search_query')
 		if search_query:
 			qs = qs.filter(Q(student__full_name__icontains=search_query) | Q(student__index__icontains=search_query))
@@ -543,7 +544,7 @@ class PreviousAssessmentDetailView(LoginRequiredMixin, DetailView):
 		context = super().get_context_data(**kwargs)
 		context['is_nav_enabled'] = True
 		context['title'] = f'Previous {student.full_name} Assessments Detail'
-		context['total'] = StudentLetter.objects.filter(student=student).aggregate(total_score=Avg('total_score'))
+		context['total'] = StudentLetter.objects.filter(Q(to_delete=False) & Q(student=student)).aggregate(total_score=Avg('total_score'))
 		context['sections'] = sections
 		context['letter'] = student_letter
 		context['assessment_type'] = StudentSection.objects.filter(student_letter=student_letter).first().section.assessment_type
@@ -563,7 +564,7 @@ class AssessorAssessmentsListView(LoginRequiredMixin, AdminMixin, ListView):
 	
 	def get_queryset(self):
 		assessor = self.kwargs.get('assessor')
-		student_letters = StudentLetter.objects.filter(assessor=assessor)
+		student_letters = StudentLetter.objects.filter(Q(to_delete=False) & Q(assessor__pk=assessor))
 		return student_letters
 
 class EditStudentLetterView(LoginRequiredMixin, ActivePeriodMixin, UpdateView):
@@ -695,7 +696,7 @@ class PreviewStudentLetter(LoginRequiredMixin, DetailView):
 		context = super().get_context_data(**kwargs)
 		context['is_nav_enabled'] = True
 		context['title'] = f'{student.full_name}\'s Assessment Preview'
-		context['total'] = StudentLetter.objects.filter(student=student).aggregate(total_score=Avg('total_score'))
+		context['total'] = StudentLetter.objects.filter(Q(to_delete=False) & Q(student=student)).aggregate(total_score=Avg('total_score'))
 		context['sections'] = sections
 		context['letter'] = student_letter
 		context['assessment_type'] = StudentSection.objects.filter(student_letter=student_letter).first().section.assessment_type
@@ -714,13 +715,15 @@ class StudentLetterViewList(LoginRequiredMixin, ListView):
 		context['title'] = 'Student Letters'
 		context['search_query'] = SearchForm(self.request.GET)
 		context['filter_form'] = FilterAssessmentsForm(self.request.GET, user=self.request.user)
+		messages.info(self.request, 'These are the assessments that have been created. You can search for a specific assessment using the search bar below. If invalid, request for deletion.')
 		return context
 	
 	def get_queryset(self):
+		qs = StudentLetter.objects.prefetch_related('student_sections').filter(to_delete=False)
 		if self.request.user.is_staff:
-			qs = StudentLetter.objects.prefetch_related('student_sections').all()
+			qs = qs
 		else:
-			qs = StudentLetter.objects.prefetch_related('student_sections').filter(assessor=self.request.user)
+			qs = qs.filter(assessor=self.request.user)
 		search_query = self.request.GET.get('search_query')
 		if department := self.request.GET.get('department'):
 			qs = qs.filter(Q(student__department=department))
@@ -784,10 +787,11 @@ class IncompleteAssessmentsListView(LoginRequiredMixin, ListView):
 		context['title'] = 'Incomplete Assessments'
 		context['search_query'] = SearchForm(self.request.GET)
 		context['filter_form'] = FilterAssessmentsForm(self.request.GET, user=self.request.user)
+		messages.info(self.request, 'These are the assessments that have not been completed. Please complete them or request for their deletion.')
 		return context
 	
 	def get_queryset(self):
-		letters = StudentLetter.objects.prefetch_related('student_sections').filter(Q(comments=None) | Q(total_score=0)).exclude(student__full_name__icontains='test')
+		letters = StudentLetter.objects.prefetch_related('student_sections').filter(Q(to_delete=False) & (Q(comments=None) | Q(total_score=0))).exclude(student__full_name__icontains='test')
 		if self.request.user.is_staff:
 			qs = letters
 		else:
@@ -828,6 +832,55 @@ class DeleteStudentLetterView(LoginRequiredMixin, AdminMixin, View):
 		log_custom_action(request.user, letter, DELETION)
 		messages.success(request, f'Deleted the Student letter {letter.student.full_name}')
 		return redirect(reverse_lazy('invalid_assessments'))
+		
+class RequestDeletionView(LoginRequiredMixin, View):
+	def post(self, *args, **kwargs):
+		obj_id = self.kwargs.get('pk')
+		path = self.kwargs.get('path')
+		letter = StudentLetter.objects.get(pk=obj_id)
+		letter.to_delete = True
+		letter.request_time = timezone.now()
+		letter.save()
+		request_deletion(self.request, obj_id, path)
+		messages.success(self.request, 'Your request for deletion has been sent successfully. The admin will review it and take action if necessary.')
+		return redirect(reverse_lazy('pending_deletion'))
+	
+class PendingDeletionView(LoginRequiredMixin, ListView):
+	model = StudentAspect
+	form_class = NewStudentAspect
+	template_name = 'teaching_practice/invalid_student_letters.html'
+	paginate_by = 50
+
+	def get_queryset(self):
+		user = self.request.user
+		qs = StudentLetter.objects.filter(to_delete=True)
+		if user.is_superuser:
+			qs = qs
+		else:
+			qs = qs.filter(assessor=user)
+		return qs
+
+	def get_context_data(self, **kwargs):
+		user = self.request.user
+		student_section_id = self.kwargs.get('pk')
+		student_section = StudentSection.objects.get(pk=student_section_id)
+		section = Section.objects.get(pk=student_section.section)
+		context = super().get_context_data(**kwargs)
+		context['is_nav_enabled'] = True
+		context['title'] = 'Pending Deletion'
+		return context
+	
+class CancelDeletionView(LoginRequiredMixin, View):
+	def post(self, *args, **kwargs):
+		obj_id = self.kwargs.get('pk')
+		path = self.kwargs.get('path')
+		letter = StudentLetter.objects.get(pk=obj_id)
+		letter.to_delete = False
+		letter.request_time = timezone.now()
+		letter.save()
+		request_deletion(self.request, obj_id, path)
+		messages.success(self.request, 'The request for deletion has been cancelled successfully.')
+		return redirect(f"{reverse_lazy('student_letters')}?search_query={letter.pk}")
 
 class NewStudentSectionView(LoginRequiredMixin, CreateView):
 	model = StudentSection
@@ -906,21 +959,6 @@ class StudentSectionsViewList(LoginRequiredMixin, ActivePeriodMixin, ListView):
 		context = super().get_context_data(**kwargs)
 		context['is_nav_enabled'] = True
 		context['search_query'] = SearchForm(self.request.GET)
-		return context
-
-class NewStudentAspectView(LoginRequiredMixin, ActivePeriodMixin, CreateView):
-	model = StudentAspect
-	form_class = NewStudentAspect
-	template_name = 'teaching_practice/base_form.html'
-	success_url = reverse_lazy('studentaspects')
-
-	def get_context_data(self, **kwargs):
-		user = self.request.user
-		student_section_id = self.kwargs.get('pk')
-		student_section = StudentSection.objects.get(pk=student_section_id)
-		section = Section.objects.get(pk=student_section.section)
-		context = super().get_context_data(**kwargs)
-		context['is_nav_enabled'] = True
 		return context
 
 class EditStudentAspectView(LoginRequiredMixin, ActivePeriodMixin, View):
@@ -1077,11 +1115,12 @@ class ZonesViewList(LoginRequiredMixin, ListView):
 	def get_queryset(self):
 		user = self.request.user
 		zonal_leaders = ZonalLeader.objects.all().values_list('assessor__pk', flat=True)
+		qs = StudentLetter.objects.filter(to_delete=False)
 		if user.is_staff:
-			qs = StudentLetter.objects.all()
+			qs = qs
 		elif user.pk in zonal_leaders:
 			zone = ZonalLeader.objects.get(assessor=user)
-			qs = StudentLetter.objects.filter(zone=zone)
+			qs = qs.filter(zone=zone)
 		else:
 			raise PermissionDenied
 		if department := self.request.GET.get('department'):
@@ -1144,18 +1183,7 @@ class ZonalLeaderViewList(LoginRequiredMixin, CreateView):
 		context['is_nav_enabled'] = True
 		context['title'] = 'Zonal Leaders'
 		return context
-	
-class RequestDeletionView(LoginRequiredMixin, View):
-	def post(self, *args, **kwargs):
-		obj_id = self.kwargs.get('pk')
-		path = self.kwargs.get('path')
-		letter = StudentLetter.objects.get(pk=obj_id)
-		letter.to_delete = True
-		letter.save()
-		request_deletion(self.request, obj_id, path)
-		messages.success(self.request, 'Your request for deletion has been sent successfully. The admin will review it and take action if necessary.')
-		return redirect(path)
-	
+
 class DeleteObject(LoginRequiredMixin, DeleteView):
 	model = Aspect
 	success_url = reverse_lazy('aspects')
