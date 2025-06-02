@@ -14,9 +14,10 @@ class StudentAspectAdmin(admin.ModelAdmin):
 class StudentLetterAdmin(admin.ModelAdmin):
   list_display = ['student', 'assessor']
   search_fields = ['pk','student__full_name', 'assessor__full_name']
+  autocomplete_fields = ['student', 'assessor']
 
 class TpStudentAdmin(admin.ModelAdmin):
-  list_display = ['full_name', 'index', 'created_by']
+  list_display = ['full_name', 'index', 'specialization', 'created_by']
   search_fields = ['full_name', 'index', 'created_by__full_name']
   # list_filter = ['centre', 'course', 'specialization']
 

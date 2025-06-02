@@ -11,7 +11,7 @@
 		</form>
 		{% include 'teaching_practice/filter_assessments.html' with filter_url='zones' %}
 		<table class="w-5/6 place-self-center border">
-			<caption class=''>Student Letters for {{ zone.zone_name }}</caption>
+			<caption class=''>Student Assessments for {{ zone.zone_name }}</caption>
 			<thead class="border-b bg-gray-500 text-white p-2">
 				<tr class="">
 					
@@ -56,7 +56,7 @@
 				<tr class="">
 					<td colspan='11' class=''>
 						<p class='w-full grid grid-flow-col'>
-							<span class='text-left'>Showing {{ page_obj.object_list|length }} of {{ page_obj.paginator.count }} Student Letters</span>
+							<span class='text-left'>Showing {{ page_obj.object_list|length }} of {{ page_obj.paginator.count }} Student Assessments</span>
 							<span class='text-right'>
 								{% if page_obj.has_previous %}
 								<a
@@ -88,7 +88,7 @@
 				<td
 					colspan="11"
 					class="text-center">
-					No Student Letters Found
+					No Student Assessments Found
 				</td>
 			</tr>
 			{% endif %}

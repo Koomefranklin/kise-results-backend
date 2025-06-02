@@ -54,18 +54,21 @@
 						<a href='{% url "edit_student_letter" letter.id %}' title='View'>View</a>
 						
 						{% if user.is_superuser %}
-							<form action='{% url "delete_letter" letter.id %}' method='post'>
+							<form action='{% url "delete_letter" letter.id %}' method='post' id='delete_letter_form'>
 								{% csrf_token %}
 								<button type='submit'>Delete</button>
 							</form>
 						{% else %}
 						
 						{% if letter.to_delete %}
-							<form action='{% url "cancel_deletion" letter.pk request.build_absolute_uri %}' title='Cancel Deletion' method='post'>
+							<form action='{% url "cancel_deletion" letter.pk request.build_absolute_uri %}' title='Cancel Deletion' method='post' id='cancel_deletion_form'>
+								{% if not user.is_staff %}
+									<input type='hidden' name='letter_id' value='{{ letter.pk }}'>
+								{% endif %}
 								{% csrf_token %}
 								<button type='submit' class='font-bold'>Cancel Deletion</button>
 							{% else %}
-							<form action='{% url "request_deletion" letter.pk request.build_absolute_uri %}' title='Request Deletion' method='post'>
+							<form action='{% url "request_deletion" letter.pk request.build_absolute_uri %}' title='Request Deletion' method='post' id='request_deletion_form'>
 								{% csrf_token %}
 								<button type='submit' class='font-bold'>Request Deletion</button>
 							</form>
@@ -81,7 +84,7 @@
 				<tr class="">
 					<td colspan='11' class=''>
 						<p class='w-full grid grid-flow-col'>
-							<span class='text-left'>Showing {{ page_obj.object_list|length }} of {{ page_obj.paginator.count }} Student Letters</span>
+							<span class='text-left'>Showing {{ page_obj.object_list|length }} of {{ page_obj.paginator.count }} Student Assessments</span>
 							<span class='text-right'>
 								{% if page_obj.has_previous %}
 								<a
@@ -113,7 +116,7 @@
 				<td
 					colspan="11"
 					class="text-center">
-					No Student Letters Found
+					No Student Assessments Found
 				</td>
 			</tr>
 			{% endif %}
@@ -125,4 +128,27 @@
 			
 	</div>
 </div>
+<script>
+	document.getElementById('delete_letter_form').addEventListener('submit', function(event) {
+		const confirmed = confirm('Are you sure you want to delete this letter? This action cannot be undone.');
+	
+		if (!confirmed) {
+			event.preventDefault(); 
+		}
+	});
+	document.getElementById('cancel_deletion_form').addEventListener('submit', function(event) {
+		const confirmed = confirm('Are you sure you want to cancel the deletion request for this letter?');
+	
+		if (!confirmed) {
+			event.preventDefault(); 
+		}
+	});
+	document.getElementById('request_deletion_form').addEventListener('submit', function(event) {
+		const confirmed = confirm('Are you sure you want to request deletion of this letter? The request will be sent to the administrator for approval.');
+	
+		if (!confirmed) {
+			event.preventDefault(); 
+		}
+	});
+	</script>
 {% endblock main %}

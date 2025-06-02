@@ -353,24 +353,22 @@ class NewStudentView(LoginRequiredMixin, ActivePeriodMixin, CreateView):
 	
 	def post(self, request, *args, **kwargs):
 		form = self.get_form(self.get_form_class())
-		if form.is_valid:
+		if form.is_valid():
 			instance = form.save(commit=False)
 			instance.created_by = self.request.user
 			active_period=Period.objects.get(is_active=True)
 			instance.period = active_period
 			students = Student.objects.filter(period=active_period).exclude(full_name__icontains='test')
-			student_numbers = students.values_list('index', flat=True)
-			student_names = students.values_list('full_name', flat=True)
-			if (instance.index).strip(' ') in student_numbers:
-				student = Student.objects.get(Q(index=instance.index) & Q(period=active_period))
+			existing_student = students.filter(index=instance.index.strip()).first()
+			if existing_student:
 				messages.error(self.request, f'{instance.full_name} already exists')
-				return redirect(f'{reverse_lazy("students_tp")}?search_query={student.index}')
+				return redirect(f'{reverse_lazy("students_tp")}?search_query={existing_student.index}')
 			else:
 				instance.save()
 				log_custom_action(self.request.user, instance, ADDITION)
 				self.object = instance
 				messages.success(self.request, f'Added {instance.full_name} Successfully')
-				return redirect(f'{reverse_lazy('students_tp')}?search_query={instance.index}')
+				return redirect(f"{reverse_lazy('students_tp')}?search_query={instance.index}")
 		else:
 			return self.form_invalid(form)
 	
@@ -461,12 +459,12 @@ class NewStudentLetterView(LoginRequiredMixin, ActivePeriodMixin, View):
 
 		try:
 			student_letter, created = StudentLetter.objects.get_or_create(student=student_instance, 
-				assessor=self.request.user, defaults={'location':location_instance})
+				assessor=self.request.user, to_delete=False, defaults={'location':location_instance})
 			if not created:
 				previous_assessment_type = StudentSection.objects.filter(student_letter=student_letter).first().section.assessment_type
 				creation_time = student_letter.created_at
 				time_difference = timezone.now() - creation_time
-				if time_difference.days < 7 and assessment_type == previous_assessment_type:
+				if time_difference.days < 4 and assessment_type == previous_assessment_type:
 					return redirect(reverse_lazy('edit_student_letter', kwargs={'pk': student_letter.pk}))
 				else:
 					student_letter = StudentLetter.objects.create(student=student_instance, assessor=self.request.user, location=location_instance)
@@ -597,7 +595,7 @@ class EditStudentLetterView(LoginRequiredMixin, ActivePeriodMixin, UpdateView):
 			for field in student_letter._meta.get_fields():
 				if isinstance(field, Field):
 					value = getattr(student_letter, field.name)
-					if value is None and field.name != 'reason':
+					if value is None and field.name not in ['reason', 'to_delete', 'request_time']:
 						null_fields.append(field.name)
 
 			for section in sections:
@@ -610,7 +608,7 @@ class EditStudentLetterView(LoginRequiredMixin, ActivePeriodMixin, UpdateView):
 					for field in null_fields:
 						messages.error(self.request, field)
 				if len(uncommented_sections) > 0:
-					messages.info(self.request, f'Please fiil in the grades and comments for these sections:')
+					messages.info(self.request, f'Please fiil in the scores and comments for these sections:')
 					for uncommented_section in uncommented_sections:
 						messages.error(self.request, f'<a href="{reverse_lazy('edit_student_aspects', kwargs={'pk': uncommented_section.pk})}">{uncommented_section.name}</a>')
 				return redirect(reverse_lazy('edit_student_letter', kwargs={'pk': student_letter.pk}))
@@ -631,7 +629,7 @@ class EditStudentLetterView(LoginRequiredMixin, ActivePeriodMixin, UpdateView):
 		context['title']= f'Update {student_letter_instance}\'s Letter'
 		context['sections'] = student_sections
 		context['letter'] = student_letter_instance
-		context['can_edit'] = student_letter_instance.assessor == self.request.user
+		context['can_edit'] = student_letter_instance.assessor == self.request.user or self.request.user.is_superuser
 		return context
 	
 class EditStudentDetailsView(LoginRequiredMixin, ActivePeriodMixin, View):
@@ -712,7 +710,7 @@ class StudentLetterViewList(LoginRequiredMixin, ListView):
 		user = self.request.user
 		context = super().get_context_data(**kwargs)
 		context['is_nav_enabled'] = True
-		context['title'] = 'Student Letters'
+		context['title'] = 'Student Assessments'
 		context['search_query'] = SearchForm(self.request.GET)
 		context['filter_form'] = FilterAssessmentsForm(self.request.GET, user=self.request.user)
 		messages.info(self.request, 'These are the assessments that have been created. You can search for a specific assessment using the search bar below. If invalid, request for deletion.')
@@ -762,7 +760,7 @@ class InvalidStudentLetterViewList(LoginRequiredMixin, ListView):
 		user = self.request.user
 		context = super().get_context_data(**kwargs)
 		context['is_nav_enabled'] = True
-		context['title'] = 'Invalid Student Letters'
+		context['title'] = 'Invalid Student Assessments'
 		context['search_query'] = SearchForm(self.request.GET)
 		return context
 	
@@ -830,7 +828,7 @@ class DeleteStudentLetterView(LoginRequiredMixin, AdminMixin, View):
 		letter = StudentLetter.objects.get(pk=letter_id)
 		letter.delete()
 		log_custom_action(request.user, letter, DELETION)
-		messages.success(request, f'Deleted the Student letter {letter.student.full_name}')
+		messages.success(request, f'Deleted the Student Assessment {letter.student.full_name}')
 		return redirect(reverse_lazy('invalid_assessments'))
 		
 class RequestDeletionView(LoginRequiredMixin, View):
@@ -846,8 +844,7 @@ class RequestDeletionView(LoginRequiredMixin, View):
 		return redirect(reverse_lazy('pending_deletion'))
 	
 class PendingDeletionView(LoginRequiredMixin, ListView):
-	model = StudentAspect
-	form_class = NewStudentAspect
+	model = StudentLetter
 	template_name = 'teaching_practice/invalid_student_letters.html'
 	paginate_by = 50
 
@@ -862,9 +859,6 @@ class PendingDeletionView(LoginRequiredMixin, ListView):
 
 	def get_context_data(self, **kwargs):
 		user = self.request.user
-		student_section_id = self.kwargs.get('pk')
-		student_section = StudentSection.objects.get(pk=student_section_id)
-		section = Section.objects.get(pk=student_section.section)
 		context = super().get_context_data(**kwargs)
 		context['is_nav_enabled'] = True
 		context['title'] = 'Pending Deletion'
