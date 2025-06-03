@@ -1,6 +1,8 @@
 import datetime
 from django.conf import settings
+from django.contrib.postgres.search import SearchQuery, SearchVector
 from django.core.exceptions import MultipleObjectsReturned, PermissionDenied
+from django.db.models.sql import Query
 from django.shortcuts import get_object_or_404, render, redirect
 from dal import autocomplete
 from django.template.context_processors import media
@@ -717,7 +719,7 @@ class StudentLetterViewList(LoginRequiredMixin, ListView):
 		return context
 	
 	def get_queryset(self):
-		qs = StudentLetter.objects.prefetch_related('student_sections').filter(to_delete=False)
+		qs = StudentLetter.objects.prefetch_related('student_sections').filter(to_delete=False).annotate(search=SearchVector('student__full_name', 'student__index', 'school', 'grade', 'learning_area', 'zone', 'assessor__full_name'))
 		if self.request.user.is_staff:
 			qs = qs
 		else:
@@ -748,7 +750,9 @@ class StudentLetterViewList(LoginRequiredMixin, ListView):
 			timezone_aware_to_time = timezone.make_aware(datetime.datetime.combine(datetime.datetime.strptime(to_date, '%Y-%m-%d'), to_time))
 			qs = qs.filter(created_at__lt=timezone_aware_to_time)
 		if search_query:
-			qs = qs.filter(Q(pk__icontains=search_query) | Q(student__full_name__icontains=search_query) | Q(student__index__icontains=search_query) | Q(school__icontains=search_query) | Q(grade__icontains=search_query) | Q(learning_area__icontains=search_query) | Q(zone__icontains=search_query) | Q(assessor__full_name__icontains=search_query))
+			Query = SearchQuery(search_query)
+			qs = qs.filter(search=Query)
+			# qs = qs.filter(Q(pk__icontains=search_query) | Q(student__full_name__icontains=search_query) | Q(student__index__icontains=search_query) | Q(school__icontains=search_query) | Q(grade__icontains=search_query) | Q(learning_area__icontains=search_query) | Q(zone__icontains=search_query) | Q(assessor__full_name__icontains=search_query))
 		return qs.order_by('-created_at')
 	
 class InvalidStudentLetterViewList(LoginRequiredMixin, ListView):
