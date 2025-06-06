@@ -58,6 +58,7 @@ class Section(models.Model):
   class AssessmentType(models.TextChoices):
     GENERAL = 'General', _('General')
     PHE = 'PHE', _('Physical Health Education')
+    CFA = 'CFA', _('Certificate in Functional Assessment')
 
   id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
   number = models.IntegerField()
