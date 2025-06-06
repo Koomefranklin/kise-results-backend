@@ -395,10 +395,6 @@ class StudentsViewList(LoginRequiredMixin, ListView):
 	
 
 	def get_context_data(self, **kwargs):
-		letters = StudentLetter.objects.all()
-		for letter in letters:
-			letter.assessment_type = StudentSection.objects.filter(student_letter=letter).first().section.assessment_type
-			letter.save()
 		user = self.request.user
 		searched = self.request.GET.get('search_query')
 		context = super().get_context_data(**kwargs)
