@@ -68,7 +68,7 @@ class Section(models.Model):
   number = models.IntegerField()
   name = models.CharField(max_length=200)
   contribution = models.IntegerField()
-  assessment = models.ForeignKey(AssessmentType, on_delete=models.CASCADE, related_name='assessment_type_section', null=True, blank=True)
+  assessment_type = models.ForeignKey(AssessmentType, on_delete=models.CASCADE, related_name='assessment_type_section', null=True, blank=True)
   created_by = models.ForeignKey(User, on_delete=models.CASCADE, related_name='section_created_by')
   updated_by = models.ForeignKey(User, on_delete=models.CASCADE, related_name='section_updated_by', null=True, blank=True)
   created_at = models.DateTimeField(auto_now_add=True)
@@ -78,7 +78,7 @@ class Section(models.Model):
     ordering = ['number']
 
   def __str__(self):
-    return f'{self.name} - {self.assessment}'
+    return f'{self.name} - {self.assessment_type}'
   
 class SubSection(models.Model):
   id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)

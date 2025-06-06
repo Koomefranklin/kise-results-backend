@@ -24,7 +24,7 @@ class PeriodForm(forms.ModelForm):
 class NewSection(forms.ModelForm):
   class Meta:
     model = Section
-    fields = ['number', 'name', 'contribution', 'assessment', 'created_by']
+    fields = ['number', 'name', 'contribution', 'assessment_type', 'created_by']
 
   def __init__(self, *args, **kwargs):
     user = kwargs.pop('user', None)

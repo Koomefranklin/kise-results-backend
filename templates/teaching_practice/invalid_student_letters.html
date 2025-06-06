@@ -49,7 +49,7 @@
 					<td class="px-2">{{ letter.created_at.date }}</td>
 					<td class="px-2">{{ letter.created_at|localtime|time }}</td>
 					<td class="px-2">{{ letter.assessor }}</td>
-					<td class="px-2">{{ letter.student_sections.first.section.get_assessment_type_display }}</td>
+					<td class="px-2">{{ letter.student_sections.first.section.ssessment_type.name }}</td>
 					<td class="flex justify-between gap-2">
 						<a href='{% url "edit_student_letter" letter.id %}' title='View'>View</a>
 						
