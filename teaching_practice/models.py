@@ -64,16 +64,10 @@ class AssessmentType(models.Model):
     return f'{self.name} - {self.course.name}'
 
 class Section(models.Model):
-  class AssessmentTypes(models.TextChoices):
-    GENERAL = 'General', _('General')
-    PHE = 'PHE', _('Physical Health Education')
-    CFA = 'CFA', _('Certificate in Functional Assessment')
-
   id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
   number = models.IntegerField()
   name = models.CharField(max_length=200)
   contribution = models.IntegerField()
-  assessment_type = models.CharField(max_length=50, choices=AssessmentTypes.choices)
   assessment = models.ForeignKey(AssessmentType, on_delete=models.CASCADE, related_name='assessment_type_section', null=True, blank=True)
   created_by = models.ForeignKey(User, on_delete=models.CASCADE, related_name='section_created_by')
   updated_by = models.ForeignKey(User, on_delete=models.CASCADE, related_name='section_updated_by', null=True, blank=True)
@@ -84,7 +78,7 @@ class Section(models.Model):
     ordering = ['number']
 
   def __str__(self):
-    return f'{self.name} - {self.assessment_type}'
+    return f'{self.name} - {self.assessment}'
   
 class SubSection(models.Model):
   id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)

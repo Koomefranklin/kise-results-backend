@@ -8,7 +8,7 @@ from django.utils import timezone
 from platformdirs import user_cache_path
 from dev import views
 from dev.models import Specialization, User
-from .models import Location, Period, Student, Section, StudentAspect, StudentLetter, StudentSection, Aspect, SubSection, ZonalLeader
+from .models import AssessmentType, Location, Period, Student, Section, StudentAspect, StudentLetter, StudentSection, Aspect, SubSection, ZonalLeader
 from django.utils.translation import gettext_lazy as _
 from django.db.models import Q
 
@@ -24,7 +24,7 @@ class PeriodForm(forms.ModelForm):
 class NewSection(forms.ModelForm):
   class Meta:
     model = Section
-    fields = ['number', 'name', 'contribution', 'assessment_type', 'created_by']
+    fields = ['number', 'name', 'contribution', 'assessment', 'created_by']
 
   def __init__(self, *args, **kwargs):
     user = kwargs.pop('user', None)
@@ -236,11 +236,6 @@ class FilterAssessmentsForm(forms.Form):
     ('DL', _('Distance Learning')),
     ('FT', _('Full Time')),
   ]
-  ASSESSMENTS = [
-     ('', _('')),
-    ('General', _('General')),
-    ('PHE', _('Physical Health Education')),
-  ]
 
   department = forms.ChoiceField(widget=forms.Select(), choices=DEPARTMENTS)
   specialization = forms.ModelChoiceField(queryset=Specialization.objects.all(), required=False)
@@ -249,7 +244,7 @@ class FilterAssessmentsForm(forms.Form):
   from_time = forms.TimeField(widget=forms.TimeInput(attrs={'type': 'time'}), initial=timezone.now().time())
   to_date = forms.DateField(widget=forms.DateInput(attrs={'type': 'date'}), initial=timezone.now().date())
   to_time = forms.TimeField(widget=forms.TimeInput(attrs={'type': 'time'}), initial=timezone.now().time())
-  assessment_type = forms.ChoiceField(widget=forms.Select(), choices=ASSESSMENTS)
+  assessment_type = forms.ModelChoiceField(queryset=AssessmentType.objects.all())
   assessor = forms.ModelChoiceField(queryset=User.objects.none())
 
   def __init__(self, *args, **kwargs):

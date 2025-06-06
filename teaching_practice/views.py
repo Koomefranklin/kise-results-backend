@@ -710,10 +710,6 @@ class StudentLetterViewList(LoginRequiredMixin, ListView):
 	paginate_by = 50
 
 	def get_context_data(self, **kwargs):
-		sections = Section.objects.all()
-		for section in sections:
-			section.assessment = AssessmentType.objects.get(short_name=section.assessment_type)
-			section.save()
 		user = self.request.user
 		context = super().get_context_data(**kwargs)
 		context['is_nav_enabled'] = True
