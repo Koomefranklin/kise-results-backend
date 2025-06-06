@@ -1,5 +1,7 @@
 from django.contrib import admin
 from django.contrib.admin.models import LogEntry
+
+from teaching_practice.models import AssessmentType
 from .models import Deadline, Hod, ModuleScore, ResetPasswordOtp, SitinCat, User, Mode, Lecturer, Student, TeamLeader, Specialization, Paper, Module, CatCombination, Result, IndexNumber, Centre, Course
 from django.contrib.auth.admin import UserAdmin
 from .forms import CatCombinationAdminForm, StudentAdminForm, LecturerAdminForm, TeamLeaderAdminForm
@@ -129,3 +131,4 @@ admin.site.register(Deadline)
 admin.site.register(Hod)
 admin.site.register(ResetPasswordOtp)
 admin.site.register(LogEntry, LogEntryAdmin)
+admin.site.register(AssessmentType)

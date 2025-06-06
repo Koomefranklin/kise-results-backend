@@ -1,5 +1,5 @@
 from django.db import models
-from dev.models import Specialization, User
+from dev.models import Course, Specialization, User
 import uuid
 from django.contrib.gis.db import models as gis_models
 from django.contrib.gis.geos import Point
@@ -54,8 +54,17 @@ class Period(models.Model):
   class Meta:
     ordering = ['-is_active', 'period']
 
+class AssessmentType(models.Model):
+  id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+  course = models.ForeignKey(Course, on_delete=models.CASCADE, related_name='course_assessment_types')
+  short_name = models.CharField(max_length=50, unique=True)
+  name = models.CharField(max_length=200)
+
+  def __str__(self):
+    return f'{self.name} - {self.course.name}'
+
 class Section(models.Model):
-  class AssessmentType(models.TextChoices):
+  class AssessmentTypes(models.TextChoices):
     GENERAL = 'General', _('General')
     PHE = 'PHE', _('Physical Health Education')
     CFA = 'CFA', _('Certificate in Functional Assessment')
@@ -64,7 +73,8 @@ class Section(models.Model):
   number = models.IntegerField()
   name = models.CharField(max_length=200)
   contribution = models.IntegerField()
-  assessment_type = models.CharField(max_length=50, choices=AssessmentType.choices)
+  assessment_type = models.CharField(max_length=50, choices=AssessmentTypes.choices)
+  assessment = models.ForeignKey(AssessmentType, on_delete=models.CASCADE, related_name='assessment_type_section', null=True, blank=True)
   created_by = models.ForeignKey(User, on_delete=models.CASCADE, related_name='section_created_by')
   updated_by = models.ForeignKey(User, on_delete=models.CASCADE, related_name='section_updated_by', null=True, blank=True)
   created_at = models.DateTimeField(auto_now_add=True)

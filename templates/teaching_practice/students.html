@@ -56,8 +56,7 @@
 					<td class=''>{{ student.department }}</td>
 					<td class=''>{{ student.specialization }}</td>
 					<td class="flex justify-around">
-						<button type='button' class='text-[#4caf50] font-bold' onclick="sendLocation('{{ student.pk }}', 'General')">New General Assessment</button>
-						<button type='button' class='text-[#4caf50] font-bold' onclick="sendLocation('{{ student.pk }}', 'PHE')">New PHE Assessment</button>
+						<button type='button' class='text-[#4caf50] font-bold' onclick="getAssType('{{ student.pk }}')">New Assessment</button>
 						<button type='button' class='text-[#4caf50] font-bold'><a href='{% url "previous_assessments" student.pk %}' class='text-[#4caf50] font-bold'>Previous Assessments</a></button>
 						
 						{% if user.is_superuser %}
@@ -115,8 +114,11 @@
 	</div>
 </div>
 <script>
-	function sendLocation(student_id, assessment_type) {
+	function getAssType(student_id) {
 		const loader = document.createElement('div');
+		loader.textContent = 'Select Assessment Type:';
+		const container = document.createElement('div');
+		
 		loader.id = 'loader';
 		loader.style.position = 'fixed';
 		loader.style.top = '0';
@@ -126,18 +128,58 @@
 		loader.style.backgroundColor = 'rgba(0, 0, 0, 0.9)';
 		loader.style.zIndex = '1000';
 		loader.style.display = 'flex';
+		loader.style.flexDirection = 'column';
+		loader.style.fontSize = '1.5rem';
 		loader.style.justifyContent = 'center';
 		loader.style.alignItems = 'center';
+		
+		container.style.display = 'flex';
+		container.style.flexDirection = 'column';
+		container.style.fontSize = '1.5rem';
+		const options = [
+			{ label: "Diploma General", value: "General" },
+			{ label: "Diploma Physical Health Education", value: "PHE" },
+			{ label: "Certificate in Functional Assessment", value: "CFA" }
+		];
+		options.forEach((opt, index) => {
+			const id = `radio-${index}`;
+
+			const radio = document.createElement("input");
+			radio.type = "radio";
+			radio.name = "ass-type";
+			radio.id = id;
+			radio.value = opt.value;
+			radio.onclick = () => {
+				const confirmation = confirm(`Start a new ${opt.label} Assessment?`)
+				if(confirmation) {
+					sendLocation(student_id, radio.value)
+				}
+			};
+
+			const label = document.createElement("label");
+			label.htmlFor = id;
+			label.textContent = opt.label;
+
+			container.appendChild(radio);
+			container.appendChild(label);
+			loader.appendChild(container);
+			document.body.appendChild(loader);
+		});
+	}
+
+	function sendLocation(student_id, assessment_type) {
+		const loader = document.getElementById('loader')
+		loader.innerHTML = '';
 
 		const messageBox = document.createElement('div');
 		messageBox.textContent = 'Getting Your Location...';
 		messageBox.style.padding = '20px';
 		messageBox.style.borderRadius = '8px';
 		messageBox.style.boxShadow = '0 0 10px rgba(0,0,0,0.25)';
+
       if (navigator.geolocation) {
 
 				loader.appendChild(messageBox);
-				document.body.appendChild(loader);
         navigator.geolocation.getCurrentPosition(
           (position) => {
             // Get latitude and longitude

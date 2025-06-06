@@ -14,7 +14,7 @@ from dev.models import User
 from teaching_practice.mailer import request_deletion, send_student_report
 from teaching_practice.mixins import ActivePeriodMixin, AdminMixin
 from .forms import FilterAssessmentsForm, NewAspect, NewLocationForm, NewSection, NewStudentAspect, NewStudentForm, NewStudentLetter, NewStudentSection, NewSubSection, PeriodForm, SearchForm, StudentForm, UpdateAspect, UpdateSection, UpdateStudentAspect, UpdateStudentLetter, UpdateStudentSection, StudentAspectFormSet, UpdateSubSection, ZonalLeaderForm
-from .models import Period, Student, Section, StudentAspect, StudentLetter, StudentSection, Aspect, Location, SubSection, ZonalLeader
+from .models import AssessmentType, Period, Student, Section, StudentAspect, StudentLetter, StudentSection, Aspect, Location, SubSection, ZonalLeader
 from django.views.generic import ListView, CreateView, FormView, UpdateView, DeleteView, DetailView
 from django.db.models import Q, Avg, F, Count, ExpressionWrapper, FloatField, Value
 from django.contrib.auth.mixins import LoginRequiredMixin
@@ -486,6 +486,7 @@ class NewStudentLetterView(LoginRequiredMixin, ActivePeriodMixin, View):
 			elif assessment_type == 'PHE':
 				sections = Section.objects.filter(assessment_type='PHE')
 			else:
+				student_letter.delete()
 				raise Http404('Invalid Assessment Type')
 
 			if sections.exists():
@@ -709,6 +710,10 @@ class StudentLetterViewList(LoginRequiredMixin, ListView):
 	paginate_by = 50
 
 	def get_context_data(self, **kwargs):
+		sections = Section.objects.all()
+		for section in sections:
+			section.assessment = AssessmentType.objects.get(short_name=section.assessment_type)
+			section.save()
 		user = self.request.user
 		context = super().get_context_data(**kwargs)
 		context['is_nav_enabled'] = True
