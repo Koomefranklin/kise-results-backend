@@ -102,14 +102,27 @@ class NewStudentForm(forms.ModelForm):
       else:
         self.fields[fieldname].widget.attrs['class'] = 'rounded border-2 w-5/6 grid p-2'
 
-
-class StudentForm(forms.ModelForm):
+class DiplomaStudentForm(forms.ModelForm):
   class Meta:
     model = Student
     fields = ['full_name', 'sex', 'index', 'email', 'department', 'specialization']
 
   def __init__(self, *args, **kwargs):
-    super(StudentForm, self).__init__(*args, **kwargs)
+    super(DiplomaStudentForm, self).__init__(*args, **kwargs)
+    for fieldname, field in self.fields.items():
+      self.fields[fieldname].required = True
+      if fieldname not in ['email', 'sex']:
+        self.fields[fieldname].widget.attrs['class'] = 'rounded border-2 w-5/6 grid p-2 uppercase'
+      else:
+        self.fields[fieldname].widget.attrs['class'] = 'rounded border-2 w-5/6 grid'
+
+class CertificateStudentForm(forms.ModelForm):
+  class Meta:
+    model = Student
+    fields = ['full_name', 'sex', 'index', 'email', 'specialization']
+
+  def __init__(self, *args, **kwargs):
+    super(CertificateStudentForm, self).__init__(*args, **kwargs)
     for fieldname, field in self.fields.items():
       self.fields[fieldname].required = True
       if fieldname not in ['email', 'sex']:
@@ -129,13 +142,13 @@ class NewLocationForm(forms.Form):
       self.fields[fieldname].label = ''
       self.fields[fieldname].widget.attrs['class'] = 'hidden'
 
-class NewStudentLetter(forms.ModelForm):
+class NewDiplomaStudentLetter(forms.ModelForm):
   class Meta:
     model = StudentLetter
     fields = ['school', 'grade', 'learning_area', 'zone', 'late_submission', 'reason']
   
   def __init__(self, *args, **kwargs):
-    super(NewStudentLetter, self).__init__(*args, **kwargs)
+    super(NewDiplomaStudentLetter, self).__init__(*args, **kwargs)
     self.fields['late_submission'].widget = forms.Select(choices=[(False, 'No'), (True, 'Yes')])
     deadline = timezone.datetime.strptime('17:00', '%H:%M').time()
     start_time = timezone.datetime.strptime('05:00', '%H:%M').time()
@@ -148,14 +161,50 @@ class NewStudentLetter(forms.ModelForm):
         self.fields[fieldname].required = True
       self.fields[fieldname].widget.attrs['class'] = 'rounded border-2 w-5/6 grid'
 
-class UpdateStudentLetter(forms.ModelForm):
+class NewCertificateStudentLetter(forms.ModelForm):
+  class Meta:
+    model = StudentLetter
+    fields = ['earc', 'late_submission', 'reason']
+  
+  def __init__(self, *args, **kwargs):
+    super(NewCertificateStudentLetter, self).__init__(*args, **kwargs)
+    self.fields['late_submission'].widget = forms.Select(choices=[(False, 'No'), (True, 'Yes')])
+    deadline = timezone.datetime.strptime('17:00', '%H:%M').time()
+    start_time = timezone.datetime.strptime('05:00', '%H:%M').time()
+    current_time = timezone.now().astimezone().time()
+    if not (current_time > start_time <= current_time <= deadline):
+      self.fields['late_submission'].widget.choices = [(True, 'Yes')]
+      self.fields['late_submission'].disabled = True
+    for fieldname, field in self.fields.items():
+      if fieldname != 'late_submission' and fieldname != 'reason':
+        self.fields[fieldname].required = True
+      self.fields[fieldname].widget.attrs['class'] = 'rounded border-2 w-5/6 grid'
+
+class UpdateDiplomaStudentLetter(forms.ModelForm):
   class Meta:
     model = StudentLetter
     fields = ['school', 'grade', 'learning_area', 'zone', 'late_submission', 'reason', 'location', 'assessor', 'total_score', 'comments']
   
   def __init__(self, *args, **kwargs):
     user = kwargs.pop('user', None)
-    super(UpdateStudentLetter, self).__init__(*args, **kwargs)
+    super(UpdateDiplomaStudentLetter, self).__init__(*args, **kwargs)
+    # self.fields['late_submission'].widget = forms.Select()
+    self.fields['comments'].widget = forms.Textarea()
+    self.fields['comments'].label = 'General Comments and Suggestions:'
+    self.fields['comments'].required = True
+    for fieldname, field in self.fields.items():
+      if fieldname != 'comments':
+        self.fields[fieldname].disabled = True
+      self.fields[fieldname].widget.attrs['class'] = 'p-2 bg-transparent border rounded w-5/6 grid'
+
+class UpdateCertificateStudentLetter(forms.ModelForm):
+  class Meta:
+    model = StudentLetter
+    fields = ['earc', 'late_submission', 'reason', 'location', 'assessor', 'total_score', 'comments']
+  
+  def __init__(self, *args, **kwargs):
+    user = kwargs.pop('user', None)
+    super(UpdateCertificateStudentLetter, self).__init__(*args, **kwargs)
     # self.fields['late_submission'].widget = forms.Select()
     self.fields['comments'].widget = forms.Textarea()
     self.fields['comments'].label = 'General Comments and Suggestions:'

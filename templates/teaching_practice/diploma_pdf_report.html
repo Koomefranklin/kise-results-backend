@@ -31,8 +31,10 @@
     ul {
       font-size: smaller;
     }
-    .input {
-      color: blue;
+    .upper {
+      font-weight: bold;
+      text-transform: uppercase;
+      text-align: center;
     }
     .row {
       display: flex;
@@ -52,6 +54,9 @@
     .border {
       border: 3px solid black;
     }
+    .input {
+      color: blue;
+    }
   </style>
 <title>{{ title }}</title>
 <meta name="viewport" content="width=device-width, initial-scale=1"/>
@@ -67,12 +72,12 @@
   data-admin-utc-offset="{% now 'Z' %}">
 <div class="grid w-full h-full px-4">
 	<div class="h-full grid  w-full">
-    
+      
     <div class='upper'>kenya institute of special education</div>
     <table>
       <tr>
         <th class='left'>Tel: 0111055810,</th>
-        <th class='center' rowspan='4'><img src='{{ image_url }}' width="50"	height="50"></th>
+        <th class='center' rowspan='4'><img src='{{ image_url }}' width="50"	height="50" alt='KISE Logo'></th>
         <th class='right'>Kasarani, Thika Superhighway Exit 8</th>
       </tr>
       <tr>
@@ -89,10 +94,7 @@
       </tr>
       <tr><th class='border' colspan='3'></th></tr>
     </table>
-      <div class='upper'>
-      <div class=''>teaching practice assessment guide (competence based curriculum)</div>
-      <div class=''>PHYSICAL HEALTH EDUCATION ASSESSMENT GUIDE</div>
-    </div>
+      <div class='upper'>{{ heading }} teaching practice assessment guide</div>
     </div>
     <div class='font-bold'>
      <div class='row'>

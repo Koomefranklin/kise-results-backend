@@ -13,7 +13,7 @@ from dev.forms import CustomUserCreationForm
 from dev.models import User
 from teaching_practice.mailer import request_deletion, send_student_report
 from teaching_practice.mixins import ActivePeriodMixin, AdminMixin
-from .forms import FilterAssessmentsForm, NewAspect, NewLocationForm, NewSection, NewStudentAspect, NewStudentForm, NewStudentLetter, NewStudentSection, NewSubSection, PeriodForm, SearchForm, StudentForm, UpdateAspect, UpdateSection, UpdateStudentAspect, UpdateStudentLetter, UpdateStudentSection, StudentAspectFormSet, UpdateSubSection, ZonalLeaderForm
+from .forms import CertificateStudentForm, FilterAssessmentsForm, NewAspect, NewCertificateStudentLetter, NewLocationForm, NewSection, NewStudentAspect, NewStudentForm, NewDiplomaStudentLetter, NewStudentSection, NewSubSection, PeriodForm, SearchForm, DiplomaStudentForm, UpdateAspect, UpdateCertificateStudentLetter, UpdateSection, UpdateStudentAspect, UpdateDiplomaStudentLetter, UpdateStudentSection, StudentAspectFormSet, UpdateSubSection, ZonalLeaderForm
 from .models import AssessmentType, Period, Student, Section, StudentAspect, StudentLetter, StudentSection, Aspect, Location, SubSection, ZonalLeader
 from django.views.generic import ListView, CreateView, FormView, UpdateView, DeleteView, DetailView
 from django.db.models import Q, Avg, F, Count, ExpressionWrapper, FloatField, Value
@@ -376,7 +376,7 @@ class NewStudentView(LoginRequiredMixin, ActivePeriodMixin, CreateView):
 	
 class EditStudentView(LoginRequiredMixin, ActivePeriodMixin, UpdateView):
 	model = Student
-	form_class = StudentForm
+	form_class = DiplomaStudentForm
 	template_name = 'teaching_practice/base_form.html'
 	success_url = reverse_lazy('students_tp')
 
@@ -395,6 +395,10 @@ class StudentsViewList(LoginRequiredMixin, ListView):
 	
 
 	def get_context_data(self, **kwargs):
+		letters = StudentLetter.objects.all()
+		for letter in letters:
+			letter.assessment_type = StudentSection.objects.filter(student_letter=letter).first().section.assessment_type
+			letter.save()
 		user = self.request.user
 		searched = self.request.GET.get('search_query')
 		context = super().get_context_data(**kwargs)
@@ -403,6 +407,7 @@ class StudentsViewList(LoginRequiredMixin, ListView):
 		context['search_query'] = SearchForm(self.request.GET)
 		context['location_form'] = NewLocationForm(self.request.POST)
 		context['searched'] = True if searched else False
+		context['types'] = list(AssessmentType.objects.all().values('id', 'short_name', 'name'))
 		return context
 	
 	def get_queryset(self):
@@ -443,10 +448,11 @@ class NewStudentLetterView(LoginRequiredMixin, ActivePeriodMixin, View):
 		longitude = self.kwargs.get('longitude')
 		latitude = self.kwargs.get('latitude')
 		student_id = self.kwargs.get('student_id')
-		assessment_type = self.kwargs.get('assessment_type')
+		assessment_type_id = self.kwargs.get('assessment_type')
 		deadline = timezone.datetime.strptime('17:00', '%H:%M').time()
 		start_time = timezone.datetime.strptime('08:00', '%H:%M').time()
 		current_time = timezone.datetime.now().astimezone().time()
+		assessment_type = AssessmentType.objects.get(pk=assessment_type_id)
 
 		if latitude and longitude:
 			try:
@@ -461,15 +467,15 @@ class NewStudentLetterView(LoginRequiredMixin, ActivePeriodMixin, View):
 
 		try:
 			student_letter, created = StudentLetter.objects.get_or_create(student=student_instance, 
-				assessor=self.request.user, to_delete=False, defaults={'location':location_instance})
+				assessor=self.request.user, to_delete=False, assessment_type=assessment_type, defaults={'location':location_instance})
 			if not created:
-				previous_assessment_type = StudentSection.objects.filter(student_letter=student_letter).first().section.assessment_type
+				previous_assessment_type = student_letter.assessment_type.id
 				creation_time = student_letter.created_at
 				time_difference = timezone.now() - creation_time
-				if time_difference.days < 4 and assessment_type == previous_assessment_type:
+				if time_difference.days < 4 and assessment_type_id == previous_assessment_type:
 					return redirect(reverse_lazy('edit_student_letter', kwargs={'pk': student_letter.pk}))
 				else:
-					student_letter = StudentLetter.objects.create(student=student_instance, assessor=self.request.user, location=location_instance)
+					student_letter = StudentLetter.objects.create(student=student_instance, assessor=self.request.user, assessment_type=assessment_type, location=location_instance)
 					log_custom_action(self.request.user, student_letter, ADDITION)
 					
 			location_instance.save()
@@ -481,13 +487,7 @@ class NewStudentLetterView(LoginRequiredMixin, ActivePeriodMixin, View):
 				messages.error(self.request, f'You are Starting an assessment at {current_time} which seems not within class time. The system has marked this as a Late submission. Please provide a reason')
 				# return redirect(f'{reverse_lazy("edit_student_details", kwargs={'student_letter': student_letter.pk})}')
 			messages.success(self.request, f'Location Created Successfully')
-			if assessment_type == 'General':
-				sections = Section.objects.filter(assessment_type='General')
-			elif assessment_type == 'PHE':
-				sections = Section.objects.filter(assessment_type='PHE')
-			else:
-				student_letter.delete()
-				raise Http404('Invalid Assessment Type')
+			sections = Section.objects.filter(assessment_type__id=assessment_type_id)
 
 			if sections.exists():
 				for section in sections:
@@ -548,7 +548,7 @@ class PreviousAssessmentDetailView(LoginRequiredMixin, DetailView):
 		context['total'] = StudentLetter.objects.filter(Q(to_delete=False) & Q(student=student)).aggregate(total_score=Avg('total_score'))
 		context['sections'] = sections
 		context['letter'] = student_letter
-		context['assessment_type'] = StudentSection.objects.filter(student_letter=student_letter).first().section.assessment_type
+		context['assessment_type'] = student_letter.assessment_type
 		return context
 	
 class AssessorAssessmentsListView(LoginRequiredMixin, AdminMixin, ListView):
@@ -570,12 +570,19 @@ class AssessorAssessmentsListView(LoginRequiredMixin, AdminMixin, ListView):
 
 class EditStudentLetterView(LoginRequiredMixin, ActivePeriodMixin, UpdateView):
 	model = StudentLetter
-	form_class = UpdateStudentLetter
 	template_name = 'teaching_practice/update_student_letter.html'
 	
 	def get_success_url(self):
 		student_letter_id = self.kwargs.get('pk')
 		return reverse_lazy('pdf_report', kwargs={'pk': student_letter_id})
+	
+	def get_form_class(self):
+		student_letter_id = self.kwargs.get('pk')
+		student_letter_instance = StudentLetter.objects.get(pk=student_letter_id)
+		if 'Diploma' in student_letter_instance.assessment_type.course.name:
+			return UpdateDiplomaStudentLetter
+		elif 'Certificate' in student_letter_instance.assessment_type.course.name:
+			return UpdateCertificateStudentLetter
 	
 	def get_form_kwargs(self):
 		kwargs = super(EditStudentLetterView, self).get_form_kwargs()
@@ -594,12 +601,21 @@ class EditStudentLetterView(LoginRequiredMixin, ActivePeriodMixin, UpdateView):
 				if isinstance(field, Field):
 					value = getattr(student, field.name)
 					if value is None and field.name not in ['created_by', 'period']:
-						null_fields.append(field.name)
+						if 'Diploma' in student_letter.assessment_type.course.name:
+							null_fields.append(field.name)
+						elif 'Certificate' in student_letter.assessment_type.course.name:
+							if field.name not in ['department']:
+								null_fields.append(field.name)
 			for field in student_letter._meta.get_fields():
 				if isinstance(field, Field):
 					value = getattr(student_letter, field.name)
 					if value is None and field.name not in ['reason', 'to_delete', 'request_time']:
-						null_fields.append(field.name)
+						if 'Diploma' in student_letter.assessment_type.course.name:
+							if field.name not in ['earc']:
+								null_fields.append(field.name)
+						elif 'Certificate' in student_letter.assessment_type.course.name:
+							if field.name not in ['school', 'grade', 'learning_area', 'zone']:
+								null_fields.append(field.name)
 
 			for section in sections:
 				if not section.comments:
@@ -622,9 +638,6 @@ class EditStudentLetterView(LoginRequiredMixin, ActivePeriodMixin, UpdateView):
 		student_letter_id = self.kwargs.get('pk')
 		student_letter_instance = StudentLetter.objects.get(pk=student_letter_id)
 		student_sections = StudentSection.objects.filter(student_letter=student_letter_instance)
-		student_aspects = StudentAspect.objects.filter()
-		aspects = Aspect.objects.all()
-		sections = Section.objects.all()
 		context = super().get_context_data(**kwargs)
 		context['is_nav_enabled'] = True
 		context['location'] = student_letter_instance.location
@@ -637,7 +650,7 @@ class EditStudentLetterView(LoginRequiredMixin, ActivePeriodMixin, UpdateView):
 	
 class EditStudentDetailsView(LoginRequiredMixin, ActivePeriodMixin, View):
 	model = StudentLetter
-	form_class = NewStudentLetter
+	form_class = NewDiplomaStudentLetter
 	template_name = 'teaching_practice/student_details.html'
 	
 	def get_success_url(self):
@@ -647,9 +660,15 @@ class EditStudentDetailsView(LoginRequiredMixin, ActivePeriodMixin, View):
 		student_letter_id = self.kwargs.get('student_letter')
 		student_letter_instance = StudentLetter.objects.get(pk=student_letter_id)
 		student_instance = student_letter_instance.student
+		if 'Diploma' in student_letter_instance.assessment_type.course.name:
+			student_form = DiplomaStudentForm(instance=student_instance)
+			form = NewDiplomaStudentLetter(instance=student_letter_instance)
+		elif 'Certificate' in student_letter_instance.assessment_type.course.name:
+			student_form = CertificateStudentForm(instance=student_instance)
+			form = NewCertificateStudentLetter(instance=student_letter_instance)
 		context = {
-			'student_form': StudentForm(instance=student_instance),
-			'form': NewStudentLetter(instance=student_letter_instance),
+			'student_form': student_form,
+			'form': form,
 			'is_nav_enabled': True,
 			'title': f'Edit {student_letter_instance}\'s Details',
 		}
@@ -659,24 +678,34 @@ class EditStudentDetailsView(LoginRequiredMixin, ActivePeriodMixin, View):
 		student_letter_id = self.kwargs.get('student_letter')
 		student_letter_instance = StudentLetter.objects.get(pk=student_letter_id)
 		student_instance = student_letter_instance.student
-		letter_form = NewStudentLetter(self.request.POST, instance=student_letter_instance)
-		student_form = StudentForm(self.request.POST, instance=student_instance)
+		
+		if 'Diploma' in student_letter_instance.assessment_type.course.name:
+			post_letter_form = NewDiplomaStudentLetter(self.request.POST, instance=student_letter_instance)
+			post_student_form = DiplomaStudentForm(self.request.POST, instance=student_instance)
+			student_form = DiplomaStudentForm(instance=student_instance)
+			form = NewDiplomaStudentLetter(instance=student_letter_instance)
+		elif 'Certificate' in student_letter_instance.assessment_type.course.name:
+			post_letter_form = NewCertificateStudentLetter(self.request.POST, instance=student_letter_instance)
+			post_student_form = CertificateStudentForm(self.request.POST, instance=student_instance)
+			student_form = CertificateStudentForm(instance=student_instance)
+			form = NewCertificateStudentLetter(instance=student_letter_instance)
 
-		if letter_form.is_valid() and student_form.is_valid():
-			letter = letter_form.save(commit=False)
+		if post_letter_form.is_valid() and post_student_form.is_valid():
+
+			letter = post_letter_form.save(commit=False)
 			if letter.late_submission and letter.reason is None:
 				messages.error(self.request, f'Please provide a reason for late submission')
 				return redirect(reverse_lazy('edit_student_details'), kwargs={'student_letter': letter.pk})
 			else:
 				letter.save()
 
-				student = student_form.save(commit=True)
+				student = post_student_form.save(commit=True)
 				messages.success(self.request, f'Updated {student.full_name} Successfully')
 				return redirect(reverse_lazy('edit_student_letter', kwargs={'pk': letter.pk}))
 		else:
 			context = {
-				'student_form': StudentForm(instance=student_instance),
-				'form': NewStudentLetter(instance=student_letter_instance),
+				'student_form': student_form,
+				'form': form,
 				'is_nav_enabled': True,
 				'title': f'Edit {student_letter_instance}\'s Details',
 			}
@@ -700,7 +729,7 @@ class PreviewStudentLetter(LoginRequiredMixin, DetailView):
 		context['total'] = StudentLetter.objects.filter(Q(to_delete=False) & Q(student=student)).aggregate(total_score=Avg('total_score'))
 		context['sections'] = sections
 		context['letter'] = student_letter
-		context['assessment_type'] = StudentSection.objects.filter(student_letter=student_letter).first().section.assessment_type
+		context['assessment_type'] = student_letter.assessment_type
 		return context
 	
 class StudentLetterViewList(LoginRequiredMixin, ListView):
@@ -834,7 +863,7 @@ class DeleteStudentLetterView(LoginRequiredMixin, AdminMixin, View):
 		letter.delete()
 		log_custom_action(request.user, letter, DELETION)
 		messages.success(request, f'Deleted the Student Assessment {letter.student.full_name}')
-		return redirect(reverse_lazy('invalid_assessments'))
+		return redirect(reverse_lazy('pending_deletion'))
 		
 class RequestDeletionView(LoginRequiredMixin, View):
 	def post(self, *args, **kwargs):
@@ -1065,11 +1094,11 @@ class GeneratePDF(LoginRequiredMixin, WeasyTemplateResponseMixin, DetailView):
 	
 	def get_template_names(self):
 		student_letter = self.get_object()
-		assessment_type = StudentSection.objects.filter(student_letter=student_letter).first().section.assessment_type
-		if assessment_type == 'PHE':
-			return ['teaching_practice/phe_pdf_report.html']
-		elif assessment_type == 'General':
-			return ['teaching_practice/general_pdf_report.html']
+		assessment_type = student_letter.assessment_type
+		if 'Diploma' in assessment_type.course.name:
+			return ['teaching_practice/diploma_pdf_report.html']
+		elif 'Certificate' in assessment_type.course.name:
+			return ['teaching_practice/certificate_pdf_report.html']
 		return super().get_template_names()
 	
 	def get_pdf_filename(self):
@@ -1088,6 +1117,7 @@ class GeneratePDF(LoginRequiredMixin, WeasyTemplateResponseMixin, DetailView):
 		context['sections'] = sections
 		context['aspects'] = aspects
 		context['image_url'] = image_url
+		context['heading'] = letter.assessment_type.name
 		return context
 	
 	def render_to_response(self, context, **response_kwargs):

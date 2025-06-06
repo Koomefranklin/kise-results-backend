@@ -1,4 +1,5 @@
 {% extends 'teaching_practice/base_site.html' %} 
+
 {% block main %}
 <div class="grid w-full h-full place-self-start gap-1">
 	<div class="flex flex-col w-full gap-2">
@@ -101,6 +102,7 @@
 					</td>
 				</tr>
 			</tfoot>
+			{{ types|json_script:"types" }}
 			{% else %}
 			<tr class="">
 				<td
@@ -118,6 +120,7 @@
 		const loader = document.createElement('div');
 		loader.textContent = 'Select Assessment Type:';
 		const container = document.createElement('div');
+		const options = JSON.parse(document.getElementById('types').textContent);
 		
 		loader.id = 'loader';
 		loader.style.position = 'fixed';
@@ -136,29 +139,23 @@
 		container.style.display = 'flex';
 		container.style.flexDirection = 'column';
 		container.style.fontSize = '1.5rem';
-		const options = [
-			{ label: "Diploma General", value: "General" },
-			{ label: "Diploma Physical Health Education", value: "PHE" },
-			{ label: "Certificate in Functional Assessment", value: "CFA" }
-		];
-		options.forEach((opt, index) => {
-			const id = `radio-${index}`;
 
+		options.forEach((opt, index) => {
 			const radio = document.createElement("input");
 			radio.type = "radio";
 			radio.name = "ass-type";
-			radio.id = id;
-			radio.value = opt.value;
+			radio.id = opt['short_name'];
+			radio.value = opt['id'];
 			radio.onclick = () => {
-				const confirmation = confirm(`Start a new ${opt.label} Assessment?`)
+				const confirmation = confirm(`Start a new ${opt['name']} Assessment?`)
 				if(confirmation) {
-					sendLocation(student_id, radio.value)
+					sendLocation(student_id, opt['id'])
 				}
 			};
 
 			const label = document.createElement("label");
-			label.htmlFor = id;
-			label.textContent = opt.label;
+			label.htmlFor = opt['short_name'];
+			label.textContent = opt['name'];
 
 			container.appendChild(radio);
 			container.appendChild(label);

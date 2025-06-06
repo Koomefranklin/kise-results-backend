@@ -47,7 +47,7 @@
 					<td class="px-2">{{ letter.created_at.date }}</td>
 					<td class="px-2">{{ letter.created_at|localtime|time }}</td>
 					<td class="px-2">{{ letter.assessor }}</td>
-					<td class="px-2">{{ letter.student_sections.first.section.assessment_type.name }}</td>
+					<td class="px-2">{{ letter.assessment_type.name }}</td>
 					<td class='px-2'>{{ letter.total_score }}</td>
 					<td class="flex justify-between">
 						<a href='{% url "edit_student_letter" letter.id %}' title='View'>View</a>
