@@ -57,7 +57,7 @@
 					<td class=''>{{ student.department }}</td>
 					<td class=''>{{ student.specialization }}</td>
 					<td class="flex justify-around">
-						<button type='button' class='text-[#4caf50] font-bold' onclick="getAssType('{{ student.pk }}')">New Assessment</button>
+						<button type='button' class='text-[#4caf50] font-bold' onclick="getAssType('{{ student.pk }}')" title='New Assessment'>New Assessment</button>
 						<button type='button' class='text-[#4caf50] font-bold'><a href='{% url "previous_assessments" student.pk %}' class='text-[#4caf50] font-bold'>Previous Assessments</a></button>
 						
 						{% if user.is_superuser %}
@@ -119,7 +119,6 @@
 	function getAssType(student_id) {
 		const loader = document.createElement('div');
 		loader.textContent = 'Select Assessment Type:';
-		const container = document.createElement('div');
 		const options = JSON.parse(document.getElementById('types').textContent);
 		
 		loader.id = 'loader';
@@ -135,17 +134,19 @@
 		loader.style.fontSize = '1.5rem';
 		loader.style.justifyContent = 'center';
 		loader.style.alignItems = 'center';
+		loader.style.gap = '20px';
 		
-		container.style.display = 'flex';
-		container.style.flexDirection = 'column';
-		container.style.fontSize = '1.5rem';
-
 		options.forEach((opt, index) => {
+			const container = document.createElement('div');
+			// container.style.display = 'grid';
+			container.style.fontSize = '1.5rem';
+			container.style.gap = '10px';
 			const radio = document.createElement("input");
 			radio.type = "radio";
 			radio.name = "ass-type";
 			radio.id = opt['short_name'];
 			radio.value = opt['id'];
+			radio.title = opt['name'];
 			radio.onclick = () => {
 				const confirmation = confirm(`Start a new ${opt['name']} Assessment?`)
 				if(confirmation) {
