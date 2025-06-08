@@ -57,7 +57,7 @@
 					<td class=''>{{ student.department }}</td>
 					<td class=''>{{ student.specialization }}</td>
 					<td class="flex justify-around">
-						<button type='button' class='text-[#4caf50] font-bold' onclick="getAssType('{{ student.pk }}')" title='New Assessment'>New Assessment</button>
+						<button type='button' class='text-[#4caf50] font-bold' onclick="getAssType('{{ student.pk }}', '{{ student.full_name }}')" title='New Assessment for {{ student.full_name }}'>New Assessment</button>
 						<button type='button' class='text-[#4caf50] font-bold'><a href='{% url "previous_assessments" student.pk %}' class='text-[#4caf50] font-bold'>Previous Assessments</a></button>
 						
 						{% if user.is_superuser %}
@@ -116,9 +116,12 @@
 	</div>
 </div>
 <script>
-	function getAssType(student_id) {
+	function getAssType(student_id, student_name) {
 		const loader = document.createElement('div');
-		loader.textContent = 'Select Assessment Type:';
+		loader.textContent = `Starting a new assessment for ${student_name}.`;
+		const helper = document.createElement('p')
+		helper.textContent = 'Please Leselect the Assessment type'
+		loader.appendChild(helper)
 		const options = JSON.parse(document.getElementById('types').textContent);
 		
 		loader.id = 'loader';
@@ -135,6 +138,23 @@
 		loader.style.justifyContent = 'center';
 		loader.style.alignItems = 'center';
 		loader.style.gap = '20px';
+		loader.tabIndex = '-1';
+
+		const exitButton = document.createElement('button');
+		exitButton.textContent = 'Exit';
+		exitButton.style.position = 'absolute';
+		exitButton.style.top = '20px';
+		exitButton.style.right = '20px';
+		exitButton.style.padding = '10px 20px';
+		exitButton.style.backgroundColor = '#f44336';
+		exitButton.style.color = 'white';
+		exitButton.style.border = 'none';
+		exitButton.style.borderRadius = '5px';
+		exitButton.style.cursor = 'pointer';
+		exitButton.onclick = () => {
+			document.body.removeChild(loader);
+		};
+		loader.appendChild(exitButton);
 		
 		options.forEach((opt, index) => {
 			const container = document.createElement('div');
@@ -162,6 +182,7 @@
 			container.appendChild(label);
 			loader.appendChild(container);
 			document.body.appendChild(loader);
+			loader.focus();
 		});
 	}
 
