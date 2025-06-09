@@ -118,10 +118,23 @@
 <script>
 	function getAssType(student_id, student_name) {
 		const loader = document.createElement('div');
-		loader.textContent = `Starting a new assessment for ${student_name}.`;
+		const heading = document.createElement('h1');
+		const form = document.createElement('form');
+
+		form.id = 'form';
+		form.style.display = 'flex'
+		form.style.flexDirection = 'column';
+		form.style.width = 'max-content';
+		form.style.justifyContent = 'left';
+		form.style.alignItems = 'left';
+		form.style.gap = '10px';
+				
 		const helper = document.createElement('p')
+		heading.textContent = `New Assessment for ${student_name}`;
 		helper.textContent = 'Please Leselect the Assessment type'
-		loader.appendChild(helper)
+		loader.appendChild(heading);
+		loader.appendChild(helper);
+
 		const options = JSON.parse(document.getElementById('types').textContent);
 		
 		loader.id = 'loader';
@@ -142,7 +155,8 @@
 		loader.tabIndex = '-1';
 
 		const exitButton = document.createElement('button');
-		exitButton.textContent = 'Exit';
+		exitButton.textContent = 'X';
+		exitButton.title = 'Exit';
 		exitButton.style.position = 'absolute';
 		exitButton.style.top = '20px';
 		exitButton.style.right = '20px';
@@ -161,7 +175,8 @@
 			const container = document.createElement('div');
 			container.style.fontSize = '1.5rem';
 			container.style.gap = '10px';
-			container.style.color = 'white';
+			container.style.textAlign = 'left';
+			container.style.display = 'flex';
 			const radio = document.createElement("input");
 			radio.type = "radio";
 			radio.name = "ass-type";
@@ -169,7 +184,7 @@
 			radio.value = opt['id'];
 			radio.title = opt['name'];
 			radio.onclick = () => {
-				const confirmation = confirm(`Start a new ${opt['name']} Assessment?`)
+				const confirmation = confirm(`Start a new ${opt['name']} Assessment for ${student_name}?`)
 				if(confirmation) {
 					sendLocation(student_id, opt['id'])
 				}
@@ -177,11 +192,12 @@
 
 			const label = document.createElement("label");
 			label.htmlFor = opt['short_name'];
-			label.textContent = opt['name'];
+			label.textContent = `${opt['name']} (${opt['course__name']})`;
 
 			container.appendChild(radio);
 			container.appendChild(label);
-			loader.appendChild(container);
+			form.appendChild(container)
+			loader.appendChild(form);
 			document.body.appendChild(loader);
 			loader.focus();
 		});
