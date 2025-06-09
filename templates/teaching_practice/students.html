@@ -130,7 +130,8 @@
 		loader.style.left = '0';
 		loader.style.width = '100vw';
 		loader.style.height = '100vh';
-		loader.style.backgroundColor = 'rgba(0, 0, 0, 0.9)';
+		loader.style.backgroundColor = 'rgba(0, 0, 0, 0.95)';
+		loader.style.color = 'white';
 		loader.style.zIndex = '1000';
 		loader.style.display = 'flex';
 		loader.style.flexDirection = 'column';
@@ -158,9 +159,9 @@
 		
 		options.forEach((opt, index) => {
 			const container = document.createElement('div');
-			// container.style.display = 'grid';
 			container.style.fontSize = '1.5rem';
 			container.style.gap = '10px';
+			container.style.color = 'white';
 			const radio = document.createElement("input");
 			radio.type = "radio";
 			radio.name = "ass-type";
