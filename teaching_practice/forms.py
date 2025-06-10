@@ -164,7 +164,7 @@ class NewDiplomaStudentLetter(forms.ModelForm):
 class NewCertificateStudentLetter(forms.ModelForm):
   class Meta:
     model = StudentLetter
-    fields = ['earc', 'late_submission', 'reason']
+    fields = ['earc', 'zone', 'late_submission', 'reason']
   
   def __init__(self, *args, **kwargs):
     super(NewCertificateStudentLetter, self).__init__(*args, **kwargs)

@@ -403,7 +403,7 @@ class StudentsViewList(LoginRequiredMixin, ListView):
 		context['search_query'] = SearchForm(self.request.GET)
 		context['location_form'] = NewLocationForm(self.request.POST)
 		context['searched'] = True if searched else False
-		context['types'] = list(AssessmentType.objects.all().values('id', 'short_name', 'name', 'course__name'))
+		context['types'] = list(AssessmentType.objects.all().values('id', 'short_name', 'name', 'course__code'))
 		return context
 	
 	def get_queryset(self):

@@ -117,6 +117,7 @@
 </div>
 <script>
 	function getAssType(student_id, student_name) {
+		const main = document.getElementById('content-start')
 		const loader = document.createElement('div');
 		const heading = document.createElement('h1');
 		const form = document.createElement('form');
@@ -141,8 +142,8 @@
 		loader.style.position = 'fixed';
 		loader.style.top = '0';
 		loader.style.left = '0';
-		loader.style.width = '100vw';
-		loader.style.height = '100vh';
+		loader.style.width = '100%';
+		loader.style.height = '100%';
 		loader.style.backgroundColor = 'rgba(0, 0, 0, 0.95)';
 		loader.style.color = 'white';
 		loader.style.zIndex = '1000';
@@ -167,13 +168,14 @@
 		exitButton.style.borderRadius = '5px';
 		exitButton.style.cursor = 'pointer';
 		exitButton.onclick = () => {
-			document.body.removeChild(loader);
+			main.removeChild(loader);
 		};
 		loader.appendChild(exitButton);
 		
 		options.forEach((opt, index) => {
 			const container = document.createElement('div');
-			container.style.fontSize = '1.5rem';
+			// container.style.fontSize = '1.5rem';
+			container.style.fontWeight = 'bold'
 			container.style.gap = '10px';
 			container.style.textAlign = 'left';
 			container.style.display = 'flex';
@@ -192,13 +194,13 @@
 
 			const label = document.createElement("label");
 			label.htmlFor = opt['short_name'];
-			label.textContent = `${opt['name']} (${opt['course__name']})`;
+			label.textContent = `${opt['name']} (${opt['course__code']})`;
 
 			container.appendChild(radio);
 			container.appendChild(label);
 			form.appendChild(container)
 			loader.appendChild(form);
-			document.body.appendChild(loader);
+			main.appendChild(loader);
 			loader.focus();
 		});
 	}

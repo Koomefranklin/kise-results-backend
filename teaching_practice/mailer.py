@@ -37,7 +37,7 @@ def send_otp(request, obj):
     Use the following OTP to verify and reset your password<br>
     This OTP will expire in 15 minutes.
     <strong>{otp}</strong> <br>
-    <a href="{request.build_absolute_uri(reverse_lazy('reset_password'))}">Proceed to resetL</a><br>
+    <a href="{request.build_absolute_uri(reverse_lazy('reset_password', kwargs = {'username': user.username}))}">Proceed to resetL</a><br>
     """
     subject = 'Password Reset Request for TP Assessment module'
     msg = EmailMultiAlternatives(subject=subject, from_email=sender_mail, to=[email])

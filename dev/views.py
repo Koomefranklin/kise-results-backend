@@ -176,11 +176,8 @@ class ResetpaswordRequestView(FormView):
 		obj, created = ResetPasswordOtp.objects.get_or_create(user=user, defaults={'otp': otp})
 		if not created:
 			expiry = obj.expiry
-			print(expiry)
-			print(timezone.now())
 
 			if expiry < timezone.now():
-				print(otp)
 				obj.delete()
 				otp = get_random_string(6)
 				obj = ResetPasswordOtp.objects.create(user=user, otp=otp)
