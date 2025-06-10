@@ -61,7 +61,7 @@ class AssessmentType(models.Model):
   name = models.CharField(max_length=200)
 
   def __str__(self):
-    return f'{self.name} - {self.course.name}'
+    return f'{self.name} - {self.course.code}'
   
   class Meta:
     order_with_respect_to = 'course'

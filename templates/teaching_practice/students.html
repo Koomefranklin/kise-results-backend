@@ -57,7 +57,7 @@
 					<td class=''>{{ student.department }}</td>
 					<td class=''>{{ student.specialization }}</td>
 					<td class="flex justify-around">
-						<button type='button' class='text-[#4caf50] font-bold' onclick="getAssType('{{ student.pk }}', '{{ student.full_name }}')" title='New Assessment for {{ student.full_name }}'>New Assessment</button>
+						<button type='button' class='text-[#4caf50] font-bold' onclick='getAssType("{{ student.pk }}", "{{ student.full_name }}")' title='New Assessment for {{ student.full_name }}'>New Assessment</button>
 						<button type='button' class='text-[#4caf50] font-bold'><a href='{% url "previous_assessments" student.pk %}' class='text-[#4caf50] font-bold'>Previous Assessments</a></button>
 						
 						{% if user.is_superuser %}
@@ -116,7 +116,8 @@
 	</div>
 </div>
 <script>
-	function getAssType(student_id, student_name) {
+	function getAssType(student_id, name) {
+		const student_name = JSON.stringify(name);
 		const main = document.getElementById('content-start')
 		const loader = document.createElement('div');
 		const heading = document.createElement('h1');
