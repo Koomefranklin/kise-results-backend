@@ -9,6 +9,10 @@ from django.utils.translation import gettext_lazy as _
 
 # Create your models here.
 
+class Zone(models.Model):
+  id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+  name = models.CharField(max_length=200, unique=True)
+
 class ZonalLeader(models.Model):
   class ZONES(models.TextChoices):
     KISE_A = 'KISE A', _('KISE A')
@@ -205,6 +209,7 @@ class StudentLetter(models.Model):
   comments = models.CharField(max_length=255, blank=True, null=True, verbose_name='General Comments and Suggestions:')
   zone = models.CharField(max_length=200, null=True, blank=True, choices=ZONES.choices)
   location = models.ForeignKey(Location, on_delete=models.CASCADE)
+  is_editable = models.BooleanField(default=True)
   late_submission = models.BooleanField(default=False)
   reason = models.CharField(max_length=255, blank=True, null=True, verbose_name='Reason for late submission')
   to_delete = models.BooleanField(default=False, verbose_name='Request for deletion')

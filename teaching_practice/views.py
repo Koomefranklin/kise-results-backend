@@ -535,6 +535,7 @@ class PreviousAssessmentDetailView(LoginRequiredMixin, DetailView):
 
 	def get_context_data(self, **kwargs):
 		user = self.request.user
+		zonal_leaders = ZonalLeader.objects.all().values_list('assessor', flat=True)
 		student_letter = self.get_object()
 		student = student_letter.student
 		sections = StudentSection.objects.prefetch_related('student_aspects').filter(student_letter=student_letter)
@@ -545,6 +546,7 @@ class PreviousAssessmentDetailView(LoginRequiredMixin, DetailView):
 		context['sections'] = sections
 		context['letter'] = student_letter
 		context['assessment_type'] = student_letter.assessment_type
+		context['can_view_score'] = True if user in zonal_leaders or user.is_staff else False
 		return context
 	
 class AssessorAssessmentsListView(LoginRequiredMixin, AdminMixin, ListView):
@@ -587,7 +589,6 @@ class EditStudentLetterView(LoginRequiredMixin, ActivePeriodMixin, UpdateView):
 	
 	def form_valid(self, form):
 		if form.is_valid():
-			response = super().form_valid(form)
 			student_letter = self.get_object()
 			sections = StudentSection.objects.filter(student_letter=student_letter)
 			uncommented_sections = []
@@ -627,6 +628,10 @@ class EditStudentLetterView(LoginRequiredMixin, ActivePeriodMixin, UpdateView):
 					for uncommented_section in uncommented_sections:
 						messages.error(self.request, f'<a href="{reverse_lazy('edit_student_aspects', kwargs={'pk': uncommented_section.pk})}">{uncommented_section.name}</a>')
 				return redirect(reverse_lazy('edit_student_letter', kwargs={'pk': student_letter.pk}))
+			instance = form.save(commit=False)
+			instance.is_editable = False
+			instance.save()
+			response = super().form_valid(form)
 			return response
 		
 	def get_context_data(self, **kwargs):
@@ -735,6 +740,10 @@ class StudentLetterViewList(LoginRequiredMixin, ListView):
 	paginate_by = 50
 
 	def get_context_data(self, **kwargs):
+		student_letters = StudentLetter.objects.exclude(Q(total_score=0) | Q(comments=None))
+		for letter in student_letters:
+			letter.is_editable = False
+			letter.save()
 		user = self.request.user
 		context = super().get_context_data(**kwargs)
 		context['is_nav_enabled'] = True
@@ -940,6 +949,7 @@ class EditStudentSectionView(LoginRequiredMixin, ActivePeriodMixin, UpdateView):
 		context['section'] = section
 		context['pk'] = student_section
 		context['can_edit'] = section.student_letter.assessor == self.request.user
+		context['is_editable'] = section.student_letter.is_editable
 		return context
 	
 	def form_valid(self, form):
@@ -948,22 +958,25 @@ class EditStudentSectionView(LoginRequiredMixin, ActivePeriodMixin, UpdateView):
 		student_letter = StudentSection.objects.get(pk=student_section).student_letter
 		student_sections = StudentSection.objects.filter(student_letter=student_letter)		
 		score =0
-		for section in student_sections:
-			score += section.score
-		student_letter.total_score = score
-		student_letter.save()
+		if student_letter.is_editable:
+			for section in student_sections:
+				score += section.score
+			student_letter.total_score = score
+			student_letter.save()
 
-		response = super().form_valid(form)
-		if "save_continue" in self.request.POST:
-			student_section = StudentSection.objects.get(pk=student_section)
-			current_number = student_section.section.number
-			student_letter = student_section.student_letter
-			last_number = Section.objects.filter(assessment_type=student_section.section.assessment_type).count()
-			if current_number != last_number:
-				next_number = current_number + 1
-				next_section = StudentSection.objects.get(Q(section__number=next_number) & Q(student_letter=student_letter)).pk
-				return redirect(reverse_lazy('edit_student_aspects', kwargs={'pk': next_section}))
-		return response
+			response = super().form_valid(form)
+			if "save_continue" in self.request.POST:
+				student_section = StudentSection.objects.get(pk=student_section)
+				current_number = student_section.section.number
+				student_letter = student_section.student_letter
+				last_number = Section.objects.filter(assessment_type=student_section.section.assessment_type).count()
+				if current_number != last_number:
+					next_number = current_number + 1
+					next_section = StudentSection.objects.get(Q(section__number=next_number) & Q(student_letter=student_letter)).pk
+					return redirect(reverse_lazy('edit_student_aspects', kwargs={'pk': next_section}))
+			return response
+		else:
+			raise PermissionDenied("You do not have permission to edit this section.")
 
 class StudentSectionsViewList(LoginRequiredMixin, ActivePeriodMixin, ListView):
 	model = StudentSection
@@ -1031,7 +1044,7 @@ class EditStudentAspectView(LoginRequiredMixin, ActivePeriodMixin, View):
 
 		if formset.is_valid():
 			errors = []
-			if student_letter.assessor == self.request.user:
+			if student_letter.assessor == self.request.user and student_letter.is_editable:
 				for form in formset:
 					if form.cleaned_data:
 						score = form.cleaned_data.get('score')

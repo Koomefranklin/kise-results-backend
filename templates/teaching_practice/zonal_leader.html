@@ -23,7 +23,7 @@
 					<th class="px-2">Date</th>
 					<th class='px-2'>Time</th>
 					<th class='px-2'>Assessor</th>
-					<!-- <th class='px-2'>Location</th> -->
+					<th class='px-2'>Score</th>
 					<th class="">Actions</th>
 				</tr>
 			</thead>
@@ -44,7 +44,7 @@
 					<td class="px-2">{{ letter.created_at.date }}</td>
 					<td class="px-2">{{ letter.created_at|localtime|time }}</td>
 					<td class="px-2">{{ letter.assessor }}</td>
-					<!-- <td class="px-2">{{ letter.location.name }}</td> -->
+					<td class="px-2">{{ letter.total_score }}</td>
 					<td class="flex justify-between">
 						<a href='{% url "previous_assessment_detail" letter.pk %}' title='View'>View</a>
 						

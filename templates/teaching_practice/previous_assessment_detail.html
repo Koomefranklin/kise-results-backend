@@ -10,6 +10,11 @@
     <div class=''>Date: <span class='underline'>{{ letter.created_at.date }}</span></div>
     <div class=''>School: <span class='underline'>{{ letter.school }}</span></div>
     <div class=''>Grade/ Level: <span class='underline'>{{ letter.student.grade }}</span></div>
+    
+    {% if can_view_score %}
+      <div class=''>Total Score: <span class='underline'>{{ letter.total_score }}</span></div>
+    {% endif %}
+      
     <div class=''>Zome: <span>{{ letter.zone }}</span></div>
     <div class=''>Late Submission: <span>{{ letter.late_submission }}</span></div>
     <div class=''>Reason for late submission: <span>{{ letter.reason }}</span></div>
@@ -26,6 +31,7 @@
             <th style="border: 1px solid black;">#</th>
             <th style="border: 1px solid black;">Aspects to Consider</th>
             <th style="border: 1px solid black;">Score</th>
+            <th style='border: 1px solid black;'>Student Score</th>
             <th style="border: 1px solid black;">Assessor's Comments</th>
           </tr>
         </thead>
@@ -42,6 +48,14 @@
                 </ul>
               </td>
               <td style="border: 1px solid black;">{{ section.section.contribution }}</td>
+              
+              {% if can_view_score %}
+                <td style="border: 1px solid black;">
+                  {{ section.student_score }}
+                {% else %}
+                  <span class='text-red-500'>N/A</span>
+              {% endif %}
+                
               <td style="border: 1px solid black;">{{ section.comments }}</td>
             </tr>
             {% empty %}
