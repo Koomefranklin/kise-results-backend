@@ -606,12 +606,12 @@ class EditStudentLetterView(LoginRequiredMixin, ActivePeriodMixin, UpdateView):
 			for field in student_letter._meta.get_fields():
 				if isinstance(field, Field):
 					value = getattr(student_letter, field.name)
-					if value is None and field.name not in ['reason', 'to_delete', 'request_time']:
+					if value is None and field.name not in ['reason', 'to_delete', 'request_time', 'comments']:
 						if 'Diploma' in student_letter.assessment_type.course.name:
 							if field.name not in ['earc']:
 								null_fields.append(field.name)
 						elif 'Certificate' in student_letter.assessment_type.course.name:
-							if field.name not in ['school', 'grade', 'learning_area', 'zone']:
+							if field.name not in ['school', 'grade', 'learning_area', 'zone', 'comments']:
 								null_fields.append(field.name)
 
 			for section in sections:
