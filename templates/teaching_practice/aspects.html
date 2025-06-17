@@ -9,6 +9,11 @@
 					<button type="submit" class='rounded-md border p-2'>Search</button>
 				</div>
 			</form>
+			<form method='get' action='{% url "aspects" %}' class='flex flex-row'>
+				{{ filter_form }}
+				<button type='submit'>Filter</button>
+			</form>
+			<p>{{ total }}</p>
 			<thead class="border-b bg-gray-500 text-white p-2">
 				<tr class="">
 					<th class='border-r px-2'>Section</th>

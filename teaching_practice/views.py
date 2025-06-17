@@ -13,10 +13,10 @@ from dev.forms import CustomUserCreationForm
 from dev.models import User
 from teaching_practice.mailer import request_deletion, send_student_report
 from teaching_practice.mixins import ActivePeriodMixin, AdminMixin
-from .forms import CertificateStudentForm, FilterAssessmentsForm, NewAspect, NewCertificateStudentLetter, NewLocationForm, NewSection, NewStudentAspect, NewStudentForm, NewDiplomaStudentLetter, NewStudentSection, NewSubSection, PeriodForm, SearchForm, DiplomaStudentForm, UpdateAspect, UpdateCertificateStudentLetter, UpdateSection, UpdateStudentAspect, UpdateDiplomaStudentLetter, UpdateStudentSection, StudentAspectFormSet, UpdateSubSection, ZonalLeaderForm
+from .forms import AspectFilterForm, CertificateStudentForm, FilterAssessmentsForm, NewAspect, NewCertificateStudentLetter, NewLocationForm, NewSection, NewStudentAspect, NewStudentForm, NewDiplomaStudentLetter, NewStudentSection, NewSubSection, PeriodForm, SearchForm, DiplomaStudentForm, UpdateAspect, UpdateCertificateStudentLetter, UpdateSection, UpdateStudentAspect, UpdateDiplomaStudentLetter, UpdateStudentSection, StudentAspectFormSet, UpdateSubSection, ZonalLeaderForm
 from .models import AssessmentType, Period, Student, Section, StudentAspect, StudentLetter, StudentSection, Aspect, Location, SubSection, ZonalLeader
 from django.views.generic import ListView, CreateView, FormView, UpdateView, DeleteView, DetailView
-from django.db.models import Q, Avg, F, Count, ExpressionWrapper, FloatField, Value
+from django.db.models import Q, Avg, F, Count, ExpressionWrapper, FloatField, Sum, Value
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.contrib import messages
 from django.contrib.gis.geos import Point
@@ -331,6 +331,8 @@ class AspectViewList(LoginRequiredMixin, ListView):
 		context['is_nav_enabled'] = True
 		context['title'] = 'Aspects to consider'
 		context['search_query'] = SearchForm(self.request.GET)
+		context['filter_form'] = AspectFilterForm(self.request.GET)
+		context['total'] = self.get_queryset().aggregate(contribution_sum = Sum('contribution'))['contribution_sum'] 
 		return context
 	
 	def get_queryset(self):
@@ -338,6 +340,10 @@ class AspectViewList(LoginRequiredMixin, ListView):
 		search_query = self.request.GET.get('search_query')
 		if search_query:
 			qs = qs.filter(Q(name__icontains=search_query) | Q(section__name__icontains=search_query))
+		if assessment_type := self.request.GET.get('assessment_type'):
+			qs = qs.filter(section__assessment_type=assessment_type)
+		if section := self.request.GET.get('section'):
+			qs = qs.filter(section__pk=section)
 		return qs.order_by('section')
 	
 class NewStudentView(LoginRequiredMixin, ActivePeriodMixin, CreateView):
@@ -376,7 +382,7 @@ class NewStudentView(LoginRequiredMixin, ActivePeriodMixin, CreateView):
 	
 class EditStudentView(LoginRequiredMixin, ActivePeriodMixin, UpdateView):
 	model = Student
-	form_class = DiplomaStudentForm
+	form_class = NewStudentForm
 	template_name = 'teaching_practice/base_form.html'
 	success_url = reverse_lazy('students_tp')
 

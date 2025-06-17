@@ -15,6 +15,8 @@ class StudentLetterAdmin(admin.ModelAdmin):
   list_display = ['student', 'assessor']
   search_fields = ['pk','student__full_name', 'assessor__full_name']
   autocomplete_fields = ['student', 'assessor']
+  readonly_fields = ['created_at', 'updated_at']
+  list_filter = ['assessment_type', 'is_editable']
 
 class TpStudentAdmin(admin.ModelAdmin):
   list_display = ['full_name', 'index', 'specialization', 'created_by']

@@ -61,6 +61,7 @@
 						<button type='button' class='text-[#4caf50] font-bold'><a href='{% url "previous_assessments" student.pk %}' class='text-[#4caf50] font-bold'>Previous Assessments</a></button>
 						
 						{% if user.is_superuser %}
+							<a href='{% url "edit_student_tp" student.pk %}'>Edit</a>
 							<form action='{% url "delete_student" student.pk %}' method='get'>
 								{% csrf_token %}
 								<button type='submit'>Delete</button>
@@ -219,27 +220,39 @@
       if (navigator.geolocation) {
 
 				loader.appendChild(messageBox);
+				const main = document.getElementById('content-start')
         navigator.geolocation.getCurrentPosition(
           (position) => {
             // Get latitude and longitude
             const latitude = position.coords.latitude;
             const longitude = position.coords.longitude;
 
-						form = document.getElementById('form');
-						form.action = `/teaching_practice/student-letter/new/${student_id}/${longitude}/${latitude}/${assessment_type}/`;
-						form.submit();
-
-						document.body.removeChild(loader);
+						SubmitForm(latitude, longitude)
           },
           (error) => {
-						document.body.removeChild(loader);
-						alert('Unable to access your location. Please enable location permissions on your browser and try again.');
+						alert('Unable to access your location. Please enable location permissions on your browser and try again.')
+						const confirm_default = confirm('Proceed without location? \nNB: Use this if issue persist only.');
+						if (confirm_default) {
+							const latitude = -1.2276396;
+							const longitude = 36.89358;
+							
+							SubmitForm(latitude, longitude)
+						} else {
+							main.removeChild(loader)
+						}
           }
         );
       } else {
-				document.body.removeChild(loader);
+				main.removeChild(loader);
         alert('Geolocation is not supported by your browser.');
       }
+			function SubmitForm(latitude, longitude) {
+				form = document.getElementById('form');
+				form.action = `/teaching_practice/student-letter/new/${student_id}/${longitude}/${latitude}/${assessment_type}/`;
+				form.submit();
+
+				main.removeChild(loader);
+			}
     };
   </script>
 {% endblock main %}

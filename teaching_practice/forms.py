@@ -336,6 +336,18 @@ StudentAspectFormSet = forms.modelformset_factory(
   extra=0
 )
 
+class AspectFilterForm(forms.Form):
+  assessment_type = forms.ModelChoiceField(
+    queryset=AssessmentType.objects.all(),
+    required=False,
+    widget=forms.Select(attrs={'class': 'rounded border-2 w-5/6 grid'})
+  )
+  section = forms.ModelChoiceField(
+    queryset=Section.objects.all(),
+    required=False,
+    widget=forms.Select(attrs={'class': 'rounded border-2 w-5/6 grid'})
+  )
+
 class SearchForm(forms.Form):
 	search_query = forms.CharField(label='Search', widget=forms.TextInput(attrs={'placeholder': 'Input Search Query'}), required=False)
 	
