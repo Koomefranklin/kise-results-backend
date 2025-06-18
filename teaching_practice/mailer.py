@@ -37,7 +37,7 @@ def send_otp(request, obj):
     Use the following OTP to verify and reset your password<br>
     This OTP will expire in 15 minutes.
     <strong>{otp}</strong> <br>
-    <a href="{request.build_absolute_uri(reverse_lazy('reset_password', kwargs = {'username': user.username}))}">Proceed to resetL</a><br>
+    <a href="{request.build_absolute_uri(reverse_lazy('reset_password', kwargs = {'username': user.username}))}?otp={otp}">Proceed to reset</a><br>
     """
     subject = 'Password Reset Request for TP Assessment module'
     msg = EmailMultiAlternatives(subject=subject, from_email=sender_mail, to=[email])
@@ -76,9 +76,10 @@ def send_error(request, exception):
 def request_deletion(request, obj_id, path):
   try:
     user = request.user.full_name
+    url = request.build_absolute_uri()
     sender_mail = 'TP Assessment <webform@kise.ac.ke>'
     html_content = f"""
-    A request for deletion of object {obj_id} from {path} was made by {user}<br>
+    A request for deletion of object {obj_id} from {url} was made by {user}<br>
     Please review the request and take appropriate action.<br>
     """
     subject = 'Deletion Request for TP Assessment module'

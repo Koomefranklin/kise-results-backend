@@ -14,8 +14,8 @@
 {% tailwind_css %}
 </head>
 <body class='grid w-screen h-screen bg dark:bg-slate-900 overflow-x-hidden'>
-  <div class='grid place-self-center w-5/6 border rounded-lg shadow-2xl p-2 font-bold text-2xl gap-4'>
-    <div class='grid font-bold text-center capitalize justify-center bg-[#ffcb05]' style='width: inherit;'>
+  <div class='grid place-self-center rounded-lg shadow-2xl font-bold text-xl gap-4'>
+    <div class='grid font-bold text-center capitalize justify-center bg-[#ffcb05] rounded-t-lg text-black' style='width: inherit;'>
       <img src='{{ MEDIA_URL }}icons/kise_logo.png' class='grid place-self-center' width='50' height='50'>
       <div class='grid'>
         <!-- <h1 class='text-center'>Result Management</h1> -->
@@ -58,13 +58,13 @@
     {% endblock main %}
     
     {% block reveal %}
-      <div class='flex place-self-center gap-2'>
+      <div class='flex place-self-center gap-2 text-sm'>
         <input type='checkbox' id='reveal' class='w-fit'>
-        <label for='reveal' class=''>Show Passwords</label>
+        <label for='reveal' class=''>Reveal Password</label>
       </div>
     {% endblock reveal %}
       
-    {% block footer %}<footer id="footer" class=' justify-center w-screen p-2 text white h-fit text-center'>Developed by: Koome Franklin</footer>{% endblock %}
+    {% block footer %}<footer id="footer" class='bg-black rounded-b-lg justify-center w-full p-2 text white h-fit text-center'>Developed by: Koome Franklin</footer>{% endblock %}
   </div>
   <script>
     const revealPassword = document.getElementById('reveal');

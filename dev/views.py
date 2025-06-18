@@ -1,4 +1,5 @@
 from typing import Any
+from django.contrib.auth.views import LoginView
 from django.db.models.query import QuerySet
 from django.http import HttpResponseRedirect
 from django.shortcuts import get_object_or_404, render, redirect
@@ -14,7 +15,7 @@ from teaching_practice.mailer import send_error, send_otp
 from .mixins import AdminMixin, AdminOrHeadMixin, AdminOrLecturerMixin, HoDMixin
 from .models import Deadline, Hod, ModuleScore, ResetPasswordOtp, User, Student, Result, Mode, Lecturer, Specialization, Paper, TeamLeader, Module, CatCombination, IndexNumber, SitinCat, Centre
 from django.http.response import HttpResponse
-from .forms import CSVUploadForm, CustomPasswordChangeForm, CustomUserCreationForm, CustomUserChangeForm, GenerateResultsForm, NewCatCombination, NewDeadline, NewHoD, NewStudent, NewTeamLeader, OTPVerificationForm, ResetPasswordForm, UpdateCatCombination, UpdateDeadline, UpdateHoD, UpdateStudent, NewLecturer, UpdateLecturer, NewSpecialization, UpdateSpecialization, NewPaper, UpdatePaper, NewModule, UpdateModule, NewModuleScore, UpdateModuleScore, NewSitinCat, UpdateSitinCat, UpdateTeamLeader, SearchForm
+from .forms import CSVUploadForm, CustomLoginForm, CustomPasswordChangeForm, CustomUserCreationForm, CustomUserChangeForm, GenerateResultsForm, NewCatCombination, NewDeadline, NewHoD, NewStudent, NewTeamLeader, OTPVerificationForm, ResetPasswordForm, UpdateCatCombination, UpdateDeadline, UpdateHoD, UpdateStudent, NewLecturer, UpdateLecturer, NewSpecialization, UpdateSpecialization, NewPaper, UpdatePaper, NewModule, UpdateModule, NewModuleScore, UpdateModuleScore, NewSitinCat, UpdateSitinCat, UpdateTeamLeader, SearchForm
 from itertools import chain
 from dal import autocomplete
 from django.urls import reverse_lazy
@@ -123,6 +124,9 @@ class Index(LoginRequiredMixin, ListView):
 		context['center'] = 'KISE'
 		context['deadlines'] = deadlines
 		return context
+	
+class CustomLoginView(LoginView):
+    form_class = CustomLoginForm
 
 class UpdateUserPassword(LoginRequiredMixin, FormView):
 	form_class = CustomPasswordChangeForm
@@ -164,9 +168,13 @@ class ResetpaswordRequestView(FormView):
 		context['title'] = 'Reset Password'
 		context['stage'] = 'request'
 		return context
+	
+	def get_form_kwargs(self):
+		kwargs = super(ResetpaswordRequestView, self).get_form_kwargs()
+		kwargs['username'] = self.request.GET.get('username')
+		return kwargs
 
 	def form_valid(self, form):
-		# response = super().form_valid(form)
 		username = form.cleaned_data['username']
 		user = User.objects.get(username=username)
 
@@ -196,6 +204,11 @@ class ResetPasswordView(FormView):
 		context['stage'] = 'reset'
 		return context
 	
+	def get_form_kwargs(self):
+		kwargs = super(ResetPasswordView, self).get_form_kwargs()
+		kwargs['otp'] = self.request.GET.get('otp')
+		return kwargs
+	
 	def form_valid(self, form):
 		response = super().form_valid(form)
 		username = self.kwargs.get('username')
@@ -220,7 +233,7 @@ class ResetPasswordView(FormView):
 					messages.error(self.request, 'Invalid OTP')
 					return self.form_invalid(self.get_form_class())
 		except ResetPasswordOtp.DoesNotExist:
-			return self.form_invalid(self.get_form_class())
+			return redirect(f'{reverse_lazy('request_otp')}?username={username}')
 		return response
 
 class StudentsViewList(LoginRequiredMixin, ListView):
