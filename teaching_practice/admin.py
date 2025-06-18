@@ -1,5 +1,6 @@
 from django.contrib import admin
 
+from teaching_practice.forms import AssessmentTypeForm
 from teaching_practice.models import Aspect, AssessmentType, Location, Section, Student, StudentAspect, StudentLetter, SubSection
 
 # Register your models here.
@@ -23,6 +24,11 @@ class TpStudentAdmin(admin.ModelAdmin):
   search_fields = ['full_name', 'index', 'created_by__full_name']
   # list_filter = ['centre', 'course', 'specialization']
 
+class AssessmentTypeAdmin(admin.ModelAdmin):
+  list_display = ['course', 'short_name']
+  form = AssessmentTypeForm
+  filter_horizontal = ('admins',)
+
 admin.site.register(Location)
 admin.site.register(StudentLetter, StudentLetterAdmin)
 admin.site.register(Section)
@@ -30,4 +36,4 @@ admin.site.register(Aspect)
 admin.site.register(SubSection)
 admin.site.register(Student, TpStudentAdmin)
 admin.site.register(StudentAspect, StudentAspectAdmin)
-admin.site.register(AssessmentType)
+admin.site.register(AssessmentType, AssessmentTypeAdmin)

@@ -27,5 +27,4 @@ class ExceptionMiddleware:
                
 			request.exception = e
 			self.logger.error("Unhandled exception", exc_info=True)
-			print(e)
 			return render(request, 'errors/500.html', status=500, context={'title': 'Server error'})

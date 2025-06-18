@@ -141,8 +141,11 @@ class IndexPage(LoginRequiredMixin, ListView):
 		zonal_leaders = ZonalLeader.objects.all().values_list('assessor', flat=True)
 		students = Student.objects.exclude(full_name__icontains='test')
 		all_assessments = StudentLetter.objects.filter(to_delete=False)
-		if user.is_staff:
-			initiated_assessments = all_assessments
+		assessment_types = AssessmentType.objects.all()
+		admins = assessment_types.values_list('admins', flat=True)
+		if user.pk in admins:
+			admin_assessment_types = assessment_types.filter(admins=user)
+			initiated_assessments = all_assessments.filter(assessment_type__in=admin_assessment_types)
 		else:
 			if user.pk in zonal_leaders:
 				initiated_assessments = all_assessments.filter(assessor=user)
@@ -541,6 +544,8 @@ class PreviousAssessmentDetailView(LoginRequiredMixin, DetailView):
 
 	def get_context_data(self, **kwargs):
 		user = self.request.user
+		assessment_types = AssessmentType.objects.all()
+		admins = assessment_types.values_list('admins', flat=True)
 		zonal_leaders = ZonalLeader.objects.all().values_list('assessor', flat=True)
 		student_letter = self.get_object()
 		student = student_letter.student
@@ -552,7 +557,7 @@ class PreviousAssessmentDetailView(LoginRequiredMixin, DetailView):
 		context['sections'] = sections
 		context['letter'] = student_letter
 		context['assessment_type'] = student_letter.assessment_type
-		context['can_view_score'] = True if user in zonal_leaders or user.is_staff else False
+		context['can_view_score'] = True if user in zonal_leaders or user.pk in admins else False
 		return context
 	
 class AssessorAssessmentsListView(LoginRequiredMixin, AdminMixin, ListView):
@@ -761,10 +766,16 @@ class StudentLetterViewList(LoginRequiredMixin, ListView):
 	
 	def get_queryset(self):
 		qs = StudentLetter.objects.prefetch_related('student_sections').filter(to_delete=False).annotate(search=SearchVector('student__full_name', 'student__index', 'school', 'grade', 'learning_area', 'zone', 'assessor__full_name'))
-		if self.request.user.is_staff:
+		user = self.request.user
+		assessment_types = AssessmentType.objects.all()
+		admins = assessment_types.values_list('admins', flat=True)
+		if self.request.user.is_superuser:
 			qs = qs
+		elif user.pk in admins:
+			admin_assessment_types = assessment_types.filter(admins=user)
+			qs = qs.filter(assessment_type__in=admin_assessment_types)
 		else:
-			qs = qs.filter(assessor=self.request.user)
+			qs = qs.filter(Q(assessor=self.request.user))
 		search_query = self.request.GET.get('search_query')
 		if department := self.request.GET.get('department'):
 			qs = qs.filter(Q(student__department=department))
@@ -834,9 +845,15 @@ class IncompleteAssessmentsListView(LoginRequiredMixin, ListView):
 		return context
 	
 	def get_queryset(self):
+		user = self.request.user
 		letters = StudentLetter.objects.prefetch_related('student_sections').filter(Q(to_delete=False) & (Q(comments=None) | Q(total_score=0))).exclude(student__full_name__icontains='test')
-		if self.request.user.is_staff:
+		assessment_types = AssessmentType.objects.all()
+		admins = assessment_types.values_list('admins', flat=True)
+		if user.is_superuser:
 			qs = letters
+		elif user.id in admins:
+			admin_assessment_types = assessment_types.filter(admins=user)
+			qs = letters.filter(assessment_type__in=admin_assessment_types)
 		else:
 			qs = letters.filter(assessor=self.request.user)
 		if department := self.request.GET.get('department'):
@@ -1160,8 +1177,13 @@ class ZonesViewList(LoginRequiredMixin, ListView):
 		user = self.request.user
 		zonal_leaders = ZonalLeader.objects.all().values_list('assessor__pk', flat=True)
 		qs = StudentLetter.objects.filter(to_delete=False)
-		if user.is_staff:
+		assessment_types = AssessmentType.objects.all()
+		admins = assessment_types.values_list('admins', flat=True)
+		if user.is_superuser:
 			qs = qs
+		if user.id in admins:
+			admin_assessment_types = assessment_types.filter(admins=user)
+			qs = qs.filter(assessment_type__in=admin_assessment_types)
 		elif user.pk in zonal_leaders:
 			zone = ZonalLeader.objects.get(assessor=user)
 			qs = qs.filter(zone=zone)
@@ -1216,8 +1238,10 @@ class ZonalLeaderViewList(LoginRequiredMixin, CreateView):
 	def get_context_data(self, **kwargs):
 		user = self.request.user
 		zonal_leaders = ZonalLeader.objects.all().values_list('assessor', flat=True)
+		assessment_types = AssessmentType.objects.all()
+		admins = assessment_types.values_list('admins', flat=True)
 		context = super().get_context_data(**kwargs)
-		if user.is_staff:
+		if user.is_superuser or user.id in admins:
 			context['zonal_leaders'] = ZonalLeader.objects.all()
 		elif user in zonal_leaders:
 			zone = ZonalLeader.objects.get(assessor=user)

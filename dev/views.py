@@ -1041,7 +1041,6 @@ class BulkStudentCreation(LoginRequiredMixin, AdminMixin, FormView):
 			return redirect('upload_csv')
 
 		# Process the CSV file
-		print('uploaded')
 		file_data = csv_file.read().decode("utf-8").splitlines()
 		csv_reader = csv.reader(file_data)
 

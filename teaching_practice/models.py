@@ -1,3 +1,4 @@
+from pyexpat import model
 from django.db import models
 from dev.models import Course, Specialization, User
 import uuid
@@ -63,6 +64,11 @@ class AssessmentType(models.Model):
   course = models.ForeignKey(Course, on_delete=models.CASCADE, related_name='course_assessment_types')
   short_name = models.CharField(max_length=50, unique=True)
   name = models.CharField(max_length=200)
+  admins = models.ManyToManyField(User, related_name='assessmenttype_admins')
+
+  # def __init__(self, *args, **kwargs):
+  #   self.admins
+  #   super().__init__(*args, **kwargs)
 
   def __str__(self):
     return f'{self.name} - {self.course.code}'

@@ -1,12 +1,14 @@
 from django.core.exceptions import ImproperlyConfigured, PermissionDenied
 from django.shortcuts import get_object_or_404, redirect
 
-from teaching_practice.models import Period
+from teaching_practice.models import AssessmentType, Period
 
 class AdminMixin:
   def has_permission(self):
     user = self.request.user
-    return user.is_staff
+    assessment_types = AssessmentType.objects.all()
+    admins = assessment_types.values_list('admins', flat=True)
+    return user.is_superuser or user.id in admins
   
   def handle_no_permission(self):
     return redirect('no_permission')

@@ -21,6 +21,16 @@ class PeriodForm(forms.ModelForm):
     super(PeriodForm, self).__init__(*args, **kwargs)
     self.fields['period'].widget = forms.DateInput(attrs={'class': 'rounded border-2 w-5/6 grid', 'type': 'date'})
 
+class AssessmentTypeForm(forms.ModelForm):
+  class Meta:
+    model = AssessmentType
+    fields = '__all__'
+
+  def __init__(self, *args, **kwargs):
+    super(AssessmentTypeForm, self).__init__(*args, **kwargs)
+    users = User.objects.filter(Q(role='admin') | Q(role='lecturer'))
+    self.fields['admins'].queryset = users
+
 class NewSection(forms.ModelForm):
   class Meta:
     model = Section
@@ -298,13 +308,14 @@ class FilterAssessmentsForm(forms.Form):
 
   def __init__(self, *args, **kwargs):
     user = kwargs.pop('user', None)
+    assessment_types = AssessmentType.objects.all()
+    admins = assessment_types.values_list('admins', flat=True)
     zonal_leaaders = ZonalLeader.objects.all().values_list('assessor__pk', flat=True)
     super(FilterAssessmentsForm, self).__init__(*args, **kwargs)
-    if user.is_staff:
+    if user.is_superuser or user.id in admins:
       self.fields['assessor'].queryset = User.objects.filter(Q(role='lecturer') & Q(is_active=True))
     elif user.pk in zonal_leaaders:
       self.fields['assessor'].queryset = User.objects.filter(Q(role='lecturer') & Q(is_active=True))
-      # self.fields['zone'].
     else:
       self.fields['assessor'].queryset = User.objects.filter(pk=user.pk)
     for fieldname, field in self.fields.items():
