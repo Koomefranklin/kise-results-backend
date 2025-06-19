@@ -373,8 +373,8 @@ class NewStudentView(LoginRequiredMixin, ActivePeriodMixin, CreateView):
 			instance.created_by = self.request.user
 			active_period=Period.objects.get(is_active=True)
 			instance.period = active_period
-			students = Student.objects.filter(period=active_period).exclude(full_name__icontains='test')
-			existing_student = students.filter(index=instance.index.strip()).first()
+			students = Student.objects.filter(period=active_period)
+			existing_student = students.filter(index=instance.index.replace(' ', '')).first()
 			if existing_student:
 				messages.error(self.request, f'{instance.full_name} already exists')
 				return redirect(f'{reverse_lazy("students_tp")}?search_query={existing_student.index}')
@@ -771,13 +771,6 @@ class StudentLetterViewList(LoginRequiredMixin, ListView):
 	paginate_by = 50
 
 	def get_context_data(self, **kwargs):
-		students = Student.objects.all()
-		for student in students:
-			if student.index:
-				student.index = student.index.replace(' ', '')
-			if student.email:
-				student.email = student.email.lower()
-			student.save()
 		user = self.request.user
 		context = super().get_context_data(**kwargs)
 		context['is_nav_enabled'] = True
@@ -1289,7 +1282,7 @@ class ExportAssessmentReport(LoginRequiredMixin, AdminMixin, View):
 		grouped = defaultdict(list)
 
 		# Group values by name
-		for obj in StudentLetter.objects.exclude(Q(comments=None) | Q(total_score=0)).filter(to_delete=False).order_by('zone'):
+		for obj in StudentLetter.objects.exclude(Q(comments=None) | Q(total_score=0)).filter(Q(to_delete=False) | Q(is_editable=False)).order_by('zone'):
 			grouped[obj.student.full_name, obj.student.index, obj.zone].append(obj.total_score)
 
 		# Determine the max number of values per name to set column headers

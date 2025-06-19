@@ -23,7 +23,7 @@
 <body class='w-screen h-screen dark:bg-slate-900 flex flex-col overflow-hidden'
   data-admin-utc-offset="{% now 'Z' %}">
 
-   <div class='sticky top-0 z-50 w-screen h-fit'>
+   <div class='sticky top-0 z-50 w-screen h-fit text-sm'>
      <!-- Header -->
     {% block header %}
       <header id="header" class='w-full h-fit grid grid-flow-col p-2'>
@@ -46,7 +46,7 @@
             <div id="user-tools" class='grid grid-flow-col justify-end gap-px self-center'>
               {% block welcome-msg %}
                   {% translate 'Welcome,' %}
-                  <strong class='uppercase'>{% firstof user.full_name user.get_username %}, {{ user.role }}</strong>.
+                  {% firstof user.full_name user.get_username %}, {{ user.role }}.
               {% endblock %}
               {% block userlinks %}
                   {% if user.has_usable_password %}
