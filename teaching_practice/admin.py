@@ -13,7 +13,7 @@ class StudentAspectAdmin(admin.ModelAdmin):
     return obj.aspect.name
   
 class StudentLetterAdmin(admin.ModelAdmin):
-  list_display = ['student', 'assessor', 'total_score']
+  list_display = ['student', 'assessor', 'total_score', 'created_at']
   search_fields = ['pk','student__full_name', 'assessor__full_name']
   autocomplete_fields = ['student', 'assessor']
   readonly_fields = ['created_at', 'updated_at']
