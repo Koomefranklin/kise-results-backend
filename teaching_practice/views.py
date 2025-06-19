@@ -1284,7 +1284,7 @@ class DeleteObject(LoginRequiredMixin, DeleteView):
 		
 		return super().get_object(queryset)
 	
-class ExportAssessmentReport(LoginRequiredMixin, View):
+class ExportAssessmentReport(LoginRequiredMixin, AdminMixin, View):
 	def get(self, request):
 		grouped = defaultdict(list)
 

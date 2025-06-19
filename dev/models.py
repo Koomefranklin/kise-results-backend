@@ -100,7 +100,7 @@ class Specialization(models.Model):
   updated_at = models.DateTimeField(auto_now=True)
 
   def __str__(self):
-    return f'{self.code} {self.name}'
+    return f'{self.code} {self.short_name}'
   
   def save(self, *args, **kwargs):
     self.name = self.name.upper()
