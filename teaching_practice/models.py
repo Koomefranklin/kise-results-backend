@@ -66,10 +66,6 @@ class AssessmentType(models.Model):
   name = models.CharField(max_length=200)
   admins = models.ManyToManyField(User, related_name='assessmenttype_admins')
 
-  # def __init__(self, *args, **kwargs):
-  #   self.admins
-  #   super().__init__(*args, **kwargs)
-
   def __str__(self):
     return f'{self.name} - {self.course.code}'
   
@@ -153,8 +149,9 @@ class Student(models.Model):
     ordering = ['index', 'full_name']
   
   def save(self, *args, **kwargs):
-    self.index = self.index.upper().strip(' ') if self.index else None
+    self.index = self.index.upper().replace(' ', '') if self.index else None
     self.full_name = self.full_name.upper().strip()
+    self.email = self.email.lower() if self.email else None
     super().save(*args, **kwargs)
 
 class Location(gis_models.Model):

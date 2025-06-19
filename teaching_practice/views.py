@@ -1,3 +1,5 @@
+from collections import defaultdict
+import csv
 import datetime
 from django.conf import settings
 from django.contrib.postgres.search import SearchQuery, SearchVector
@@ -492,8 +494,6 @@ class NewStudentLetterView(LoginRequiredMixin, ActivePeriodMixin, View):
 				student_letter.save()
 				log_custom_action(self.request.user, student_letter, ADDITION)
 				messages.error(self.request, f'You are Starting an assessment at {current_time} which seems not within class time. The system has marked this as a Late submission. Please provide a reason')
-				# return redirect(f'{reverse_lazy("edit_student_details", kwargs={'student_letter': student_letter.pk})}')
-			messages.success(self.request, f'Location Created Successfully')
 			sections = Section.objects.filter(assessment_type__id=assessment_type_id)
 
 			if sections.exists():
@@ -501,11 +501,12 @@ class NewStudentLetterView(LoginRequiredMixin, ActivePeriodMixin, View):
 					student_section = StudentSection.objects.create(student_letter=student_letter, section=section)
 					aspects = Aspect.objects.filter(Q(section=section) & Q(is_active=True))
 					for aspect in aspects:
-						student_aspect = StudentAspect.objects.create(student_section=student_section, aspect=aspect)
+						StudentAspect.objects.create(student_section=student_section, aspect=aspect)
 				messages.success(self.request, f'Added {student_letter.student} Successfully')
 			else:
 				student_name = student_letter.student.full_name
 				student_letter.delete()
+				location_instance.delete()
 				messages.error(self.request, f'An error occured while creating the letter. Please try again')
 				return redirect(f'{reverse_lazy("students_tp")}?search_query={student_name}')
 
@@ -770,10 +771,13 @@ class StudentLetterViewList(LoginRequiredMixin, ListView):
 	paginate_by = 50
 
 	def get_context_data(self, **kwargs):
-		student_letters = StudentLetter.objects.exclude(Q(total_score=0) | Q(comments=None))
-		for letter in student_letters:
-			letter.is_editable = False
-			letter.save()
+		students = Student.objects.all()
+		for student in students:
+			if student.index:
+				student.index = student.index.replace(' ', '')
+			if student.email:
+				student.email = student.email.lower()
+			student.save()
 		user = self.request.user
 		context = super().get_context_data(**kwargs)
 		context['is_nav_enabled'] = True
@@ -1279,3 +1283,30 @@ class DeleteObject(LoginRequiredMixin, DeleteView):
 	def get_object(self, queryset = None):
 		
 		return super().get_object(queryset)
+	
+class ExportAssessmentReport(LoginRequiredMixin, View):
+	def get(self, request):
+		grouped = defaultdict(list)
+
+		# Group values by name
+		for obj in StudentLetter.objects.exclude(Q(comments=None) | Q(total_score=0)).filter(to_delete=False).order_by('zone'):
+			grouped[obj.student.full_name, obj.student.index, obj.zone].append(obj.total_score)
+
+		# Determine the max number of values per name to set column headers
+		max_items = max(len(values) for values in grouped.values())
+
+		# Column headers
+		headers = ['Name', 'Assessment No.', 'Zone'] + [f'Assessment_{i+1}' for i in range(max_items)]
+
+		# Prepare the response
+		response = HttpResponse(content_type='text/csv')
+		response['Content-Disposition'] = 'attachment; filename="export.csv"'
+		writer = csv.writer(response)
+		writer.writerow(headers)
+
+		# Write rows
+		for (name, index, zone), values in grouped.items():
+			row = [name, index, zone] + values + [''] * (max_items - len(values))
+			writer.writerow(row)
+
+		return response

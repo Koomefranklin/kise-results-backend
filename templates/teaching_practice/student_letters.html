@@ -9,6 +9,9 @@
 				<button type="submit" class='rounded-md border p-2'>Search</button>
 			</div>
 		</form>
+		<form class='' action='{% url "assessments-export" %}' method='get'>
+			<button class=''>Extract Report</button>
+		</form>
 		{% include 'teaching_practice/filter_assessments.html' with filter_url='student_letters' %}
 		<table class="w-5/6 place-self-center border">
 			<caption class=''>Student Assessments</caption>
@@ -17,9 +20,8 @@
 					
 					<th class="px-2">Full Name</th>
 					<th class="px-2">Assessment Number</th>
-					<th class="px-2">School</th>
-					<th class="px-2">Grade/Level</th>
-					<th class='px-2'>Learning Area</th>
+					<th class="px-2">School/ EARC</th>
+					<th class="px-2">Zone</th>
 					<th class="px-2">Department</th>
 					<th class="px-2">Date</th>
 					<th class='px-2'>Time</th>
@@ -40,10 +42,9 @@
 						<a href='{% url "edit_student_letter" letter.pk %}' class='w-full'>{{ letter.student.full_name }}</a>
 					</td>
 					<td class="px-2">{{ letter.student.index }}</td>
-					<td class="px-2">{{ letter.school }}</td>
+					<td class="px-2">{% firstof letter.school letter.earc %}</td>
 					<td class="px-2">{{ letter.grade }}</td>
-					<td class="px-2">{{ letter.learning_area }}</td>
-					<td class="px-2">{{ letter.student.department }}</td>
+					<td class="px-2">{{ letter.zone }}</td>
 					<td class="px-2">{{ letter.created_at.date }}</td>
 					<td class="px-2">{{ letter.created_at|localtime|time }}</td>
 					<td class="px-2">{{ letter.assessor }}</td>

@@ -23,7 +23,6 @@
     <div class='w-full'>
       <div class='flex gap-3 text-center'>
         <a href='{% url "previous_assessments" letter.student.pk %}' class='w-full border rounded-md p-2 bg-gray-500 text-white'>More Assessments</a>
-        <!-- <a href='{% url "pdf_report" letter.student.pk %}' class='w-full border rounded-md p-2 bg-gray-500 text-white'>Generate PDF</a> -->
       </div>
       <table style="width: 100%; border-collapse: collapse; border: 1px solid black;">
         <thead>
@@ -31,7 +30,11 @@
             <th style="border: 1px solid black;">#</th>
             <th style="border: 1px solid black;">Aspects to Consider</th>
             <th style="border: 1px solid black;">Score</th>
-            <th style='border: 1px solid black;'>Student Score</th>
+            
+            {% if can_view_score %}
+              <th style='border: 1px solid black;'>Student Score</th>
+            {% endif %}
+              
             <th style="border: 1px solid black;">Assessor's Comments</th>
           </tr>
         </thead>
