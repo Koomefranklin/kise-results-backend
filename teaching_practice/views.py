@@ -143,7 +143,9 @@ class IndexPage(LoginRequiredMixin, ListView):
 		all_assessments = StudentLetter.objects.filter(to_delete=False)
 		assessment_types = AssessmentType.objects.all()
 		admins = assessment_types.values_list('admins', flat=True)
-		if user.pk in admins:
+		if user.is_superuser:
+			initiated_assessments = all_assessments
+		elif user.pk in admins:
 			admin_assessment_types = assessment_types.filter(admins=user)
 			initiated_assessments = all_assessments.filter(assessment_type__in=admin_assessment_types)
 		else:
@@ -509,8 +511,25 @@ class NewStudentLetterView(LoginRequiredMixin, ActivePeriodMixin, View):
 
 			return redirect(reverse_lazy('edit_student_details', kwargs={'student_letter': student_letter.pk}))
 		except MultipleObjectsReturned:
-			messages.error(self.request, f'The Assessment already exist pick it from ones below')
-			return redirect(f'{reverse_lazy("student_letters")}?search_query={student_instance.full_name}')
+			location_instance.save()
+			log_custom_action(self.request.user, location_instance, ADDITION)
+			student_letter = StudentLetter.objects.create(student=student_instance, assessor=self.request.user, assessment_type=assessment_type, location=location_instance)
+			log_custom_action(self.request.user, student_letter, ADDITION)
+			sections = Section.objects.filter(assessment_type__id=assessment_type_id)
+			if sections.exists():
+				for section in sections:
+					student_section = StudentSection.objects.create(student_letter=student_letter, section=section)
+					aspects = Aspect.objects.filter(Q(section=section) & Q(is_active=True))
+					for aspect in aspects:
+						student_aspect = StudentAspect.objects.create(student_section=student_section, aspect=aspect)
+				messages.success(self.request, f'Added {student_letter.student} Successfully')
+			else:
+				student_name = student_letter.student.full_name
+				student_letter.delete()
+				messages.error(self.request, f'An error occured while creating the letter. Please try again')
+				return redirect(f'{reverse_lazy("students_tp")}?search_query={student_name}')
+
+			return redirect(reverse_lazy('edit_student_details', kwargs={'student_letter': student_letter.pk}))
 		except Exception as e:
 			messages.error(self.request, f'Error: {e}')
 			return redirect(f'{reverse_lazy("student_letters")}?search_query={student_instance.full_name}')
