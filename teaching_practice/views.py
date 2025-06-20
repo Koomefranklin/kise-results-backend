@@ -1252,6 +1252,12 @@ class ZonalLeaderViewList(LoginRequiredMixin, CreateView):
 	success_url = reverse_lazy('zonal_leaders')
 	
 	def get_context_data(self, **kwargs):
+		objs = Student.objects.all()
+		for obj in objs:
+			assessment = StudentLetter.objects.filter(student=obj).order_by('created_at', 'zone').first()
+			for letter in StudentLetter.objects.filter(student=obj):
+				letter.zone = assessment.zone
+				letter.save()
 		user = self.request.user
 		zonal_leaders = ZonalLeader.objects.all().values_list('assessor', flat=True)
 		assessment_types = AssessmentType.objects.all()
@@ -1280,9 +1286,10 @@ class DeleteObject(LoginRequiredMixin, DeleteView):
 class ExportAssessmentReport(LoginRequiredMixin, AdminMixin, View):
 	def get(self, request):
 		grouped = defaultdict(list)
+		assessments = StudentLetter.objects.exclude(Q(comments=None) | Q(total_score=0) | Q(to_delete=True ) | Q(is_editable=True)).order_by('created_at', 'zone')
 
 		# Group values by name
-		for obj in StudentLetter.objects.exclude(Q(comments=None) | Q(total_score=0)).filter(Q(to_delete=False) | Q(is_editable=False)).order_by('zone'):
+		for obj in assessments:
 			grouped[obj.student.full_name, obj.student.index, obj.zone].append(obj.total_score)
 
 		# Determine the max number of values per name to set column headers

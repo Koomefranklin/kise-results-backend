@@ -248,7 +248,7 @@
       }
 			function SubmitForm(latitude, longitude) {
 				form = document.getElementById('form');
-				form.action = `/teaching_practice/student-letter/new/${student_id}/${longitude}/${latitude}/${assessment_type}/`;
+				form.action = `/teaching_practice/assessment/new/${student_id}/${longitude}/${latitude}/${assessment_type}/`;
 				form.submit();
 
 				main.removeChild(loader);
