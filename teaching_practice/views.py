@@ -642,7 +642,7 @@ class EditStudentLetterView(LoginRequiredMixin, ActivePeriodMixin, UpdateView):
 							if field.name not in ['earc']:
 								null_fields.append(field.name)
 						elif 'Certificate' in student_letter.assessment_type.course.name:
-							if field.name not in ['school', 'grade', 'learning_area', 'zone', 'comments']:
+							if field.name not in ['school', 'grade', 'learning_area', 'comments']:
 								null_fields.append(field.name)
 
 			for section in sections:
