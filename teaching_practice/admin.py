@@ -22,6 +22,7 @@ class StudentLetterAdmin(admin.ModelAdmin):
 class TpStudentAdmin(admin.ModelAdmin):
   list_display = ['full_name', 'index', 'specialization', 'created_by']
   search_fields = ['full_name', 'index', 'created_by__full_name']
+  readonly_fields = ['created_at', 'updated_at']
   # list_filter = ['centre', 'course', 'specialization']
 
 class AssessmentTypeAdmin(admin.ModelAdmin):
