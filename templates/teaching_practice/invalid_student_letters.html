@@ -7,6 +7,42 @@
 		<div class='grid gap-2 place-self-center shadow-2xl p-2 '>
 			<button class='text-left'><a href='{% url "incomplete_assessments" %}'>Clear filters</a></button>
 		</div>
+		
+		{% if user.is_superuser %}
+			<table class=''>
+				<thead>
+					<tr>
+						<th>Number</th>
+						<th>Name</th>
+						<th>Specialization</th>
+						<th>Action</th>
+					</tr>
+				</thead>
+				<tbody>
+					
+					{% if invalid %}
+						
+						{% for item in invalid %}
+							<tr class=''>
+								<td>{{ item.index }}</td>
+								<td>{{ item.full_name }}</td>
+								<td>{{ item.specialization }}</td>
+								<td class='flex p-2 gap-2'>
+									<a href='{% url "edit_student_tp" item.pk %}'>Edit</a>
+									<form action='{% url "delete_student" item.pk %}' method='get'>
+										{% csrf_token %}
+										<button type='submit'>Delete</button>
+									</form>
+								</td>
+							</tr>
+						{% endfor %}
+							
+					{% endif %}
+						
+				</tbody>
+			</table>
+		{% endif %}
+			
 		<table class="w-5/6 place-self-center border">
 			<caption class=''>{{ tittle }}</caption>
 			<thead class="border-b bg-gray-500 text-white p-2">
@@ -82,26 +118,43 @@
 						<p class='w-full grid grid-flow-col'>
 							<span class='text-left'>Showing {{ page_obj.object_list|length }} of {{ page_obj.paginator.count }} Student Assessments</span>
 							<span class='text-right'>
-								{% if page_obj.has_previous %}
-								<a
-									class="px-2"
-									href="?page={{ page_obj.previous_page_number }}">
-									Previous
-								</a>
-								{% endif %}
-								PAGE: {{ page_obj.number }} of
-								<a
-									class="px-2"
-									href="?page={{ page_obj.paginator.num_pages }}">
-									{{ page_obj.paginator.num_pages }}
-								</a>
-								{% if page_obj.has_next %}
-								<a
-									class="px-2 bg-[#4caf50] rounded"
-									href="?page={{ page_obj.next_page_number }}">
-									Next
-								</a>
-								{% endif %}
+								{% with request.GET.urlencode as query_params %}
+									{% if query_params %}
+										{% if page_obj.has_previous %}
+											<a
+												class="px-2"
+												href="?{{ query_params }}&page={{ page_obj.previous_page_number }}">
+												Previous
+											</a>
+										{% endif %}
+										PAGE: {{ page_obj.number }} of
+										<a
+											class="px-2"
+											href="?{{ query_params }}&page={{ page_obj.paginator.num_pages }}">
+											{{ page_obj.paginator.num_pages }}
+										</a>
+												{% if page_obj.has_next %}
+														<a href="?{{ query_params }}&page={{ page_obj.next_page_number }}">Next</a>
+												{% endif %}
+										{% else %}
+											{% if page_obj.has_previous %}
+												<a
+													class="px-2"
+													href="?{{ query_params }}&page={{ page_obj.previous_page_number }}">
+													Previous
+												</a>
+											{% endif %}
+												PAGE: {{ page_obj.number }} of
+												<a
+													class="px-2"
+													href="?page={{ page_obj.paginator.num_pages }}">
+													{{ page_obj.paginator.num_pages }}
+												</a>
+											{% if page_obj.has_next %}
+												<a href="?page={{ page_obj.next_page_number }}">Next</a>
+											{% endif %}
+										{% endif %}
+									{% endwith %}
 							</span>
 						</p>
 					</td>
