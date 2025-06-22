@@ -406,7 +406,6 @@ class StudentsViewList(LoginRequiredMixin, ListView):
 	context_object_name = 'students'
 	paginate_by = 50
 	
-
 	def get_context_data(self, **kwargs):
 		get_request = self.request.GET
 		user = self.request.user
@@ -424,14 +423,11 @@ class StudentsViewList(LoginRequiredMixin, ListView):
 	def get_queryset(self):
 		get_request = self.request.GET
 		active_period = Period.objects.get(is_active=True)
-		qs = Student.objects.filter(period=active_period)
+		qs = Student.objects.filter(period=active_period).annotate(search=SearchVector('full_name', 'index', 'email'))
 		search_query = get_request.get('search_query')
 		if search_query:
-			qs = qs.filter(Q(full_name__icontains=search_query) | Q(index__icontains=search_query.replace(' ', '')) | Q(email__icontains=search_query))
-		if department := get_request.get('department'):
-			qs = qs.filter(department=department)
-		if specialization := get_request.get('specialization'):
-			qs = qs.filter(specialization=specialization)
+			query = SearchQuery(search_query)
+			qs = qs.filter(search=query)
 		if filter_query := get_request.get('filter_query'):
 			duplicates = qs.values(filter_query).annotate(dup_count=Count(filter_query)).filter(dup_count__gt=1)
 			duplicate_ids = [item[filter_query] for item in duplicates]
@@ -837,11 +833,11 @@ class InvalidStudentLetterViewList(LoginRequiredMixin, ListView):
 	paginate_by = 50
 
 	def get_context_data(self, **kwargs):
-		students = Student.objects.all()
+		students = Student.objects.filter(specialization__course__code='DSNE')
 		invalid_students = []
 		for student in students:
 			if student.specialization and student.index:
-				if len(student.index) != 11 and student.specialization.course.code == 'DSNE' or not str(student.index).startswith('TA'):
+				if len(student.index) != 11 or not str(student.index).startswith('TA'):
 					invalid_students.append(student)
 		user = self.request.user
 		context = super().get_context_data(**kwargs)
