@@ -581,7 +581,7 @@ class PreviousAssessmentDetailView(LoginRequiredMixin, DetailView):
 		context['sections'] = sections
 		context['letter'] = student_letter
 		context['assessment_type'] = student_letter.assessment_type
-		context['can_view_score'] = True if user in zonal_leaders or user.pk in admins else False
+		context['can_view_score'] = True if user.is_superuser or user in zonal_leaders or user.pk in admins else False
 		return context
 	
 class AssessorAssessmentsListView(LoginRequiredMixin, AdminMixin, ListView):
