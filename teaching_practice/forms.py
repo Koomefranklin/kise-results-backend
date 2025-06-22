@@ -1,10 +1,35 @@
+from tokenize import Special
+from tracemalloc import start
 from dal_gm2m import fields
 from django import forms
 from dal import autocomplete
+from django.conf.locale import de
+from django.utils import timezone
 from platformdirs import user_cache_path
 from dev import views
-from dev.models import User
-from .models import Location, Student, Section, StudentAspect, StudentLetter, StudentSection, Aspect, SubSection, ZonalLeader
+from dev.models import Specialization, User
+from .models import AssessmentType, Location, Period, Student, Section, StudentAspect, StudentLetter, StudentSection, Aspect, SubSection, ZonalLeader
+from django.utils.translation import gettext_lazy as _
+from django.db.models import Q
+
+class PeriodForm(forms.ModelForm):
+  class Meta:
+    model = Period
+    fields = ['period', 'is_active']
+
+  def __init__(self, *args, **kwargs):
+    super(PeriodForm, self).__init__(*args, **kwargs)
+    self.fields['period'].widget = forms.DateInput(attrs={'class': 'rounded border-2 w-5/6 grid', 'type': 'date'})
+
+class AssessmentTypeForm(forms.ModelForm):
+  class Meta:
+    model = AssessmentType
+    fields = '__all__'
+
+  def __init__(self, *args, **kwargs):
+    super(AssessmentTypeForm, self).__init__(*args, **kwargs)
+    users = User.objects.filter(Q(role='admin') | Q(role='lecturer'))
+    self.fields['admins'].queryset = users
 
 class NewSection(forms.ModelForm):
   class Meta:
@@ -76,24 +101,67 @@ class UpdateAspect(forms.ModelForm):
 class NewStudentForm(forms.ModelForm):
   class Meta:
     model = Student
-    fields = ['full_name', 'sex', 'index', 'email']
+    fields = ['full_name', 'sex', 'email', 'department', 'specialization', 'index']
   
   def __init__(self, *args, **kwargs):
     super(NewStudentForm, self).__init__(*args, **kwargs)
+    self.fields['index'].required = True
+    self.fields['specialization'].required = True
+    self.fields['specialization'].queryset = Specialization.objects.exclude(code=9101)
     for fieldname, field in self.fields.items():
-      self.fields[fieldname].widget.attrs['class'] = 'rounded border-2 w-5/6 grid p-2'
-    self.fields['full_name'].widget.attrs['class'] = 'rounded border-2 w-5/6 grid p-2'
+      if fieldname not in ['email', 'sex']:
+        self.fields[fieldname].widget.attrs['class'] = 'rounded border-2 w-5/6 grid p-2 uppercase'
+      else:
+        self.fields[fieldname].widget.attrs['class'] = 'rounded border-2 w-5/6 grid p-2'
 
-class StudentForm(forms.ModelForm):
+  def clean_index(self):
+    index = self.cleaned_data.get('index')
+    specialization = self.cleaned_data.get('specialization')
+    cleaned_index = str(index).upper().replace(' ', '')
+    if len(cleaned_index) == 11 and cleaned_index.startswith(('TA', 'CFA')):
+      try:
+        Student.objects.get(index=cleaned_index)
+        raise forms.ValidationError(f'Student with assessment number {cleaned_index} exists')
+      except Student.DoesNotExist:
+        return cleaned_index 
+    else:
+      raise forms.ValidationError('The Assessment number is not valid. Formats Diploma: "TA700000000" CFA: "CFA/0000/00"')
+    
+  def clean_full_name(self):
+    full_name = self.cleaned_data.get('full_name')
+    cleaned_full_name = str(full_name).strip()
+    if len(cleaned_full_name.split(' ')) < 2:
+      raise forms.ValidationError('Full name should have atleast two parts of the name')
+    else:
+      return cleaned_full_name
+
+class DiplomaStudentForm(forms.ModelForm):
   class Meta:
     model = Student
-    fields = ['full_name', 'sex', 'index', 'email']
+    fields = ['full_name', 'sex', 'index', 'email', 'department', 'specialization']
 
   def __init__(self, *args, **kwargs):
-    super(StudentForm, self).__init__(*args, **kwargs)
+    super(DiplomaStudentForm, self).__init__(*args, **kwargs)
     for fieldname, field in self.fields.items():
       self.fields[fieldname].required = True
-      self.fields[fieldname].widget.attrs['class'] = 'rounded border-2 w-5/6 grid'
+      if fieldname not in ['email', 'sex']:
+        self.fields[fieldname].widget.attrs['class'] = 'rounded border-2 w-5/6 grid p-2 uppercase'
+      else:
+        self.fields[fieldname].widget.attrs['class'] = 'rounded border-2 w-5/6 grid'
+
+class CertificateStudentForm(forms.ModelForm):
+  class Meta:
+    model = Student
+    fields = ['full_name', 'sex', 'index', 'email', 'specialization']
+
+  def __init__(self, *args, **kwargs):
+    super(CertificateStudentForm, self).__init__(*args, **kwargs)
+    for fieldname, field in self.fields.items():
+      self.fields[fieldname].required = True
+      if fieldname not in ['email', 'sex']:
+        self.fields[fieldname].widget.attrs['class'] = 'rounded border-2 w-5/6 grid p-2 uppercase'
+      else:
+        self.fields[fieldname].widget.attrs['class'] = 'rounded border-2 w-5/6 grid'
 
 class NewLocationForm(forms.Form):
   longitude = forms.FloatField()
@@ -107,27 +175,69 @@ class NewLocationForm(forms.Form):
       self.fields[fieldname].label = ''
       self.fields[fieldname].widget.attrs['class'] = 'hidden'
 
-class NewStudentLetter(forms.ModelForm):
+class NewDiplomaStudentLetter(forms.ModelForm):
   class Meta:
     model = StudentLetter
-    fields = ['school', 'grade', 'department', 'learning_area', 'zone', 'late_submission', 'reason']
+    fields = ['school', 'grade', 'learning_area', 'zone', 'late_submission', 'reason']
   
   def __init__(self, *args, **kwargs):
-    super(NewStudentLetter, self).__init__(*args, **kwargs)
+    super(NewDiplomaStudentLetter, self).__init__(*args, **kwargs)
     self.fields['late_submission'].widget = forms.Select(choices=[(False, 'No'), (True, 'Yes')])
+    deadline = timezone.datetime.strptime('17:00', '%H:%M').time()
+    start_time = timezone.datetime.strptime('05:00', '%H:%M').time()
+    current_time = timezone.now().astimezone().time()
+    if not (current_time > start_time <= current_time <= deadline):
+      self.fields['late_submission'].widget.choices = [(True, 'Yes')]
+      self.fields['late_submission'].disabled = True
     for fieldname, field in self.fields.items():
       if fieldname != 'late_submission' and fieldname != 'reason':
         self.fields[fieldname].required = True
       self.fields[fieldname].widget.attrs['class'] = 'rounded border-2 w-5/6 grid'
 
-class UpdateStudentLetter(forms.ModelForm):
+class NewCertificateStudentLetter(forms.ModelForm):
   class Meta:
     model = StudentLetter
-    fields = ['assessor', 'total_score', 'department', 'school', 'grade', 'learning_area', 'zone', 'late_submission', 'reason', 'location', 'comments']
+    fields = ['earc', 'zone', 'late_submission', 'reason']
+  
+  def __init__(self, *args, **kwargs):
+    super(NewCertificateStudentLetter, self).__init__(*args, **kwargs)
+    self.fields['late_submission'].widget = forms.Select(choices=[(False, 'No'), (True, 'Yes')])
+    deadline = timezone.datetime.strptime('17:00', '%H:%M').time()
+    start_time = timezone.datetime.strptime('05:00', '%H:%M').time()
+    current_time = timezone.now().astimezone().time()
+    if not (current_time > start_time <= current_time <= deadline):
+      self.fields['late_submission'].widget.choices = [(True, 'Yes')]
+      self.fields['late_submission'].disabled = True
+    for fieldname, field in self.fields.items():
+      if fieldname != 'late_submission' and fieldname != 'reason':
+        self.fields[fieldname].required = True
+      self.fields[fieldname].widget.attrs['class'] = 'rounded border-2 w-5/6 grid'
+
+class UpdateDiplomaStudentLetter(forms.ModelForm):
+  class Meta:
+    model = StudentLetter
+    fields = ['school', 'grade', 'learning_area', 'zone', 'late_submission', 'reason', 'location', 'assessor', 'total_score', 'comments']
   
   def __init__(self, *args, **kwargs):
     user = kwargs.pop('user', None)
-    super(UpdateStudentLetter, self).__init__(*args, **kwargs)
+    super(UpdateDiplomaStudentLetter, self).__init__(*args, **kwargs)
+    # self.fields['late_submission'].widget = forms.Select()
+    self.fields['comments'].widget = forms.Textarea()
+    self.fields['comments'].label = 'General Comments and Suggestions:'
+    self.fields['comments'].required = True
+    for fieldname, field in self.fields.items():
+      if fieldname != 'comments':
+        self.fields[fieldname].disabled = True
+      self.fields[fieldname].widget.attrs['class'] = 'p-2 bg-transparent border rounded w-5/6 grid'
+
+class UpdateCertificateStudentLetter(forms.ModelForm):
+  class Meta:
+    model = StudentLetter
+    fields = ['earc', 'late_submission', 'reason', 'location', 'assessor', 'total_score', 'comments']
+  
+  def __init__(self, *args, **kwargs):
+    user = kwargs.pop('user', None)
+    super(UpdateCertificateStudentLetter, self).__init__(*args, **kwargs)
     # self.fields['late_submission'].widget = forms.Select()
     self.fields['comments'].widget = forms.Textarea()
     self.fields['comments'].label = 'General Comments and Suggestions:'
@@ -175,17 +285,67 @@ class UpdateStudentAspect(forms.ModelForm):
   contribution = forms.IntegerField(disabled=True, required=False)
   class Meta:
     model = StudentAspect
-    fields = ['aspect', 'score']
+    fields = ['contribution', 'score', 'aspect']
 
   def __init__(self, *args, **kwargs):
     section = kwargs.pop('section', None)
     super(UpdateStudentAspect, self).__init__(*args, **kwargs)
     contribution = self.instance.aspect.contribution
+    aspect = self.instance.aspect
     self.fields['contribution'].initial = contribution
     self.fields['aspect'].disabled = True
-    self.fields['aspect'].widget.attrs['class'] = 'p-4 mx-4 bg-transparent w-5/6 grid'
+    self.fields['aspect'].widget.attrs['class'] = 'p-4 mx-4 bg-transparent grid'
     self.fields['score'].widget.attrs['class'] = 'rounded border-2 grid p-2'
-    self.fields['contribution'].widget.attrs['class'] = 'bg-transparent grid p-2'
+    self.fields['contribution'].widget = forms.TextInput(attrs={'class': 'bg-transparent grid', 'title': f'Max score for {aspect.name}'})
+    self.fields['score'].widget.attrs['title'] = f'Score for {aspect.name} ({aspect.contribution})'
+
+class FilterAssessmentsForm(forms.Form):
+  ZONES = [
+    ('', _('')),
+    ('KISE A', _('KISE A')),
+    ('KISE B', _('KISE B')),
+    ('KISE C', _('KISE C')),
+    ('KISE-NAIROBI/KAJIADO EAST', _('KISE-NAIROBI/KAJIADO EAST')),
+    ('KISE-NAIROBI/KAJIADO WEST', _('KISE-NAIROBI/KAJIADO WEST')),
+    ('EREGI', _('EREGI')),
+    ('MIGORI', _('MIGORI')),
+    ('KERICHO A', _('KERICHO A')),
+    ('KERICHO B', _('KERICHO B')),
+    ('SHANZU', _('SHANZU')),
+  ]
+  DEPARTMENTS = [
+    ('', _('')),
+    ('DL', _('Distance Learning')),
+    ('FT', _('Full Time')),
+  ]
+
+  department = forms.ChoiceField(widget=forms.Select(), choices=DEPARTMENTS)
+  specialization = forms.ModelChoiceField(queryset=Specialization.objects.all(), required=False)
+  zone = forms.ChoiceField(widget=forms.Select(), choices=ZONES)
+  from_date = forms.DateField(widget=forms.DateInput(attrs={'type': 'date'}), initial=timezone.now().date())
+  from_time = forms.TimeField(widget=forms.TimeInput(attrs={'type': 'time'}), initial=timezone.now().time())
+  to_date = forms.DateField(widget=forms.DateInput(attrs={'type': 'date'}), initial=timezone.now().date())
+  to_time = forms.TimeField(widget=forms.TimeInput(attrs={'type': 'time'}), initial=timezone.now().time())
+  assessment_type = forms.ModelChoiceField(queryset=AssessmentType.objects.all())
+  assessor = forms.ModelChoiceField(queryset=User.objects.none())
+
+  def __init__(self, *args, **kwargs):
+    user = kwargs.pop('user', None)
+    assessment_types = AssessmentType.objects.all()
+    admins = assessment_types.values_list('admins', flat=True)
+    zonal_leaaders = ZonalLeader.objects.all().values_list('assessor__pk', flat=True)
+    super(FilterAssessmentsForm, self).__init__(*args, **kwargs)
+    if user.is_superuser or user.id in admins:
+      self.fields['assessor'].queryset = User.objects.filter(Q(role='lecturer') & Q(is_active=True))
+    elif user.pk in zonal_leaaders:
+      self.fields['assessor'].queryset = User.objects.filter(Q(role='lecturer') & Q(is_active=True))
+    else:
+      self.fields['assessor'].queryset = User.objects.filter(pk=user.pk)
+    for fieldname, field in self.fields.items():
+      self.fields[fieldname].required = False
+      if fieldname in ['from_time', 'from_date', 'to_date', 'to_time']:
+        self.fields[fieldname].label = ''
+      self.fields[fieldname].widget.attrs['class'] = 'rounded-md border p-2'
 
 class ZonalLeaderForm(forms.ModelForm):
   class Meta:
@@ -199,7 +359,7 @@ class ZonalLeaderForm(forms.ModelForm):
 
   def __init__(self, *args, **kwargs):
     super(ZonalLeaderForm, self).__init__(*args, **kwargs)
-    self.fields['assessor'].queryset = User.objects.filter(role='lecturer')
+    self.fields['assessor'].queryset = User.objects.filter(Q(role='lecturer') & Q(is_active=True))
     self.fields['assessor'].label = 'Zonal Leader'
     for fieldname, field in self.fields.items():
       self.fields[fieldname].widget.attrs['class'] = 'rounded border-2 p-2 m2 grid'
@@ -210,9 +370,31 @@ StudentAspectFormSet = forms.modelformset_factory(
   extra=0
 )
 
+class AspectFilterForm(forms.Form):
+  assessment_type = forms.ModelChoiceField(
+    queryset=AssessmentType.objects.all(),
+    required=False,
+    widget=forms.Select(attrs={'class': 'rounded border-2 w-5/6 grid'})
+  )
+  section = forms.ModelChoiceField(
+    queryset=Section.objects.all(),
+    required=False,
+    widget=forms.Select(attrs={'class': 'rounded border-2 w-5/6 grid'})
+  )
+
+class StudentFilterForm(forms.Form):
+  DEPARTMENTS = [
+    ('', _('')),
+    ('DL', _('Distance Learning')),
+    ('FT', _('Full Time')),
+  ]
+
+  department = forms.ChoiceField(required=False, widget=forms.Select(attrs={'class': 'rounded border-2 p-2 grid'}), choices=DEPARTMENTS)
+  specialization = forms.ModelChoiceField(
+    queryset=Specialization.objects.all(),
+    required=False,
+    widget=forms.Select(attrs={'class': 'rounded border-2 p-2 grid'})
+  )
+
 class SearchForm(forms.Form):
-	search_query = forms.CharField(label='Search', widget=forms.TextInput(attrs={'placeholder': 'Input Search Query'}))
-	
-	def __init__(self, *args, **kwargs):
-		super(SearchForm, self).__init__(*args, **kwargs)
-		self.fields['search_query'].widget.attrs['class'] = 'w-full h-fit p-2'
+	search_query = forms.CharField(label='Search', widget=forms.TextInput(attrs={'placeholder': 'Input Search Query', 'class': 'rounded-md border-2 p-2'}), required=False)

@@ -1,22 +1,27 @@
 from typing import Any
+from django.contrib.auth.views import LoginView
 from django.db.models.query import QuerySet
 from django.http import HttpResponseRedirect
 from django.shortcuts import get_object_or_404, render, redirect
+from django.utils import timezone
 from django.views import View
 from django.views.generic import ListView, CreateView, FormView, UpdateView
 from django.db.models import Q, Avg, F, ExpressionWrapper, FloatField, Value
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.contrib.auth.decorators import login_required
 from django.db.models.functions import Coalesce
+
+from teaching_practice.mailer import send_error, send_otp
 from .mixins import AdminMixin, AdminOrHeadMixin, AdminOrLecturerMixin, HoDMixin
-from .models import Deadline, Hod, ModuleScore, User, Student, Result, Mode, Lecturer, Specialization, Paper, TeamLeader, Module, CatCombination, IndexNumber, SitinCat, Centre
+from .models import Deadline, Hod, ModuleScore, ResetPasswordOtp, User, Student, Result, Mode, Lecturer, Specialization, Paper, TeamLeader, Module, CatCombination, IndexNumber, SitinCat, Centre
 from django.http.response import HttpResponse
-from .forms import CSVUploadForm, CustomPasswordChangeForm, CustomUserCreationForm, CustomUserChangeForm, GenerateResultsForm, NewCatCombination, NewDeadline, NewHoD, NewStudent, NewTeamLeader, UpdateCatCombination, UpdateDeadline, UpdateHoD, UpdateStudent, NewLecturer, UpdateLecturer, NewSpecialization, UpdateSpecialization, NewPaper, UpdatePaper, NewModule, UpdateModule, NewModuleScore, UpdateModuleScore, NewSitinCat, UpdateSitinCat, UpdateTeamLeader, SearchForm
+from .forms import CSVUploadForm, CustomLoginForm, CustomPasswordChangeForm, CustomUserCreationForm, CustomUserChangeForm, GenerateResultsForm, NewCatCombination, NewDeadline, NewHoD, NewStudent, NewTeamLeader, OTPVerificationForm, ResetPasswordForm, UpdateCatCombination, UpdateDeadline, UpdateHoD, UpdateStudent, NewLecturer, UpdateLecturer, NewSpecialization, UpdateSpecialization, NewPaper, UpdatePaper, NewModule, UpdateModule, NewModuleScore, UpdateModuleScore, NewSitinCat, UpdateSitinCat, UpdateTeamLeader, SearchForm
 from itertools import chain
 from dal import autocomplete
 from django.urls import reverse_lazy
 from django.contrib import messages
 import csv
+from django.utils.crypto import get_random_string
 
 # Create your views here.
 @login_required
@@ -119,6 +124,9 @@ class Index(LoginRequiredMixin, ListView):
 		context['center'] = 'KISE'
 		context['deadlines'] = deadlines
 		return context
+	
+class CustomLoginView(LoginView):
+    form_class = CustomLoginForm
 
 class UpdateUserPassword(LoginRequiredMixin, FormView):
 	form_class = CustomPasswordChangeForm
@@ -138,7 +146,7 @@ class UpdateUserPassword(LoginRequiredMixin, FormView):
 	
 class FirstTimePasswordChangeView(UpdateUserPassword):
 	template_name = 'registration/change_password_first.html'
-	success_url = '/'
+	success_url = reverse_lazy('students_tp')
 
 	def form_valid(self, form):
 		response = super().form_valid(form)
@@ -146,6 +154,86 @@ class FirstTimePasswordChangeView(UpdateUserPassword):
 		user.set_password(form.cleaned_data['new_password1'])
 		user.is_first_login = False
 		user.save()
+		return response
+	
+class ResetpaswordRequestView(FormView):
+	form_class = ResetPasswordForm
+	template_name = 'registration/reset_password.html'
+
+	def get_success_url(self):
+		return reverse_lazy('reset_password')
+	
+	def get_context_data(self, **kwargs):
+		context = super().get_context_data(**kwargs)
+		context['title'] = 'Reset Password'
+		context['stage'] = 'request'
+		return context
+	
+	def get_form_kwargs(self):
+		kwargs = super(ResetpaswordRequestView, self).get_form_kwargs()
+		kwargs['username'] = self.request.GET.get('username')
+		return kwargs
+
+	def form_valid(self, form):
+		username = form.cleaned_data['username']
+		user = User.objects.get(username=username)
+
+		user.set_unusable_password()
+		user.save()
+		otp = get_random_string(6)
+		obj, created = ResetPasswordOtp.objects.get_or_create(user=user, defaults={'otp': otp})
+		if not created:
+			expiry = obj.expiry
+
+			if expiry < timezone.now():
+				obj.delete()
+				otp = get_random_string(6)
+				obj = ResetPasswordOtp.objects.create(user=user, otp=otp)
+
+		send_otp(self.request, obj)
+		return redirect(reverse_lazy('reset_password', kwargs={'username': username}))
+
+class ResetPasswordView(FormView):
+	form_class = OTPVerificationForm
+	template_name = 'registration/reset_password.html'
+	success_url = reverse_lazy('login')
+
+	def get_context_data(self, **kwargs):
+		context = super().get_context_data(**kwargs)
+		context['title'] = 'Reset Password'
+		context['stage'] = 'reset'
+		return context
+	
+	def get_form_kwargs(self):
+		kwargs = super(ResetPasswordView, self).get_form_kwargs()
+		kwargs['otp'] = self.request.GET.get('otp')
+		return kwargs
+	
+	def form_valid(self, form):
+		response = super().form_valid(form)
+		username = self.kwargs.get('username')
+		otp = form.cleaned_data['otp']
+		password = form.cleaned_data['new_password']
+		try:
+			otp_obj = ResetPasswordOtp.objects.get(user__username=username)
+			user = otp_obj.user
+			generated_otp = otp_obj.otp
+			otp_expiry = otp_obj.expiry
+			if otp_expiry < timezone.now():
+				otp_obj.delete()
+				messages.error(self.request, 'OTP expired. Request a new one')
+				raise ResetPasswordOtp.DoesNotExist()
+			else:
+				if otp == generated_otp:
+					user.set_password(password)
+					user.save()
+					otp_obj.delete()
+					messages.success(self.request, 'Password Reset Successful')
+				else:
+					messages.error(self.request, 'Invalid OTP')
+					return self.form_invalid(self.get_form_class())
+		except ResetPasswordOtp.DoesNotExist:
+			return redirect(f'{reverse_lazy('request_otp')}?username={username}')
 		return response
 
 class StudentsViewList(LoginRequiredMixin, ListView):
@@ -966,7 +1054,6 @@ class BulkStudentCreation(LoginRequiredMixin, AdminMixin, FormView):
 			return redirect('upload_csv')
 
 		# Process the CSV file
-		print('uploaded')
 		file_data = csv_file.read().decode("utf-8").splitlines()
 		csv_reader = csv.reader(file_data)
 
@@ -1155,3 +1242,7 @@ def custom_403_view(request, exception):
 
 def custom_404_view(request, exception):
 	return render(request, 'errors/404.html', status=404, context={'title': 404})
+
+def custom_500_view(request):
+	send_error(request, getattr(request, 'exception', None))
+	return render(request, 'errors/500.html', status=500, context={'title': 'Server error'})

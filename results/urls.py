@@ -17,16 +17,19 @@ from django.contrib import admin
 from django.urls import path, include
 from django.conf import settings
 from django.conf.urls.static import static
+from dev import views
 
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('', include('dev.urls')),
     path("__reload__/", include("django_browser_reload.urls")),
     path("accounts/", include('django.contrib.auth.urls')),
+    path('login/', views.CustomLoginView.as_view(), name='login'),
     path('teaching_practice/', include('teaching_practice.urls'), name='teaching_practice')
 ]
 handler403 = 'dev.views.custom_403_view'
 handler404 = 'dev.views.custom_404_view'
+handler500 = 'dev.views.custom_500_view'
 
 if settings.DEBUG:
     urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

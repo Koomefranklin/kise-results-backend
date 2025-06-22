@@ -5,7 +5,11 @@
 <html lang="{{ LANGUAGE_CODE|default:'en-us' }}" dir="{{ LANGUAGE_BIDI|yesno:'rtl,ltr,auto' }}">
 <head>
 <title>{% block title %}{% endblock %}</title>
-{% block extrahead %}{% endblock %}
+{% block extrahead %}
+<script>
+  
+</script>
+{% endblock %}
 <meta name="viewport" content="width=device-width, initial-scale=1"/>
 <meta name="author" content="Koome Franklin"/>
 <meta name="color-scheme" content="dark light">
@@ -19,7 +23,7 @@
 <body class='w-screen h-screen dark:bg-slate-900 flex flex-col overflow-hidden'
   data-admin-utc-offset="{% now 'Z' %}">
 
-   <div class='sticky top-0 z-50 w-screen h-fit'>
+   <div class='sticky top-0 z-50 w-screen h-fit text-sm'>
      <!-- Header -->
     {% block header %}
       <header id="header" class='w-full h-fit grid grid-flow-col p-2'>
@@ -42,7 +46,7 @@
             <div id="user-tools" class='grid grid-flow-col justify-end gap-px self-center'>
               {% block welcome-msg %}
                   {% translate 'Welcome,' %}
-                  <strong class='uppercase'>{% firstof user.full_name user.get_username %}, {{ user.role }}</strong>.
+                  {% firstof user.full_name user.get_username %}, {{ user.role }}.
               {% endblock %}
               {% block userlinks %}
                   {% if user.has_usable_password %}
@@ -75,7 +79,7 @@
     {% endblock %}
    </div>
 
-    <div class="flex w-full h-full overflow-y-auto p-3" id="main">
+    <div class="flex w-full h-full overflow-y-auto" id="main">
        
        {% if is_nav_enabled %}
          <div class='flex flex-row'>
@@ -84,7 +88,7 @@
         </div>
        {% endif %}
         
-      <main id="content-start" class="h-full w-full p-4 overflow-auto mb-10" tabindex="-1">
+      <main id="content-start" class="h-full w-full overflow-auto pt-4" tabindex="-1">
         
         
           
@@ -121,40 +125,51 @@
 
 {% if is_nav_enabled %}
   <script>
-  'use strict';
-  {
-    const toggleNavSidebar = document.getElementById('toggle-nav-sidebar');
-    if (toggleNavSidebar !== null) {
+    'use strict';
+    {
+      const toggleNavSidebar = document.getElementById('toggle-nav-sidebar');
+
+      if (toggleNavSidebar !== null) {
         const navSidebar = document.getElementById('nav-sidebar');
         const main = document.getElementById('main');
         const toggleIcon = document.getElementById('toggle_icon');
-        let navSidebarIsOpen = localStorage.getItem('django.admin.navSidebarIsOpen');
+        let navSidebarIsOpen = localStorage.getItem('django.navSidebarIsOpen');
+
         if (navSidebarIsOpen === null) {
-            navSidebarIsOpen = 'true';
+          navSidebarIsOpen = 'true'; 
         }
-        main.classList.toggle('shifted', navSidebarIsOpen === 'true');
+
+        if (navSidebarIsOpen === 'true') {
+          main.classList.add('shifted');
+          navSidebar.style.display = 'block';
+          if (toggleIcon) {
+            toggleIcon.className = 'fa-solid fa-caret-left fa-lg';
+          }
+        } else {
+          main.classList.remove('shifted');
+          navSidebar.style.display = 'none';
+          if (toggleIcon) {
+            toggleIcon.className = 'fa-solid fa-caret-right fa-lg';
+          }
+        }
         navSidebar.setAttribute('aria-expanded', navSidebarIsOpen);
 
         toggleNavSidebar.addEventListener('click', function() {
-            // Toggle the sidebar open/closed
-            if (navSidebarIsOpen === 'true') {
-                navSidebarIsOpen = 'false';
-                navSidebar.style.display = 'none';
-                toggleIcon.className = 'fa-solid fa-caret-right fa-lg';
-            } else {
-                navSidebarIsOpen = 'true';
-                navSidebar.style.display = 'block';
-                toggleIcon.className = 'fa-solid fa-caret-left fa-lg';
-            }
-            localStorage.setItem('django.admin.navSidebarIsOpen', navSidebarIsOpen);
-            main.classList.toggle('shifted');
-            navSidebar.setAttribute('aria-expanded', navSidebarIsOpen);
+          const isOpen = navSidebarIsOpen === 'true';
+          navSidebarIsOpen = isOpen ? 'false' : 'true';
+          navSidebar.style.display = isOpen ? 'none' : 'block';
+          if (toggleIcon) {
+            toggleIcon.className = isOpen
+              ? 'fa-solid fa-caret-right fa-lg'
+              : 'fa-solid fa-caret-left fa-lg';
+          }
+          localStorage.setItem('django.navSidebarIsOpen', navSidebarIsOpen);
+          main.classList.toggle('shifted');
+          navSidebar.setAttribute('aria-expanded', navSidebarIsOpen);
         });
+      }
     }
-
-  }
-
-</script>
+  </script>
 {% endif %}
   
 </body>

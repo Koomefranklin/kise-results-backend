@@ -13,6 +13,30 @@
 			<tr class="py-6 border-b h-10">
 				<th
 					scope="row"
+					id="dashboard"
+					class="flex justify-between">
+					<a
+						href='{% url "index" %}'
+						class="font-bold uppercase">
+						Dashboard
+					</a>
+				</th>
+			</tr>
+			<tr class="py-6 border-b h-10">
+				<th
+					scope="row"
+					id="period"
+					class="flex justify-between">
+					<a
+						href='{% url "new_period" %}'
+						class="font-bold uppercase">
+						Assessment Periods
+					</a>
+				</th>
+			</tr>
+			<tr class="py-6 border-b h-10">
+				<th
+					scope="row"
 					id="sections"
 					class="flex justify-between">
 					<a
@@ -20,7 +44,7 @@
 						class="font-bold uppercase">
 						Sections
 					</a>
-					{% if user.role == 'admin' %}
+					{% if user.is_staff %}
 						<a href='{% url "new_section" %}'><i class="fa-solid fa-plus text-[#4caf50] font-extrabold"></i> Add</a>
 					{% endif %}
 				</th>
@@ -59,7 +83,6 @@
 						class="font-bold uppercase">
 						Students
 					</a>
-					<a href='{% url "new_student_tp" %}'><i class="fa-solid fa-plus text-[#4caf50] font-extrabold"></i> Add</a>
 				</th>
 			</tr>	
 			<tr class="py-6 border-b h-10">
@@ -70,7 +93,7 @@
 					<a
 						href='{% url "student_letters" %}'
 						class="font-bold uppercase">
-						Student Letters
+						Student Assessments
 					</a>
 				</th>
 			</tr>	
@@ -82,7 +105,7 @@
 					<a
 						href='{% url "zones" %}'
 						class="font-bold uppercase">
-						Zones
+						Zone Assessments
 					</a>
 					
 					{% if user.is_staff %}
@@ -90,7 +113,43 @@
 					{% endif %}
 						
 				</th>
-			</tr>	
+			</tr>
+			<tr class='py-6 h-10 border-b'>
+				<th
+					scope='row'
+					id='invalid'
+					class='flex'>
+					<a href='{% url "incomplete_assessments" %}'>Incomplete Assessments</a></th>
+			</tr>
+			<tr class='py-6 h-10 border-b'>
+				<th
+					scope='row'
+					id='deletiion'
+					class='flex'>
+					<a href='{% url "pending_deletion" %}'>Assessments Submitted for Deletion</a></th>
+			</tr>
+			
+			{% if user.is_staff %}
+			<tr class='py-6 h-10 border-b'>
+				<th
+					scope='row'
+					id='assessors'
+					class='flex'>
+					<a href='{% url "assessors" %}'>Assessors</a></th>
+			</tr>
+			{% endif %}
+				
+			
+			{% if user.is_superuser %}
+				<tr class='py-6 h-10'>
+					<th
+						scope='row'
+						id='invalid'
+						class='flex'>
+						<a href='{% url "invalid_assessments" %}'>Invalid Assessments</a></th>
+				</tr>
+			{% endif %}
+				
 				
 		</tbody>
 	</table>

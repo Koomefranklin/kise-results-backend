@@ -4,7 +4,7 @@
 {% get_current_language as LANGUAGE_CODE %}{% get_current_language_bidi as LANGUAGE_BIDI %}
 <html lang="{{ LANGUAGE_CODE|default:'en-us' }}" dir="{{ LANGUAGE_BIDI|yesno:'rtl,ltr,auto' }}">
 <head>
-<title>{% block title %}{% endblock %}</title>
+<title>{% block title %}{{ title }}{% endblock %}</title>
 {% block extrahead %}{% endblock %}
 {% block blockbots %}<meta name="robots" content="NONE,NOARCHIVE">{% endblock %}
 <meta name="color-scheme" content="dark light">
@@ -13,24 +13,75 @@
 <link rel="icon" type="image/x-icon" href="{{ MEDIA_URL }}icons/favicon.ico"/>
 {% tailwind_css %}
 </head>
-<body class='grid w-screen h-screen bg dark:bg-slate-900'>
-  <div class='grid place-self-center w-fit border rounded-lg shadow-2xl p-2 font-bold text-2xl gap-4'>
-    <div class='grid font-bold text-center capitalize justify-center w-full bg-[#ffcb05]'>
+<body class='grid w-screen h-screen bg dark:bg-slate-900 overflow-x-hidden'>
+  <div class='grid place-self-center rounded-lg shadow-2xl font-bold text-xl gap-4'>
+    <div class='grid font-bold text-center capitalize justify-center bg-[#ffcb05] rounded-t-lg text-black' style='width: inherit;'>
       <img src='{{ MEDIA_URL }}icons/kise_logo.png' class='grid place-self-center' width='50' height='50'>
-      <div class='grid  w-full'>
+      <div class='grid'>
         <!-- <h1 class='text-center'>Result Management</h1> -->
       <h2 class='uppercase'>
       {% block head %}
         
       {% endblock head %}
         </h2>
-        </div>
+      </div>
     </div>
+    {% block messages %}
+      {% if messages %}
+        <ul class="grid h-fit border-gray-500 border-2 text-white p-2 rounded-md">
+          {% for message in messages %}
+          <li{% if message.tags %} 
+          {}
+            class="w-full {% if message.tags == 'error' %}text-red-500{% elif message.tags == 'success' %}text-[#4caf50]{% elif message.tags == 'warning' %}text-yellow-500{% elif message.tags == 'info' %}text-black dark:text-white{% else %}text-inherit{% endif %}"
+            {% endif %}>
+            {{ message|safe }}
+          </li>
+        {% endfor %}</ul>
+      {% endif %}
+    {% endblock messages %}
+    {% if form.errors and not form.non_field_errors %}
+      <p class="text-sm text-red-500">
+        {% blocktranslate count counter=form.errors.items|length %}Please correct the error below.{% plural %}Please correct
+        the errors below.{% endblocktranslate %}
+      </p>
+    {% endif %}
+    {% if form.non_field_errors %}
+      {% for error in form.non_field_errors %}
+      <p class="text-sm text-red-500">
+        {{ error }}
+      </p>
+      {% endfor %}
+    {% endif %}
     
     {% block main %}
       
     {% endblock main %}
-    {% block footer %}<footer id="footer" class=' justify-center w-screen p-2 text white h-fit text-center'>Developed by: Koome Franklin</footer>{% endblock %}
+    
+    {% block reveal %}
+      <div class='flex place-self-center gap-2 text-sm'>
+        <input type='checkbox' id='reveal' class='w-fit'>
+        <label for='reveal' class=''>Reveal Password</label>
+      </div>
+    {% endblock reveal %}
+      
+    {% block footer %}<footer id="footer" class='bg-black rounded-b-lg justify-center w-full p-2 text white h-fit text-center'>Developed by: Koome Franklin</footer>{% endblock %}
   </div>
+  <script>
+    const revealPassword = document.getElementById('reveal');
+    const elements = document.getElementsByClassName('password-field');
+    const passwordFields = Array.from(elements);
+    revealPassword.addEventListener('change', function() {
+      if (revealPassword.checked === true) {
+        passwordFields.forEach(field => {
+          field.type = 'text';
+        });
+      }
+      else {
+        passwordFields.forEach(field => {
+          field.type = 'password';
+        });
+      }
+    });
+  </script>
 </body>
 </html>

@@ -1,0 +1,63 @@
+{% extends 'teaching_practice/base_site.html' %} 
+{% block main %}
+<div class="grid w-full h-full place-self-start gap-1">
+	<div class="flex flex-col w-full gap-2">
+		
+    {% if user.is_staff %}
+      <div class='grid place-self-center w-5/6'>
+        <h2 class='text-center font-bold'>{{ title }}</h2>
+      </div>
+      <form method="post" class='flex gap-2 place-content-center'> 
+        {% csrf_token %} 
+          {{ form.as_div }}
+          <button type="submit" class='rounded-md border px-2'>Submit</button>
+      </form>
+    {% endif %}
+      
+		<table class="w-5/6 place-self-center border">
+			<caption class=''>Assessment Periods</caption>
+			<thead class="border-b bg-gray-500 text-white p-2">
+				<tr class="">
+					
+					<th class="px-2">Period</th>
+					<th class="px-2">Is Active</th>
+          <th class='px-2'>Created by</th>
+          <th class='px-2'>Created at</th>
+          <th class='px-2'>Updated by</th>
+          <th class='px-2'>Updated at</th>
+					<th class="">Actions</th>
+				</tr>
+			</thead>
+
+			{% if periods %}
+			<tbody class="capitalize">
+				{% for period in periods %}
+
+				<tr
+					class="{% if 'period.is_active' %} bg-[#4caf50]{% endif %} {% cycle 'bg-gray-200 dark:text-black' 'bg-inherit' %} text-{% cycle 'bg-black' 'inherit' %} hover:bg-[#333] hover:text-white">
+					<td class="px-2">{{ period.period|date:"F Y" }}</td>
+					<td class="px-2">{{ period.is_active }}</td>
+          <td class='px-2'>{{ period.created_by }}</td>
+          <td class='px-2'>{{ period.created_at }}</td>
+          <td class='px-2'>{{ period.updated_by }}</td>
+          <td class='px-2'>{{ period.updated_at }}</td>
+					<td class="flex justify-between">
+						<a href='{% url "edit_period" period.pk %}' title='View'>Edit</a>
+					</td>
+				</tr>
+				{% endfor %}
+			</tbody>
+			
+			{% else %}
+			<tr class="">
+				<td
+					colspan="11"
+					class="text-center">
+					No Periods Found
+				</td>
+			</tr>
+			{% endif %}
+		</table>
+	</div>
+</div>
+{% endblock main %}

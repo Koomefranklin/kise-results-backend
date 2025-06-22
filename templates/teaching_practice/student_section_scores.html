@@ -41,18 +41,22 @@
 						Back to Scores
 					</button>
 				</a>
-				<button
-					type="submit"
-					name="save_continue"
-					class="border w-fit grid rounded p-2 place-self-center shadow-lg bg-[#4caf50] font-bold">
-					Save and Continue
-				</button>
-				<button 
-					type="submit" 
-					name="save_back" 
-					class="border w-fit grid rounded p-2 place-self-center shadow-lg bg-[#4caf50] font-bold">
-					Save and Back to Sections
-				</button>
+				
+				{% if can_edit %}
+					<button
+						type="submit"
+						name="save_continue"
+						class="border w-fit grid rounded p-2 place-self-center shadow-lg bg-[#4caf50] font-bold">
+						Save and Continue
+					</button>
+					<button 
+						type="submit" 
+						name="save_back" 
+						class="border w-fit grid rounded p-2 place-self-center shadow-lg bg-[#4caf50] font-bold">
+						Save and Back to Sections
+					</button>
+				{% endif %}
+					
 			</div>
 		</form>
 		<script type="text/javascript" src="{% static 'admin/js/vendor/jquery/jquery.js' %}"></script>

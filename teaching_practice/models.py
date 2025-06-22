@@ -1,5 +1,6 @@
+from pyexpat import model
 from django.db import models
-from dev.models import User
+from dev.models import Course, Specialization, User
 import uuid
 from django.contrib.gis.db import models as gis_models
 from django.contrib.gis.geos import Point
@@ -8,6 +9,10 @@ from geopy.exc import GeopyError
 from django.utils.translation import gettext_lazy as _
 
 # Create your models here.
+
+class Zone(models.Model):
+  id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+  name = models.CharField(max_length=200, unique=True)
 
 class ZonalLeader(models.Model):
   class ZONES(models.TextChoices):
@@ -30,17 +35,49 @@ class ZonalLeader(models.Model):
 
   def __str__(self):
     return self.zone_name
+  
+class Period(models.Model):
+  id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+  period = models.DateField()
+  is_active = models.BooleanField(default=False)
+  created_by = models.ForeignKey(User, on_delete=models.PROTECT, related_name='creator')
+  created_at = models.DateTimeField(auto_now_add=True)
+  updated_by = models.ForeignKey(User, on_delete=models.PROTECT, related_name='updator', null=True, blank=True)
+  updated_at = models.DateTimeField(auto_now=True)
+
+  def __str__(self):
+    return f'{self.period} {self.is_active}'
+  
+  def save(self, *args, **kwargs):
+    periods = Period.objects.exclude(pk=self.id)
+    if self.is_active:
+      for period in periods:
+        period.is_active = False
+        period.save()
+    super().save(*args, **kwargs)
+  
+  class Meta:
+    ordering = ['-is_active', 'period']
+
+class AssessmentType(models.Model):
+  id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+  course = models.ForeignKey(Course, on_delete=models.CASCADE, related_name='course_assessment_types')
+  short_name = models.CharField(max_length=50, unique=True)
+  name = models.CharField(max_length=200)
+  admins = models.ManyToManyField(User, related_name='assessmenttype_admins')
+
+  def __str__(self):
+    return f'{self.name} - {self.course.code}'
+  
+  class Meta:
+    order_with_respect_to = 'course'
 
 class Section(models.Model):
-  class AssessmentType(models.TextChoices):
-    GENERAL = 'General', _('General')
-    PHE = 'PHE', _('Physical Health Education')
-
   id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
   number = models.IntegerField()
   name = models.CharField(max_length=200)
   contribution = models.IntegerField()
-  assessment_type = models.CharField(max_length=50, choices=AssessmentType.choices)
+  assessment_type = models.ForeignKey(AssessmentType, on_delete=models.CASCADE, related_name='assessment_type_section')
   created_by = models.ForeignKey(User, on_delete=models.CASCADE, related_name='section_created_by')
   updated_by = models.ForeignKey(User, on_delete=models.CASCADE, related_name='section_updated_by', null=True, blank=True)
   created_at = models.DateTimeField(auto_now_add=True)
@@ -88,18 +125,34 @@ class Student(models.Model):
   class Sex(models.TextChoices):
     MALE = 'M', _('Male')
     FEMALE = 'F', _('Female')
+  
+  class DEPARTMENTS(models.TextChoices):
+    DL = 'DL', _('Distance Learning')
+    FT = 'FT', _('Full Time')
 
   id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
   full_name = models.CharField(max_length=200)
   sex = models.CharField(max_length=2, choices=Sex.choices)
   index = models.CharField(blank=True, null=True, max_length=50, verbose_name='Assessment Number')
   email = models.EmailField(max_length=200, null=True, blank=True)
-  period = models.DateField(null=True, blank=True)
+  department = models.CharField(max_length=50, null=True, blank=True, choices=DEPARTMENTS.choices)
+  specialization = models.ForeignKey(Specialization, on_delete=models.RESTRICT, null=True, blank=True)
+  period = models.ForeignKey(Period, on_delete=models.RESTRICT, null=True, blank=True)
+  created_by = models.ForeignKey(User, related_name='created_by', null=True, blank=True, on_delete=models.RESTRICT)
   created_at = models.DateTimeField(auto_now_add=True)
   updated_at = models.DateTimeField(auto_now=True)
 
   def __str__(self):
     return self.full_name
+  
+  class Meta:
+    ordering = ['index', 'full_name']
+  
+  def save(self, *args, **kwargs):
+    self.index = self.index.upper().replace(' ', '') if self.index else None
+    self.full_name = self.full_name.upper().strip()
+    self.email = self.email.lower() if self.email else None
+    super().save(*args, **kwargs)
 
 class Location(gis_models.Model):
   name = models.CharField(max_length=255, blank=True)
@@ -125,7 +178,6 @@ class Location(gis_models.Model):
   def save(self, *args, **kwargs):
     if not self.name and self.point:
       self.address = f'{self.point.y}, {self.point.x}'
-      print(self.address)
       try:
         geolocator = Nominatim(user_agent="geoapi")
         location = geolocator.reverse((self.point.y, self.point.x), language='en')  # (latitude, longitude)
@@ -149,18 +201,22 @@ class StudentLetter(models.Model):
     SHANZU = 'SHANZU', _('SHANZU')
 
   id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
-  student = models.ForeignKey(Student, on_delete=models.CASCADE)
-  department = models.CharField(max_length=50, null=True, blank=True)
+  student = models.ForeignKey(Student, on_delete=models.CASCADE, related_name='letters')
   school = models.CharField(max_length=200, null=True, blank=True)
   grade = models.CharField(null=True, blank=True, verbose_name='Grade/Level', max_length=50)
   learning_area = models.CharField(max_length=200, null=True, blank=True)
   assessor = models.ForeignKey(User, on_delete=models.CASCADE, related_name='assessor')
   total_score = models.IntegerField(default=0)
+  assessment_type = models.ForeignKey(AssessmentType, on_delete=models.RESTRICT, related_name='assessment_type_student_letter', null=True, blank=True)
+  earc = models.CharField(max_length=50, null=True, blank=True)
   comments = models.CharField(max_length=255, blank=True, null=True, verbose_name='General Comments and Suggestions:')
   zone = models.CharField(max_length=200, null=True, blank=True, choices=ZONES.choices)
   location = models.ForeignKey(Location, on_delete=models.CASCADE)
+  is_editable = models.BooleanField(default=True)
   late_submission = models.BooleanField(default=False)
   reason = models.CharField(max_length=255, blank=True, null=True, verbose_name='Reason for late submission')
+  to_delete = models.BooleanField(default=False, verbose_name='Request for deletion')
+  request_time = models.DateTimeField(null=True, blank=True, verbose_name='Request Deletion Time')
   created_at = models.DateTimeField(auto_now_add=True)
   updated_at = models.DateTimeField(auto_now=True)
 

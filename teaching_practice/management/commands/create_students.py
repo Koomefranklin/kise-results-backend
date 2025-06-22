@@ -19,13 +19,13 @@ class Command(BaseCommand):
 				for row in reader:
 					name = row['name']
 					# email = row['email']
-					index = row['index']
+					# index = row['index']
 					sex = row['sex']
 
 					student, created = Student.objects.get_or_create(
 						full_name=name,
             # email=email,
-						index=index,
+						# index=index,
 						sex=sex
 					)
 

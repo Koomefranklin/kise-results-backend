@@ -1,6 +1,7 @@
 from django.db import models
 from django.contrib.auth.models import AbstractUser
 import uuid
+from django.utils import timezone
 from django.utils.translation import gettext_lazy as _
 from django.core.validators import MinValueValidator, MaxValueValidator
 
@@ -22,7 +23,7 @@ class User(AbstractUser):
   last_name = None
   sex = models.CharField(max_length=2, choices=Sex.choices, null=True, blank=True)
   role = models.CharField(choices=Role.choices, max_length=10, default=Role.STUDENT)
-  is_first_login = models.BooleanField(default=True)
+  is_first_login = models.BooleanField(default=True, verbose_name='Requires password change')
 
   REQUIRED_FIELDS = ['full_name', 'sex', 'role']
 
@@ -35,6 +36,20 @@ class User(AbstractUser):
 
   def __str__(self):
     return f'{self.full_name}'
+  
+class ResetPasswordOtp(models.Model):
+  id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+  user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='user_otp')
+  otp = models.CharField(max_length=6)
+  created_at = models.DateTimeField(auto_now_add=True)
+  expiry = models.DateTimeField()
+
+  def save(self, *args, **kwargs):
+    self.expiry = timezone.now() + timezone.timedelta(minutes=15)
+    return super().save(*args, **kwargs)
+
+  def __str__(self):
+    return f'{self.user}'
   
 class Mode(models.Model):
   class MODE(models.TextChoices):
@@ -78,13 +93,14 @@ class Specialization(models.Model):
   id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
   course = models.ForeignKey(Course, on_delete=models.CASCADE, related_name='course_specialization')
   code = models.IntegerField()
+  short_name = models.CharField(max_length=10, unique=True, null=True, blank=True)
   name = models.CharField(max_length=50)
   mode = models.ForeignKey(Mode, on_delete=models.CASCADE, related_name='specialization_mode')
   created_at = models.DateTimeField(auto_now_add=True)
   updated_at = models.DateTimeField(auto_now=True)
 
   def __str__(self):
-    return f'{self.code} {self.name}'
+    return f'{self.code} {self.short_name}'
   
   def save(self, *args, **kwargs):
     self.name = self.name.upper()

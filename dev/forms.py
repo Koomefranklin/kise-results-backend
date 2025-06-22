@@ -5,7 +5,7 @@ from django import forms
 from .models import CatCombination, Deadline, Hod, Specialization, Module, Paper, User, Lecturer, Student, TeamLeader, Result, IndexNumber, ModuleScore, SitinCat
 from dal import autocomplete
 from django.db.models import Q
-from django.contrib.auth.forms import UserCreationForm, UserChangeForm, SetPasswordForm, PasswordChangeForm, AdminPasswordChangeForm
+from django.contrib.auth.forms import AuthenticationForm, UserCreationForm, UserChangeForm, SetPasswordForm, PasswordChangeForm, AdminPasswordChangeForm
 from django.utils import timezone
 
 class StudentAdminForm(forms.ModelForm):
@@ -72,7 +72,6 @@ class CustomUserCreationForm(UserCreationForm):
 		for fieldname, field in self.fields.items():
 			self.fields[fieldname].widget.attrs['class'] = 'rounded border-2 w-5/6 grid'
 		for fieldname in ['password1', 'password2']:
-			self.fields[fieldname].widget.attrs['value'] = 'Kisedefault1'
 			self.fields[fieldname].widget.attrs['class'] = 'hidden'
 			self.fields[fieldname].label = ''
 			self.fields[fieldname].help_text = None
@@ -88,6 +87,14 @@ class CustomUserCreationForm(UserCreationForm):
 		if commit:
 			instance.save()
 		return instance
+	
+class CustomLoginForm(AuthenticationForm):
+	username = forms.CharField(
+		widget=forms.TextInput(attrs={'class': 'form-control rounded border bg-inherit grid', 'placeholder': 'Username', 'autofocus': True})
+	)
+	password = forms.CharField(
+		widget=forms.PasswordInput(attrs={'class': 'form-control rounded border bg-inherit grid password-field', 'placeholder': 'Password'})
+	)
 
 class CustomUserChangeForm(UserChangeForm):
   password = None
@@ -101,7 +108,7 @@ class CustomUserChangeForm(UserChangeForm):
 
     # Adding extra class in the html tags
     for fieldname, field in self.fields.items():
-      self.fields[fieldname].widget.attrs['class'] = 'rounded border-2 w-5/6 grid'
+      self.fields[fieldname].widget.attrs['class'] = 'rounded border grid'
 
 class CustomPasswordChangeForm(PasswordChangeForm):
 
@@ -110,8 +117,47 @@ class CustomPasswordChangeForm(PasswordChangeForm):
 
     # Adding extra class in the html tags
     for fieldname, field in self.fields.items():
-      self.fields[fieldname].widget.attrs['class'] = 'rounded border-2 w-5/6 grid'
+      self.fields[fieldname].widget.attrs['class'] = 'rounded border-2 w-5/6 grid password-field'
 
+class ResetPasswordForm(forms.Form):
+	username = forms.CharField(label='Username', widget=forms.TextInput(attrs={'placeholder':'Enter your username', 'class':'border bg-inherit rounded-md grid p-2 lowercase'}))
+
+	def clean_username(self):
+		username = self.cleaned_data.get('username')
+		try:
+			email = User.objects.get(username=username).email
+			if not email:
+				raise forms.ValidationError('Your Email is not registered. Contact ICT')
+		except User.DoesNotExist:
+			raise forms.ValidationError('Username Does not exist')
+		return username
+	
+	
+	def __init__(self, *args, **kwargs):
+		username = kwargs.pop('username', None)
+		super(ResetPasswordForm, self).__init__(*args, **kwargs)
+		self.fields['username'].initial = username
+
+class OTPVerificationForm(forms.Form):
+	otp = forms.CharField(label='OTP', widget=forms.TextInput(attrs={'placeholder':'Enter OTP from Email', 'class':'border bg-inherit rounded-md grid p-2'}))
+	new_password = forms.CharField(label='New password', widget=forms.PasswordInput)
+	new_password2 = forms.CharField(label='Confirm new password', widget=forms.PasswordInput)
+
+	def clean(self):
+		cleaned_data = super().clean()
+		password1 = cleaned_data.get('new_password')
+		password2 = cleaned_data.get('new_password2')
+		if password1 != password2:
+			raise forms.ValidationError('Password Do not Match')
+		return cleaned_data
+	
+	def __init__(self, *args, **kwargs):
+		otp = kwargs.pop('otp', None)
+		super(OTPVerificationForm, self).__init__(*args, **kwargs)
+		for fieldname in ['new_password', 'new_password2']:
+			self.fields['otp'].initial = otp
+			self.fields[fieldname].widget.attrs['class'] = 'rounded border-2 bg-inherit p-2 grid password-field'
+	
 class NewStudent(forms.ModelForm):
 	class Meta:
 		model = Student

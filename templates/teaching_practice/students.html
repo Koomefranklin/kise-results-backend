@@ -1,13 +1,31 @@
 {% extends 'teaching_practice/base_site.html' %} 
+
 {% block main %}
 <div class="grid w-full h-full place-self-start gap-1">
 	<div class="flex flex-col w-full gap-2">
-		<form method="GET" action="{% url 'students_tp' %}" class='w-5/6 place-self-center'>  
-			<div class='flex '>
-				{{ search_query.search_query }}
-				<button type="submit" class='rounded-md border p-2 bg-gray-300'>Search</button>
+		<form method="GET" action="{% url 'students_tp' %}" class='grid gap-2 place-self-center'>  
+			<div class='flex gap-2'>
+				<div class='grid'>
+					<p class=''>Assessment Number or Name</p>
+					{{ search_query.search_query }} 
+				</div>
+				{{ filter_form }}
 			</div>
+			<button type="submit" class='rounded-md border px-2'>Filter</button>
 		</form>
+		
+		{% if user.is_superuser %}
+			<div class='fixed bottom-10 right-10 grid gap-2'>
+				<a href='{% url "students_tp" %}?filter_query=index'>Duplicates by index</a>
+				<a href='{% url "students_tp" %}?filter_query=full_name'>Duplicates by name</a>
+			</div>
+		{% endif %}
+			
+		
+		{% if searched %}
+			<div class='grid border p-2 w-fit place-self-end'><a href='{% url "new_student_tp" %}'><i class="fa-solid fa-plus text-[#4caf50] font-extrabold"></i> Add Student</a></div>
+		{% endif %}
+			
 		<table class="w-5/6 place-self-center border">
 			<caption class=''>Students</caption>
 			<thead class=" bg-gray-500 text-white p-2">
@@ -15,6 +33,9 @@
 					<th class=" px-2">Full Name</th>
 					<th class=''>Sex</th>
 					<th class=''>Assessment Number</th>
+					<th class=''>Period</th>
+					<th class=''>Department</th>
+					<th class=''>Specialization</th>
 					<th class="">Actions</th>
 				</tr>
 			</thead>
@@ -29,7 +50,7 @@
 				<tr
 					class="{% cycle 'bg-gray-200 dark:text-black' 'bg-inherit' %} text-{% cycle 'bg-black' 'inherit' %} hover:bg-[#333] hover:text-white">
 					<td class=" px-2">
-						<a href='{% url "students_tp"  %}'>{{ student.full_name }}</a>
+						<a href='{% url "previous_assessments" student.pk %}'>{{ student.full_name }}</a>
 					</td>
 					<td class=''>
 						{{ student.sex }}
@@ -37,10 +58,21 @@
 					<td class=''>
 						{{ student.index }}
 					</td>
+					<td class=''>{{ student.period.period|date:"F Y" }}</td>
+					<td class=''>{{ student.department }}</td>
+					<td class=''>{{ student.specialization }}</td>
 					<td class="flex justify-around">
-						<button type='button' class='text-[#4caf50] font-bold' onclick="sendLocation('{{ student.pk }}', 'General')">New General Assessment</button>
-						<button type='button' class='text-[#4caf50] font-bold' onclick="sendLocation('{{ student.pk }}', 'PHE')">New PHE Assessment</button>
+						<button type='button' class='text-[#4caf50] font-bold' onclick='getAssType("{{ student.pk }}", "{{ student.full_name }}")' title='New Assessment for {{ student.full_name }}'>New Assessment</button>
 						<button type='button' class='text-[#4caf50] font-bold'><a href='{% url "previous_assessments" student.pk %}' class='text-[#4caf50] font-bold'>Previous Assessments</a></button>
+						
+						{% if user.is_superuser %}
+							<a href='{% url "edit_student_tp" student.pk %}'>Edit</a>
+							<form action='{% url "delete_student" student.pk %}' method='get'>
+								{% csrf_token %}
+								<button type='submit'>Delete</button>
+							</form>
+						{% endif %}
+							
 					</td>
 				</tr>
 				{% endfor %}
@@ -51,31 +83,49 @@
 						<p class='w-full grid grid-flow-col'>
 							<span class='text-left'>Showing {{ page_obj.object_list|length }} of {{ page_obj.paginator.count }} Students</span>
 							<span class='text-right'>
-								{% if page_obj.has_previous %}
-								<a
-									class="px-2"
-									href="?page={{ page_obj.previous_page_number }}">
-									Previous
-								</a>
-								{% endif %}
-								PAGE: {{ page_obj.number }} of
-								<a
-									class="px-2"
-									href="?page={{ page_obj.paginator.num_pages }}">
-									{{ page_obj.paginator.num_pages }}
-								</a>
-								{% if page_obj.has_next %}
-								<a
-									class="px-2 bg-[#4caf50] rounded"
-									href="?page={{ page_obj.next_page_number }}">
-									Next
-								</a>
-								{% endif %}
+								{% with request.GET.urlencode as query_params %}
+									{% if query_params %}
+										{% if page_obj.has_previous %}
+											<a
+												class="px-2"
+												href="?{{ query_params }}&page={{ page_obj.previous_page_number }}">
+												Previous
+											</a>
+										{% endif %}
+										PAGE: {{ page_obj.number }} of
+										<a
+											class="px-2"
+											href="?{{ query_params }}&page={{ page_obj.paginator.num_pages }}">
+											{{ page_obj.paginator.num_pages }}
+										</a>
+												{% if page_obj.has_next %}
+														<a href="?{{ query_params }}&page={{ page_obj.next_page_number }}">Next</a>
+												{% endif %}
+										{% else %}
+											{% if page_obj.has_previous %}
+												<a
+													class="px-2"
+													href="?{{ query_params }}&page={{ page_obj.previous_page_number }}">
+													Previous
+												</a>
+											{% endif %}
+												PAGE: {{ page_obj.number }} of
+												<a
+													class="px-2"
+													href="?page={{ page_obj.paginator.num_pages }}">
+													{{ page_obj.paginator.num_pages }}
+												</a>
+											{% if page_obj.has_next %}
+												<a href="?page={{ page_obj.next_page_number }}">Next</a>
+											{% endif %}
+										{% endif %}
+									{% endwith %}
 							</span>
 						</p>
 					</td>
 				</tr>
 			</tfoot>
+			{{ types|json_script:"types" }}
 			{% else %}
 			<tr class="">
 				<td
@@ -89,51 +139,142 @@
 	</div>
 </div>
 <script>
-	function sendLocation(student_id, assessment_type) {
+	function getAssType(student_id, name) {
+		const student_name = JSON.stringify(name);
+		const main = document.getElementById('content-start')
 		const loader = document.createElement('div');
+		const heading = document.createElement('h1');
+		const form = document.createElement('form');
+
+		form.id = 'form';
+		form.style.display = 'flex'
+		form.style.flexDirection = 'column';
+		form.style.width = 'max-content';
+		form.style.justifyContent = 'left';
+		form.style.alignItems = 'left';
+		form.style.gap = '10px';
+
+		const helper = document.createElement('p')
+		heading.textContent = `New Assessment for ${student_name}`;
+		helper.textContent = 'Please select the Assessment type'
+		loader.appendChild(heading);
+		loader.appendChild(helper);
+
+		const options = JSON.parse(document.getElementById('types').textContent);
+		
 		loader.id = 'loader';
 		loader.style.position = 'fixed';
 		loader.style.top = '0';
 		loader.style.left = '0';
-		loader.style.width = '100vw';
-		loader.style.height = '100vh';
-		loader.style.backgroundColor = 'rgba(0, 0, 0, 0.5)';
+		loader.style.width = '100%';
+		loader.style.height = '100%';
+		loader.style.backgroundColor = 'rgba(0, 0, 0, 0.95)';
+		loader.style.color = 'white';
 		loader.style.zIndex = '1000';
 		loader.style.display = 'flex';
+		loader.style.flexDirection = 'column';
+		loader.style.fontSize = '1.5rem';
 		loader.style.justifyContent = 'center';
 		loader.style.alignItems = 'center';
+		loader.style.gap = '20px';
+		loader.tabIndex = '-1';
+
+		const exitButton = document.createElement('button');
+		exitButton.textContent = 'X';
+		exitButton.title = 'Exit';
+		exitButton.style.position = 'absolute';
+		exitButton.style.top = '20px';
+		exitButton.style.right = '20px';
+		exitButton.style.padding = '10px 20px';
+		exitButton.style.backgroundColor = '#f44336';
+		exitButton.style.color = 'white';
+		exitButton.style.border = 'none';
+		exitButton.style.borderRadius = '5px';
+		exitButton.style.cursor = 'pointer';
+		exitButton.onclick = () => {
+			main.removeChild(loader);
+		};
+		loader.appendChild(exitButton);
+		
+		options.forEach((opt, index) => {
+			const container = document.createElement('div');
+			// container.style.fontSize = '1.5rem';
+			container.style.fontWeight = 'bold'
+			container.style.gap = '10px';
+			container.style.textAlign = 'left';
+			container.style.display = 'flex';
+			const radio = document.createElement("input");
+			radio.type = "radio";
+			radio.name = "ass-type";
+			radio.id = opt['short_name'];
+			radio.value = opt['id'];
+			radio.title = opt['name'];
+			radio.onclick = () => {
+				const confirmation = confirm(`Start a new ${opt['name']} Assessment for ${student_name}?`)
+				if(confirmation) {
+					sendLocation(student_id, opt['id'])
+				}
+			};
+
+			const label = document.createElement("label");
+			label.htmlFor = opt['short_name'];
+			label.textContent = `${opt['name']} (${opt['course__code']})`;
+
+			container.appendChild(radio);
+			container.appendChild(label);
+			form.appendChild(container)
+			loader.appendChild(form);
+			main.appendChild(loader);
+			loader.focus();
+		});
+	}
+
+	function sendLocation(student_id, assessment_type) {
+		const loader = document.getElementById('loader')
+		loader.innerHTML = '';
 
 		const messageBox = document.createElement('div');
 		messageBox.textContent = 'Getting Your Location...';
 		messageBox.style.padding = '20px';
-		// messageBox.style.backgroundColor = '#fff';
 		messageBox.style.borderRadius = '8px';
 		messageBox.style.boxShadow = '0 0 10px rgba(0,0,0,0.25)';
+
       if (navigator.geolocation) {
 
 				loader.appendChild(messageBox);
-				document.body.appendChild(loader);
+				const main = document.getElementById('content-start')
         navigator.geolocation.getCurrentPosition(
           (position) => {
             // Get latitude and longitude
             const latitude = position.coords.latitude;
             const longitude = position.coords.longitude;
 
-						form = document.getElementById('form');
-						form.action = `/teaching_practice/student-letter/new/${student_id}/${longitude}/${latitude}/${assessment_type}/`;
-						form.submit();
-
-						document.body.removeChild(loader);
+						SubmitForm(latitude, longitude)
           },
           (error) => {
-						document.body.removeChild(loader);
-						alert('Unable to access your location. Please enable location permissions on your browser and try again.');
+						alert('Unable to access your location. Please enable location permissions on your browser and try again.')
+						const confirm_default = confirm('Proceed without location? \nNB: Use this if issue persist only.');
+						if (confirm_default) {
+							const latitude = -1.2276396;
+							const longitude = 36.89358;
+							
+							SubmitForm(latitude, longitude)
+						} else {
+							main.removeChild(loader)
+						}
           }
         );
       } else {
-				document.body.removeChild(loader);
+				main.removeChild(loader);
         alert('Geolocation is not supported by your browser.');
       }
+			function SubmitForm(latitude, longitude) {
+				form = document.getElementById('form');
+				form.action = `/teaching_practice/assessment/new/${student_id}/${longitude}/${latitude}/${assessment_type}/`;
+				form.submit();
+
+				main.removeChild(loader);
+			}
     };
   </script>
 {% endblock main %}

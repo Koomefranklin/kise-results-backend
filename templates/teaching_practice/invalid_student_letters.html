@@ -3,19 +3,57 @@
 {% block main %}
 <div class="grid w-full h-full place-self-start gap-1">
 	<div class="flex flex-col w-full gap-2">
-		<form class='' action='{% url "assessments-export" %}' method='get'>
-			<button class=''>Extract Report</button>
-		</form>
-		{% include 'teaching_practice/filter_assessments.html' with filter_url='student_letters' %}
+		{% include 'teaching_practice/filter_assessments.html' with filter_url='incomplete_assessments' %}
+		<div class='grid gap-2 place-self-center shadow-2xl p-2 '>
+			<button class='text-left'><a href='{% url "incomplete_assessments" %}'>Clear filters</a></button>
+		</div>
+		
+		{% if user.is_superuser %}
+			<table class='w-5/6 place-self-center border'>
+				<thead class='border-b bg-gray-500 text-white p-2'>
+					<tr>
+						<th>Number</th>
+						<th>Name</th>
+						<th>Specialization</th>
+						<th>Action</th>
+					</tr>
+				</thead>
+				<tbody>
+					
+					{% if invalid %}
+						
+						{% for item in invalid %}
+							<tr class="{% cycle 'bg-gray-200 dark:text-black' 'bg-inherit' %} text-{% cycle 'bg-black' 'inherit' %} hover:bg-[#333] hover:text-white">
+								<td>{{ item.index }}</td>
+								<td>{{ item.full_name }}</td>
+								<td>{{ item.specialization }}</td>
+								<td class='flex p-2 gap-2'>
+									<a href='{% url "students_tp" %}?search_query={{ item.index }}'>Related</a>
+									<a href='{% url "edit_student_tp" item.pk %}'>Edit</a>
+									<form action='{% url "delete_student" item.pk %}' method='get'>
+										{% csrf_token %}
+										<button type='submit'>Delete</button>
+									</form>
+								</td>
+							</tr>
+						{% endfor %}
+							
+					{% endif %}
+						
+				</tbody>
+			</table>
+		{% endif %}
+			
 		<table class="w-5/6 place-self-center border">
-			<caption class=''>Student Assessments</caption>
+			<caption class=''>{{ tittle }}</caption>
 			<thead class="border-b bg-gray-500 text-white p-2">
 				<tr class="">
 					
 					<th class="px-2">Full Name</th>
 					<th class="px-2">Assessment Number</th>
-					<th class="px-2">School/ EARC</th>
-					<th class="px-2">Zone</th>
+					<th class="px-2">School</th>
+					<th class="px-2">Grade/Level</th>
+					<th class='px-2'>Learning Area</th>
 					<th class="px-2">Department</th>
 					<th class="px-2">Date</th>
 					<th class='px-2'>Time</th>
@@ -36,25 +74,41 @@
 						<a href='{% url "edit_student_letter" letter.pk %}' class='w-full'>{{ letter.student.full_name }}</a>
 					</td>
 					<td class="px-2">{{ letter.student.index }}</td>
-					<td class="px-2">{% firstof letter.school letter.earc %}</td>
-					<td class="px-2">{{ letter.zone }}</td>
-					<td class="px-2">{{ letter.department }}</td>
+					<td class="px-2">{{ letter.school }}</td>
+					<td class="px-2">{{ letter.grade }}</td>
+					<td class="px-2">{{ letter.learning_area }}</td>
+					<td class="px-2">{{ letter.student.department }}</td>
 					<td class="px-2">{{ letter.created_at.date }}</td>
 					<td class="px-2">{{ letter.created_at|localtime|time }}</td>
 					<td class="px-2">{{ letter.assessor }}</td>
 					<td class="px-2">{{ letter.assessment_type.name }}</td>
 					<td class='px-2'>{{ letter.total_score }}</td>
-					<td class="flex justify-between">
+					<td class="flex justify-between gap-2">
 						<a href='{% url "edit_student_letter" letter.id %}' title='View'>View</a>
-							
-						{% if letter.assessor == user %}
-							<a href='{% url "edit_student_letter" letter.id %}' title='Edit'>Edit</a>
+						
+						{% if user.is_superuser %}
+							<form action='{% url "delete_letter" letter.id %}' method='post' id='delete_letter_form'>
+								{% csrf_token %}
+								<button type='submit'>Delete</button>
+							</form>
+						{% else %}
+						
+						{% if letter.to_delete %}
+							<form action='{% url "cancel_deletion" letter.pk request.build_absolute_uri %}' title='Cancel Deletion' method='post' id='cancel_deletion_form'>
+								{% if not user.is_staff %}
+									<input type='hidden' name='letter_id' value='{{ letter.pk }}'>
+								{% endif %}
+								{% csrf_token %}
+								<button type='submit' class='font-bold'>Cancel Deletion</button>
+							{% else %}
 							<form action='{% url "request_deletion" letter.pk request.build_absolute_uri %}' title='Request Deletion' method='post' id='request_deletion_form'>
 								{% csrf_token %}
-								<button type='submit'  class='font-bold'>Request Deletion</button>
+								<button type='submit' class='font-bold'>Request Deletion</button>
 							</form>
+							{% endif %}
 						{% endif %}
 							
+						
 					</td>
 				</tr>
 				{% endfor %}
@@ -107,22 +161,6 @@
 					</td>
 				</tr>
 			</tfoot>
-			<script>
-				function confirmDeletionRequest() {
-					const confirmed = confirm('Are you sure you want to request deletion of this letter? The request will be sent to the administrator for approval.');
-				
-					if (!confirmed) {
-						event.preventDefault(); 
-					}
-				}
-				document.getElementById('request_deletion_form').addEventListener('submit', function(event) {
-					const confirmed = confirm('Are you sure you want to request deletion of this letter? The request will be sent to the administrator for approval.');
-				
-					if (!confirmed) {
-						event.preventDefault(); 
-					}
-				});
-			</script>
 			{% else %}
 			<tr class="">
 				<td
@@ -140,4 +178,27 @@
 			
 	</div>
 </div>
+<script>
+	document.getElementById('delete_letter_form').addEventListener('submit', function(event) {
+		const confirmed = confirm('Are you sure you want to delete this letter? This action cannot be undone.');
+	
+		if (!confirmed) {
+			event.preventDefault(); 
+		}
+	});
+	document.getElementById('cancel_deletion_form').addEventListener('submit', function(event) {
+		const confirmed = confirm('Are you sure you want to cancel the deletion request for this letter?');
+	
+		if (!confirmed) {
+			event.preventDefault(); 
+		}
+	});
+	document.getElementById('request_deletion_form').addEventListener('submit', function(event) {
+		const confirmed = confirm('Are you sure you want to request deletion of this letter? The request will be sent to the administrator for approval.');
+	
+		if (!confirmed) {
+			event.preventDefault(); 
+		}
+	});
+	</script>
 {% endblock main %}

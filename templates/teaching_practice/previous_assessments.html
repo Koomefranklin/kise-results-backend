@@ -1,15 +1,10 @@
 {% extends 'teaching_practice/base_site.html' %} 
+{% load tz %}
 {% block main %}
 <div class="grid w-full h-full place-self-start gap-1">
 	<div class="flex flex-col w-full gap-2">
-		<form method="GET" action="{% url 'student_letters' %}" class='w-5/6 place-self-center'>  
-			<div class='flex h-fit'>
-				{{ search_query.search_query }}
-				<button type="submit" class='rounded-md border p-2'>Search</button>
-			</div>
-		</form>
 		<table class="w-5/6 place-self-center border">
-			<caption class=''>Student Letters</caption>
+			<caption class=''>Student Assessments</caption>
 			<thead class="border-b bg-gray-500 text-white p-2">
 				<tr class="">
 					
@@ -21,7 +16,7 @@
 					<th class="px-2">Date</th>
 					<th class='px-2'>Time</th>
 					<th class='px-2'>Assessor</th>
-					<!-- <th class='px-2'>Location</th> -->
+					<th class='px-2'>Assessment</th>
 					<th class="">Actions</th>
 				</tr>
 			</thead>
@@ -31,19 +26,24 @@
 				{% for letter in page_obj %}
 
 				<tr
-					class="{% cycle 'bg-gray-200' 'bg-inherit' %} text-{% cycle 'bg-black' 'inherit' %} hover:bg-[#333] hover:text-white">
+					class="{% cycle 'bg-gray-200 dark:text-black' 'bg-inherit' %} text-{% cycle 'bg-black' 'inherit' %} hover:bg-[#333] hover:text-white">
 					<td class="px-2">
 						<a href='{% url "previous_assessment_detail" letter.pk %}' class='w-full'>{{ letter.student.full_name }}</a>
 					</td>
 					<td class="px-2">{{ letter.student.index }}</td>
 					<td class="px-2">{{ letter.school }}</td>
-					<td class="px-2">{{ letter.student.grade }}</td>
-					<td class="px-2">{{ letter.student.learning_area }}</td>
+					<td class="px-2">{{ letter.grade }}</td>
+					<td class="px-2">{{ letter.learning_area }}</td>
 					<td class="px-2">{{ letter.created_at.date }}</td>
-					<td class="px-2">{{ letter.created_at.time }}</td>
+					<td class="px-2">{{ letter.created_at|localtime|time }}</td>
 					<td class="px-2">{{ letter.assessor }}</td>
-					<!-- <td class="px-2">{{ letter.location.name }}</td> -->
-					<td class="flex justify-between">
+					<td class="px-2">{{ letter.assessment_type }}</td>
+					<td class="flex justify-between gap-2">
+						
+						{% if letter.assessor == user %}
+						<a href='{% url "edit_student_letter" letter.id %}' title='Edit'>Edit</a>
+						{% endif %}
+							
 						<a href='{% url "previous_assessment_detail" letter.pk %}' title='View'>View</a>
 						
 					</td>
@@ -86,7 +86,7 @@
 				<td
 					colspan="11"
 					class="text-center">
-					No Student Letters Found
+					No Student Assessments Found
 				</td>
 			</tr>
 			{% endif %}

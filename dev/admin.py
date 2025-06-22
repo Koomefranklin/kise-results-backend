@@ -1,6 +1,6 @@
 from django.contrib import admin
-from .models import Deadline, Hod, ModuleScore, SitinCat, User, Mode, Lecturer, Student, TeamLeader, Specialization, Paper, Module, CatCombination, Result, IndexNumber, Centre, Course
-from teaching_practice import models as tp
+from django.contrib.admin.models import LogEntry
+from .models import Deadline, Hod, ModuleScore, ResetPasswordOtp, SitinCat, User, Mode, Lecturer, Student, TeamLeader, Specialization, Paper, Module, CatCombination, Result, IndexNumber, Centre, Course
 from django.contrib.auth.admin import UserAdmin
 from .forms import CatCombinationAdminForm, StudentAdminForm, LecturerAdminForm, TeamLeaderAdminForm
 # Register your models here.
@@ -8,6 +8,7 @@ from .forms import CatCombinationAdminForm, StudentAdminForm, LecturerAdminForm,
 class CustomUserAdmin(UserAdmin):
   model = User
   search_fields = ['full_name', 'username']
+  list_filter = ['is_staff', 'is_active', 'is_superuser', 'role', 'is_first_login']
   
   list_display = [
       'id',
@@ -15,6 +16,7 @@ class CustomUserAdmin(UserAdmin):
       'sex',
       'username',
       'is_staff',
+      'is_first_login',
   ]
   fieldsets = (
       (
@@ -95,8 +97,6 @@ class ResultAdmin(admin.ModelAdmin):
 class CatCombinationAdmin(admin.ModelAdmin):
   add_form = CatCombinationAdminForm 
 
-
-
 class ModuleScoreAdmin(admin.ModelAdmin):
   list_display = ['student', 'module', 'take_away', 'discussion', 'paper']
   
@@ -104,6 +104,11 @@ class ModuleScoreAdmin(admin.ModelAdmin):
     module = ModuleScore.objects.get(pk=obj.pk).module
     paper = Module.objects.get(pk=module.pk).paper
     return paper
+  
+class LogEntryAdmin(admin.ModelAdmin):
+  list_display = ['action_time', 'user', 'content_type', 'object_id', 'object_repr', 'action_flag']
+  search_fields = ['user__username', 'content_type__model', 'object_repr']
+  list_filter = ['action_time', 'user', 'content_type']
 
 admin.site.register(User, CustomUserAdmin)
 admin.site.register(Mode)
@@ -122,10 +127,5 @@ admin.site.register(ModuleScore, ModuleScoreAdmin)
 admin.site.register(SitinCat)
 admin.site.register(Deadline)
 admin.site.register(Hod)
-
-admin.site.register(tp.Location)
-admin.site.register(tp.StudentLetter)
-admin.site.register(tp.Section)
-admin.site.register(tp.Aspect)
-admin.site.register(tp.SubSection)
-admin.site.register(tp.Student)
+admin.site.register(ResetPasswordOtp)
+admin.site.register(LogEntry, LogEntryAdmin)
