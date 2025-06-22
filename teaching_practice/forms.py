@@ -101,11 +101,13 @@ class UpdateAspect(forms.ModelForm):
 class NewStudentForm(forms.ModelForm):
   class Meta:
     model = Student
-    fields = ['full_name', 'sex', 'index', 'email', 'department', 'specialization']
+    fields = ['full_name', 'sex', 'email', 'department', 'specialization', 'index']
   
   def __init__(self, *args, **kwargs):
     super(NewStudentForm, self).__init__(*args, **kwargs)
     self.fields['index'].required = True
+    self.fields['specialization'].required = True
+    self.fields['specialization'].queryset = Specialization.objects.exclude(code=9101)
     for fieldname, field in self.fields.items():
       if fieldname not in ['email', 'sex']:
         self.fields[fieldname].widget.attrs['class'] = 'rounded border-2 w-5/6 grid p-2 uppercase'
@@ -114,12 +116,24 @@ class NewStudentForm(forms.ModelForm):
 
   def clean_index(self):
     index = self.cleaned_data.get('index')
-    cleaned_index = index.replace(' ', '')
-    try:
-      Student.objects.get(index=cleaned_index)
-      raise forms.ValidationError(f'Student with assessment number {cleaned_index} exists')
-    except Student.DoesNotExist:
-      return cleaned_index
+    specialization = self.cleaned_data.get('specialization')
+    cleaned_index = str(index).upper().replace(' ', '')
+    if len(cleaned_index) == 11 and cleaned_index.startswith(('TA', 'CFA')):
+      try:
+        Student.objects.get(index=cleaned_index)
+        raise forms.ValidationError(f'Student with assessment number {cleaned_index} exists')
+      except Student.DoesNotExist:
+        return cleaned_index 
+    else:
+      raise forms.ValidationError('The Assessment number is not valid. Formats Diploma: "TA700000000" CFA: "CFA/0000/00"')
+    
+  def clean_full_name(self):
+    full_name = self.cleaned_data.get('full_name')
+    cleaned_full_name = str(full_name).strip()
+    if len(cleaned_full_name.split(' ')) < 2:
+      raise forms.ValidationError('Full name should have atleast two parts of the name')
+    else:
+      return cleaned_full_name
 
 class DiplomaStudentForm(forms.ModelForm):
   class Meta:
@@ -331,7 +345,7 @@ class FilterAssessmentsForm(forms.Form):
       self.fields[fieldname].required = False
       if fieldname in ['from_time', 'from_date', 'to_date', 'to_time']:
         self.fields[fieldname].label = ''
-      self.fields[fieldname].widget.attrs['class'] = 'rounded'
+      self.fields[fieldname].widget.attrs['class'] = 'rounded-md border p-2'
 
 class ZonalLeaderForm(forms.ModelForm):
   class Meta:
@@ -368,9 +382,19 @@ class AspectFilterForm(forms.Form):
     widget=forms.Select(attrs={'class': 'rounded border-2 w-5/6 grid'})
   )
 
+class StudentFilterForm(forms.Form):
+  DEPARTMENTS = [
+    ('', _('')),
+    ('DL', _('Distance Learning')),
+    ('FT', _('Full Time')),
+  ]
+
+  department = forms.ChoiceField(required=False, widget=forms.Select(attrs={'class': 'rounded border-2 p-2 grid'}), choices=DEPARTMENTS)
+  specialization = forms.ModelChoiceField(
+    queryset=Specialization.objects.all(),
+    required=False,
+    widget=forms.Select(attrs={'class': 'rounded border-2 p-2 grid'})
+  )
+
 class SearchForm(forms.Form):
-	search_query = forms.CharField(label='Search', widget=forms.TextInput(attrs={'placeholder': 'Input Search Query'}), required=False)
-	
-	def __init__(self, *args, **kwargs):
-		super(SearchForm, self).__init__(*args, **kwargs)
-		self.fields['search_query'].widget.attrs['class'] = 'w-full h-fit p-2 rounded border-2'
+	search_query = forms.CharField(label='Search', widget=forms.TextInput(attrs={'placeholder': 'Input Search Query', 'class': 'rounded-md border-2 p-2'}), required=False)

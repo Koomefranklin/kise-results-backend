@@ -1,46 +1,55 @@
 {% block filter %}
-<div class='flex flex-col place-self-center shadow-2xl sticky'>
+<div class='flex flex-col place-self-center shadow-2xl gap-2 sticky'>
   <p class='text-center'>Filter (Leave Blank if not used)</p>
-  <form action='{% url filter_url %}' method='get' class='flex flex-row gap-2'>
-    
-    {% if filter_form %}
-      {{ filter_form.errors }}
+  <form action='{% url filter_url %}' method='get' class='shadow-2xl grid gap-2'>
+    <div class='lg:flex lg:flex-row gap-2 grid grid-cols-3'>
       <div class='flex flex-col'>
-        {{ filter_form.department.label }}
-        {{ filter_form.department }}
+        <label class=''>Query</label>
+        {{ search_query.search_query }}
       </div>
-      <div class='flex flex-col'>
-        {{ filter_form.specialization.label }}
-        {{ filter_form.specialization }}
-      </div>
-      <div class='flex flex-col'>
-        {{ filter_form.zone.label }}
-        {{ filter_form.zone }}
-      </div>
-      <div class='flex flex-col'>
-        From:
-        <div class='flex flex-row'>
-          {{ filter_form.from_date }}
-          {{ filter_form.from_time }}
+      {% if filter_form %}
+        
+        {% if filter_form.errors %}
+          {{ filter_form.errors }}
+        {% endif %}
+          
+        <div class='flex flex-col'>
+          {{ filter_form.department.label }}
+          {{ filter_form.department }}
         </div>
-      </div>
-      <div class='flex flex-col'>
-        To:
-        <div class='flex flex-row'>
-          {{ filter_form.to_date }}
-          {{ filter_form.to_time }}
+        <div class='flex flex-col'>
+          {{ filter_form.specialization.label }}
+          {{ filter_form.specialization }}
         </div>
-      </div>
-      <div class='flex flex-col'>
-        {{ filter_form.assessment_type.label }}
-        {{ filter_form.assessment_type }}
-      </div>
-      <div class='flex flex-col'>
-        {{ filter_form.assessor.label }}
-        {{ filter_form.assessor }}
-      </div>
-      <button type='submit' class='rounded-md px-2 border'>Filter</button>
-    {% endif %}
+        <div class='flex flex-col'>
+          {{ filter_form.zone.label }}
+          {{ filter_form.zone }}
+        </div>
+        <div class='flex flex-col'>
+          From:
+          <div class='flex flex-row gap-1'>
+            {{ filter_form.from_date }}
+            {{ filter_form.from_time }}
+          </div>
+        </div>
+        <div class='flex flex-col'>
+          To:
+          <div class='flex flex-row gap-1'>
+            {{ filter_form.to_date }}
+            {{ filter_form.to_time }}
+          </div>
+        </div>
+        <div class='flex flex-col'>
+          {{ filter_form.assessment_type.label }}
+          {{ filter_form.assessment_type }}
+        </div>
+        <div class='flex flex-col'>
+          {{ filter_form.assessor.label }}
+          {{ filter_form.assessor }}
+        </div>
+      {% endif %}
+    </div>
+    <button type='submit' class='rounded-md p-2 border'>Filter</button>
     
   </form>
 </div>

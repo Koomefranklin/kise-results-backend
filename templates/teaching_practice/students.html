@@ -3,17 +3,22 @@
 {% block main %}
 <div class="grid w-full h-full place-self-start gap-1">
 	<div class="flex flex-col w-full gap-2">
-		<form method="GET" action="{% url 'students_tp' %}" class='w-5/6 place-self-center'>  
-			<p class=''>Search using the Assessment Number or part of the name</p>
-			<div class='flex '>
-				{{ search_query.search_query }}
-				<button type="submit" class='rounded-md border p-2 bg-gray-300'>Search</button>
+		<form method="GET" action="{% url 'students_tp' %}" class='grid gap-2 place-self-center'>  
+			<div class='flex gap-2'>
+				<div class='grid'>
+					<p class=''>Assessment Number or part of the name</p>
+					{{ search_query.search_query }} 
+				</div>
+				{{ filter_form }}
 			</div>
+			<button type="submit" class='rounded-md border px-2'>Filter</button>
 		</form>
 		
 		{% if user.is_superuser %}
-			<a href='{% url "students_tp" %}?filter_query=index'>Duplicates by index</a>
-			<a href='{% url "students_tp" %}?filter_query=full_name'>Duplicates by name</a>
+			<div class='fixed bottom-10 right-10 grid gap-2'>
+				<a href='{% url "students_tp" %}?filter_query=index'>Duplicates by index</a>
+				<a href='{% url "students_tp" %}?filter_query=full_name'>Duplicates by name</a>
+			</div>
 		{% endif %}
 			
 		

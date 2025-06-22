@@ -15,7 +15,7 @@ from dev.forms import CustomUserCreationForm
 from dev.models import User
 from teaching_practice.mailer import request_deletion, send_student_report
 from teaching_practice.mixins import ActivePeriodMixin, AdminMixin
-from .forms import AspectFilterForm, CertificateStudentForm, FilterAssessmentsForm, NewAspect, NewCertificateStudentLetter, NewLocationForm, NewSection, NewStudentAspect, NewStudentForm, NewDiplomaStudentLetter, NewStudentSection, NewSubSection, PeriodForm, SearchForm, DiplomaStudentForm, UpdateAspect, UpdateCertificateStudentLetter, UpdateSection, UpdateStudentAspect, UpdateDiplomaStudentLetter, UpdateStudentSection, StudentAspectFormSet, UpdateSubSection, ZonalLeaderForm
+from .forms import AspectFilterForm, CertificateStudentForm, FilterAssessmentsForm, NewAspect, NewCertificateStudentLetter, NewLocationForm, NewSection, NewStudentAspect, NewStudentForm, NewDiplomaStudentLetter, NewStudentSection, NewSubSection, PeriodForm, SearchForm, DiplomaStudentForm, StudentFilterForm, UpdateAspect, UpdateCertificateStudentLetter, UpdateSection, UpdateStudentAspect, UpdateDiplomaStudentLetter, UpdateStudentSection, StudentAspectFormSet, UpdateSubSection, ZonalLeaderForm
 from .models import AssessmentType, Period, Student, Section, StudentAspect, StudentLetter, StudentSection, Aspect, Location, SubSection, ZonalLeader
 from django.views.generic import ListView, CreateView, FormView, UpdateView, DeleteView, DetailView
 from django.db.models import Q, Avg, F, Count, ExpressionWrapper, FloatField, Sum, Value
@@ -141,7 +141,7 @@ class IndexPage(LoginRequiredMixin, ListView):
 	def get_context_data(self, **kwargs):
 		user = self.request.user
 		zonal_leaders = ZonalLeader.objects.all().values_list('assessor', flat=True)
-		students = Student.objects.exclude(full_name__icontains='test')
+		students = Student.objects.all()
 		all_assessments = StudentLetter.objects.filter(to_delete=False)
 		assessment_types = AssessmentType.objects.all()
 		admins = assessment_types.values_list('admins', flat=True)
@@ -360,6 +360,7 @@ class NewStudentView(LoginRequiredMixin, ActivePeriodMixin, CreateView):
 	success_url = reverse_lazy('students_tp')
 
 	def get_context_data(self, **kwargs):
+		students = Student
 		user = self.request.user
 		context = super().get_context_data(**kwargs)
 		context['is_nav_enabled'] = True
@@ -381,7 +382,6 @@ class NewStudentView(LoginRequiredMixin, ActivePeriodMixin, CreateView):
 			return redirect(f"{reverse_lazy('students_tp')}?search_query={instance.index}")
 		else:
 			self.object = None
-			messages.error(request, 'Correct the following errors:')
 			return self.form_invalid(form)
 	
 class EditStudentView(LoginRequiredMixin, ActivePeriodMixin, UpdateView):
@@ -412,6 +412,7 @@ class StudentsViewList(LoginRequiredMixin, ListView):
 		context['title'] = 'Students'
 		context['search_query'] = SearchForm(self.request.GET)
 		context['location_form'] = NewLocationForm(self.request.POST)
+		context['filter_form'] = StudentFilterForm(self.request.GET)
 		context['searched'] = True if searched else False
 		context['types'] = list(AssessmentType.objects.all().values('id', 'short_name', 'name', 'course__code'))
 		return context
@@ -422,6 +423,10 @@ class StudentsViewList(LoginRequiredMixin, ListView):
 		search_query = self.request.GET.get('search_query')
 		if search_query:
 			qs = qs.filter(Q(full_name__icontains=search_query) | Q(index__icontains=search_query.replace(' ', '')) | Q(email__icontains=search_query))
+		if department := self.request.GET.get('department'):
+			qs = qs.filter(department=department)
+		if specialization := self.request.GET.get('specialization'):
+			qs = qs.filter(specialization=specialization)
 		if filter_query := self.request.GET.get('filter_query'):
 			duplicates = qs.values(filter_query).annotate(dup_count=Count(filter_query)).filter(dup_count__gt=1)
 			duplicate_ids = [item[filter_query] for item in duplicates]
@@ -817,7 +822,6 @@ class StudentLetterViewList(LoginRequiredMixin, ListView):
 		if search_query:
 			Query = SearchQuery(search_query)
 			qs = qs.filter(search=Query)
-			# qs = qs.filter(Q(pk__icontains=search_query) | Q(student__full_name__icontains=search_query) | Q(student__index__icontains=search_query) | Q(school__icontains=search_query) | Q(grade__icontains=search_query) | Q(learning_area__icontains=search_query) | Q(zone__icontains=search_query) | Q(assessor__full_name__icontains=search_query))
 		return qs.order_by('-created_at')
 	
 class InvalidStudentLetterViewList(LoginRequiredMixin, ListView):
@@ -859,7 +863,7 @@ class IncompleteAssessmentsListView(LoginRequiredMixin, ListView):
 	
 	def get_queryset(self):
 		user = self.request.user
-		letters = StudentLetter.objects.prefetch_related('student_sections').filter(Q(to_delete=False) & (Q(comments=None) | Q(total_score=0))).exclude(student__full_name__icontains='test')
+		letters = StudentLetter.objects.prefetch_related('student_sections').filter(Q(to_delete=False) & (Q(comments=None) | Q(total_score=0)))
 		assessment_types = AssessmentType.objects.all()
 		admins = assessment_types.values_list('admins', flat=True)
 		if user.is_superuser:
@@ -937,6 +941,7 @@ class PendingDeletionView(LoginRequiredMixin, ListView):
 		context = super().get_context_data(**kwargs)
 		context['is_nav_enabled'] = True
 		context['title'] = 'Pending Deletion'
+		context['filter_form'] = FilterAssessmentsForm(self.request.GET, user=self.request.user)
 		return context
 	
 class CancelDeletionView(LoginRequiredMixin, View):
@@ -1228,7 +1233,7 @@ class ZonesViewList(LoginRequiredMixin, ListView):
 			qs = qs.filter(created_at__lt=timezone_aware_to_time)
 		search_query = self.request.GET.get('search_query')
 		if search_query:
-			qs = qs.filter(Q(student__full_name__icontains=search_query) | Q(student__index__icontains=search_query) | Q(school__icontains=search_query) | Q(grade__icontains=search_query) | Q(learning_area__icontains=search_query) | Q(zone__icontains=search_query) | Q(assessor__icontains=search_query))
+			qs = qs.filter(Q(student__full_name__icontains=search_query) | Q(student__index__icontains=search_query) | Q(school__icontains=search_query) | Q(grade__icontains=search_query) | Q(learning_area__icontains=search_query))
 		return qs.order_by('student')
 
 	def get_context_data(self, **kwargs):

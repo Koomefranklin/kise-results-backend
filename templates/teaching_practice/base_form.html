@@ -6,7 +6,12 @@
 		<form
 			method="post"
 			class="grid gap-4 place-self-center shadow-2xl p-4 rounded-md w-5/6">
-			{{ form.errors }}
+			
+			{% if form.errors %}
+				<p class='errorlist'>Correct the errors in red</p>
+				{{ form.non_field_errors }}
+			{% endif %}
+				
 			{% csrf_token %} {{ form.management_form }}
 			<div class="grid gap-4 grid-cols-2">{{ form.as_div }}</div>
 			<button
