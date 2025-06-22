@@ -373,18 +373,15 @@ class NewStudentView(LoginRequiredMixin, ActivePeriodMixin, CreateView):
 			instance.created_by = self.request.user
 			active_period=Period.objects.get(is_active=True)
 			instance.period = active_period
-			students = Student.objects.filter(period=active_period)
-			existing_student = students.filter(index=instance.index.replace(' ', '')).first()
-			if existing_student:
-				messages.error(self.request, f'{instance.full_name} already exists')
-				return redirect(f'{reverse_lazy("students_tp")}?search_query={existing_student.index}')
-			else:
-				instance.save()
-				log_custom_action(self.request.user, instance, ADDITION)
-				self.object = instance
-				messages.success(self.request, f'Added {instance.full_name} Successfully')
-				return redirect(f"{reverse_lazy('students_tp')}?search_query={instance.index}")
+			instance.save()
+
+			log_custom_action(self.request.user, instance, ADDITION)
+			self.object = instance
+			messages.success(self.request, f'Added {instance.full_name} Successfully')
+			return redirect(f"{reverse_lazy('students_tp')}?search_query={instance.index}")
 		else:
+			self.object = None
+			messages.error(request, 'Correct the following errors:')
 			return self.form_invalid(form)
 	
 class EditStudentView(LoginRequiredMixin, ActivePeriodMixin, UpdateView):
@@ -424,7 +421,7 @@ class StudentsViewList(LoginRequiredMixin, ListView):
 		qs = Student.objects.filter(period=active_period)
 		search_query = self.request.GET.get('search_query')
 		if search_query:
-			qs = qs.filter(Q(full_name__icontains=search_query) | Q(index__icontains=search_query.strip(' ')) | Q(email__icontains=search_query))
+			qs = qs.filter(Q(full_name__icontains=search_query) | Q(index__icontains=search_query.replace(' ', '')) | Q(email__icontains=search_query))
 		if filter_query := self.request.GET.get('filter_query'):
 			duplicates = qs.values(filter_query).annotate(dup_count=Count(filter_query)).filter(dup_count__gt=1)
 			duplicate_ids = [item[filter_query] for item in duplicates]

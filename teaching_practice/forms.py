@@ -112,6 +112,15 @@ class NewStudentForm(forms.ModelForm):
       else:
         self.fields[fieldname].widget.attrs['class'] = 'rounded border-2 w-5/6 grid p-2'
 
+  def clean_index(self):
+    index = self.cleaned_data.get('index')
+    cleaned_index = index.replace(' ', '')
+    try:
+      Student.objects.get(index=cleaned_index)
+      raise forms.ValidationError(f'Student with assessment number {cleaned_index} exists')
+    except Student.DoesNotExist:
+      return cleaned_index
+
 class DiplomaStudentForm(forms.ModelForm):
   class Meta:
     model = Student
