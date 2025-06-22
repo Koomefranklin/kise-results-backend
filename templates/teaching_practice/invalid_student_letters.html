@@ -23,11 +23,12 @@
 					{% if invalid %}
 						
 						{% for item in invalid %}
-							<tr class=''>
+							<tr class='hover:bg-black'>
 								<td>{{ item.index }}</td>
 								<td>{{ item.full_name }}</td>
 								<td>{{ item.specialization }}</td>
 								<td class='flex p-2 gap-2'>
+									<a href='{% url "students_tp" %}?search_query={{ item.index }}'>Related</a>
 									<a href='{% url "edit_student_tp" item.pk %}'>Edit</a>
 									<form action='{% url "delete_student" item.pk %}' method='get'>
 										{% csrf_token %}
