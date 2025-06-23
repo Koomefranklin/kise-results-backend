@@ -4,13 +4,17 @@
 
 {% block main %}
   <div class="grid w-full h-full">
+		<style>
+			input, select {
+				color: black;
+			}
+		</style>
 	<div class="h-full grid place-items-center">
 		<form
 			method="post"
 			class="grid gap-2 place-self-center shadow-2xl p-4 rounded-md text-lg">
-			{% csrf_token %} {{ form.management_form }}
+			{% csrf_token %} {{ form.management_form }}				
 			<div class="grid gap-2 grid-cols-2">{{ student_form|crispy }} {{ form|crispy }}</div>
-      <div class="grid gap-2 grid-cols-2"></div>
 			<button
 				type="submit"
 				class="border w-fit grid rounded p-4 place-self-center shadow-lg">

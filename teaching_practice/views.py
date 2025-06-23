@@ -15,7 +15,7 @@ from dev.forms import CustomUserCreationForm
 from dev.models import User
 from teaching_practice.mailer import request_deletion, send_student_report
 from teaching_practice.mixins import ActivePeriodMixin, AdminMixin
-from .forms import AspectFilterForm, CertificateStudentForm, FilterAssessmentsForm, NewAspect, NewCertificateStudentLetter, NewLocationForm, NewSection, NewStudentAspect, NewStudentForm, NewDiplomaStudentLetter, NewStudentSection, NewSubSection, PeriodForm, SearchForm, DiplomaStudentForm, StudentFilterForm, UpdateAspect, UpdateCertificateStudentLetter, UpdateSection, UpdateStudentAspect, UpdateDiplomaStudentLetter, UpdateStudentSection, StudentAspectFormSet, UpdateSubSection, ZonalLeaderForm
+from .forms import AspectFilterForm, CertificateStudentForm, FilterAssessmentsForm, NewAspect, NewCertificateStudentLetterForm, NewLocationForm, NewSection, NewStudentAspect, NewStudentForm, NewDiplomaStudentLetterForm, NewStudentSection, NewSubSection, PeriodForm, SearchForm, DiplomaStudentForm, StudentFilterForm, UpdateAspect, UpdateCertificateStudentLetter, UpdateSection, UpdateStudentAspect, UpdateDiplomaStudentLetter, UpdateStudentSection, StudentAspectFormSet, UpdateSubSection, ZonalLeaderForm
 from .models import AssessmentType, Period, Student, Section, StudentAspect, StudentLetter, StudentSection, Aspect, Location, SubSection, ZonalLeader
 from django.views.generic import ListView, CreateView, FormView, UpdateView, DeleteView, DetailView
 from django.db.models import Q, Avg, F, Count, ExpressionWrapper, FloatField, Sum, Value
@@ -686,7 +686,6 @@ class EditStudentLetterView(LoginRequiredMixin, ActivePeriodMixin, UpdateView):
 	
 class EditStudentDetailsView(LoginRequiredMixin, ActivePeriodMixin, View):
 	model = StudentLetter
-	form_class = NewDiplomaStudentLetter
 	template_name = 'teaching_practice/student_details.html'
 	
 	def get_success_url(self):
@@ -698,10 +697,10 @@ class EditStudentDetailsView(LoginRequiredMixin, ActivePeriodMixin, View):
 		student_instance = student_letter_instance.student
 		if 'Diploma' in student_letter_instance.assessment_type.course.name:
 			student_form = DiplomaStudentForm(instance=student_instance)
-			form = NewDiplomaStudentLetter(instance=student_letter_instance)
+			form = NewDiplomaStudentLetterForm(instance=student_letter_instance)
 		elif 'Certificate' in student_letter_instance.assessment_type.course.name:
 			student_form = CertificateStudentForm(instance=student_instance)
-			form = NewCertificateStudentLetter(instance=student_letter_instance)
+			form = NewCertificateStudentLetterForm(instance=student_letter_instance)
 		context = {
 			'student_form': student_form,
 			'form': form,
@@ -715,33 +714,30 @@ class EditStudentDetailsView(LoginRequiredMixin, ActivePeriodMixin, View):
 		student_letter_instance = StudentLetter.objects.get(pk=student_letter_id)
 		student_instance = student_letter_instance.student
 		
-		if 'Diploma' in student_letter_instance.assessment_type.course.name:
-			post_letter_form = NewDiplomaStudentLetter(self.request.POST, instance=student_letter_instance)
+		if student_letter_instance.assessment_type.course.code == 'DSNE':
+			post_letter_form = NewDiplomaStudentLetterForm(self.request.POST, instance=student_letter_instance)
 			post_student_form = DiplomaStudentForm(self.request.POST, instance=student_instance)
 			student_form = DiplomaStudentForm(instance=student_instance)
-			form = NewDiplomaStudentLetter(instance=student_letter_instance)
-		elif 'Certificate' in student_letter_instance.assessment_type.course.name:
-			post_letter_form = NewCertificateStudentLetter(self.request.POST, instance=student_letter_instance)
+			letter_form = NewDiplomaStudentLetterForm(instance=student_letter_instance)
+		elif student_letter_instance.assessment_type.course.code == 'CFA':
+		# else:
+			post_letter_form = NewCertificateStudentLetterForm(self.request.POST, instance=student_letter_instance)
 			post_student_form = CertificateStudentForm(self.request.POST, instance=student_instance)
 			student_form = CertificateStudentForm(instance=student_instance)
-			form = NewCertificateStudentLetter(instance=student_letter_instance)
+			letter_form = NewCertificateStudentLetterForm(instance=student_letter_instance)
 
 		if post_letter_form.is_valid() and post_student_form.is_valid():
 
 			letter = post_letter_form.save(commit=False)
-			if letter.late_submission and letter.reason is None:
-				messages.error(self.request, f'Please provide a reason for late submission')
-				return redirect(reverse_lazy('edit_student_details'), kwargs={'student_letter': letter.pk})
-			else:
-				letter.save()
+			letter.save()
 
-				student = post_student_form.save(commit=True)
-				messages.success(self.request, f'Updated {student.full_name} Successfully')
-				return redirect(reverse_lazy('edit_student_letter', kwargs={'pk': letter.pk}))
+			student = post_student_form.save(commit=True)
+			messages.success(self.request, f'Updated {student.full_name} Successfully')
+			return redirect(reverse_lazy('edit_student_letter', kwargs={'pk': letter.pk}))
 		else:
 			context = {
-				'student_form': student_form,
-				'form': form,
+				'student_form': post_student_form,
+				'form': post_letter_form,
 				'is_nav_enabled': True,
 				'title': f'Edit {student_letter_instance}\'s Details',
 			}

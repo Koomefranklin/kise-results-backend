@@ -15,6 +15,7 @@
 						<th>Number</th>
 						<th>Name</th>
 						<th>Specialization</th>
+						<th>Created at</th>
 						<th>Action</th>
 					</tr>
 				</thead>
@@ -27,6 +28,7 @@
 								<td>{{ item.index }}</td>
 								<td>{{ item.full_name }}</td>
 								<td>{{ item.specialization }}</td>
+								<td>{{ item.created_at }}</td>
 								<td class='flex p-2 gap-2'>
 									<a href='{% url "students_tp" %}?search_query={{ item.index }}'>Related</a>
 									<a href='{% url "edit_student_tp" item.pk %}'>Edit</a>

@@ -110,13 +110,12 @@ class NewStudentForm(forms.ModelForm):
     self.fields['specialization'].queryset = Specialization.objects.exclude(code=9101)
     for fieldname, field in self.fields.items():
       if fieldname not in ['email', 'sex']:
-        self.fields[fieldname].widget.attrs['class'] = 'rounded border-2 w-5/6 grid p-2 uppercase'
+        self.fields[fieldname].widget.attrs['class'] = 'rounded border-2 w-full grid p-2 uppercase'
       else:
-        self.fields[fieldname].widget.attrs['class'] = 'rounded border-2 w-5/6 grid p-2'
+        self.fields[fieldname].widget.attrs['class'] = 'rounded border-2 w-full grid p-2'
 
   def clean_index(self):
     index = self.cleaned_data.get('index')
-    specialization = self.cleaned_data.get('specialization')
     cleaned_index = str(index).upper().replace(' ', '')
     if len(cleaned_index) == 11 and cleaned_index.startswith(('TA', 'CFA')):
       try:
@@ -175,13 +174,40 @@ class NewLocationForm(forms.Form):
       self.fields[fieldname].label = ''
       self.fields[fieldname].widget.attrs['class'] = 'hidden'
 
-class NewDiplomaStudentLetter(forms.ModelForm):
+class NewDiplomaStudentLetterForm(forms.ModelForm):
   class Meta:
     model = StudentLetter
     fields = ['school', 'grade', 'learning_area', 'zone', 'late_submission', 'reason']
   
   def __init__(self, *args, **kwargs):
-    super(NewDiplomaStudentLetter, self).__init__(*args, **kwargs)
+    super(NewDiplomaStudentLetterForm, self).__init__(*args, **kwargs)
+    self.fields['late_submission'].widget = forms.Select(choices=[(False, 'No'), (True, 'Yes')])
+    deadline = timezone.datetime.strptime('17:00', '%H:%M').time()
+    start_time = timezone.datetime.strptime('05:00', '%H:%M').time()
+    current_time = timezone.now().astimezone().time()
+    if not (current_time > start_time <= current_time <= deadline):
+      self.fields['late_submission'].widget.choices = [(True, 'Yes')]
+      self.fields['late_submission'].disabled = True
+    for fieldname, field in self.fields.items():
+      if fieldname != 'late_submission' and fieldname != 'reason':
+        self.fields[fieldname].required = True
+      self.fields[fieldname].widget.attrs['class'] = 'rounded border-2 grid'
+
+  def clean_reason(self):
+    late_submission = self.cleaned_data['late_submission']
+    reason = self.cleaned_data.get('reason')
+    if late_submission and reason is None:
+      raise forms.ValidationError('Please provide a reason for late submission')
+    else:
+      return reason
+
+class NewCertificateStudentLetterForm(forms.ModelForm):
+  class Meta:
+    model = StudentLetter
+    fields = ['earc', 'zone', 'late_submission', 'reason']
+  
+  def __init__(self, *args, **kwargs):
+    super(NewCertificateStudentLetterForm, self).__init__(*args, **kwargs)
     self.fields['late_submission'].widget = forms.Select(choices=[(False, 'No'), (True, 'Yes')])
     deadline = timezone.datetime.strptime('17:00', '%H:%M').time()
     start_time = timezone.datetime.strptime('05:00', '%H:%M').time()
@@ -194,24 +220,13 @@ class NewDiplomaStudentLetter(forms.ModelForm):
         self.fields[fieldname].required = True
       self.fields[fieldname].widget.attrs['class'] = 'rounded border-2 w-5/6 grid'
 
-class NewCertificateStudentLetter(forms.ModelForm):
-  class Meta:
-    model = StudentLetter
-    fields = ['earc', 'zone', 'late_submission', 'reason']
-  
-  def __init__(self, *args, **kwargs):
-    super(NewCertificateStudentLetter, self).__init__(*args, **kwargs)
-    self.fields['late_submission'].widget = forms.Select(choices=[(False, 'No'), (True, 'Yes')])
-    deadline = timezone.datetime.strptime('17:00', '%H:%M').time()
-    start_time = timezone.datetime.strptime('05:00', '%H:%M').time()
-    current_time = timezone.now().astimezone().time()
-    if not (current_time > start_time <= current_time <= deadline):
-      self.fields['late_submission'].widget.choices = [(True, 'Yes')]
-      self.fields['late_submission'].disabled = True
-    for fieldname, field in self.fields.items():
-      if fieldname != 'late_submission' and fieldname != 'reason':
-        self.fields[fieldname].required = True
-      self.fields[fieldname].widget.attrs['class'] = 'rounded border-2 w-5/6 grid'
+  def clean_reason(self):
+    late_submission = self.cleaned_data['late_submission']
+    reason = self.cleaned_data.get('reason')
+    if late_submission and reason is None:
+      raise forms.ValidationError('Please provide a reason for late submission')
+    else:
+      return reason
 
 class UpdateDiplomaStudentLetter(forms.ModelForm):
   class Meta:
