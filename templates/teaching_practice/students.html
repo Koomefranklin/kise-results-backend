@@ -3,7 +3,8 @@
 {% block main %}
 <div class="grid w-full h-full place-self-start gap-1">
 	<div class="flex flex-col w-full gap-2">
-		<form method="GET" action="{% url 'students_tp' %}" class='grid gap-2 place-self-center'>  
+		<form method="GET" action="{% url 'students_tp' %}" class='grid gap-2 place-self-center'>
+		<p class='text-center'>Filter (Leave Blank if not used)</p>
 			<div class='flex gap-2'>
 				<div class='grid'>
 					<p class=''>Assessment Number or Name</p>
@@ -23,7 +24,10 @@
 			
 		
 		{% if searched %}
-			<div class='grid border p-2 w-fit place-self-end'><a href='{% url "new_student_tp" %}'><i class="fa-solid fa-plus text-[#4caf50] font-extrabold"></i> Add Student</a></div>
+			<div class='flex p-2 w-5/6 place-self-center justify-between gap-2'>
+				<p class='place-self-start'>Didn't find the student? Try searching using the assessment number for a more specific search before adding new</p>
+				<button class='flex place-self-end border rounded-md p-2'><a href='{% url "new_student_tp" %}'><i class="fa-solid fa-plus text-[#4caf50] font-extrabold"></i> Add Student</a></button>
+			</div>
 		{% endif %}
 			
 		<table class="w-5/6 place-self-center border">

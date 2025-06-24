@@ -806,14 +806,14 @@ class StudentLetterViewList(LoginRequiredMixin, ListView):
 			qs = qs.filter(Q(assessor__pk=assessor))
 		if from_date := get_request.get('from_date'):
 			if  from_time := get_request.get('from_time'):
-				from_time = datetime.time(from_time)
+				from_time = datetime.datetime.strptime(from_time, '%H:%M').time()
 			else:
 				from_time = datetime.time(00,00)
 			timezone_aware_from_time = timezone.make_aware(datetime.datetime.combine(datetime.datetime.strptime(from_date, '%Y-%m-%d'), from_time))
 			qs = qs.filter(created_at__gt=timezone_aware_from_time)
 		if to_date := get_request.get('to_date'):
 			if  to_time := get_request.get('to_time'):
-				to_time = datetime.time(to_time)
+				to_time = datetime.datetime.strptime(to_time, '%H:%M').time()
 			else:
 				to_time = datetime.time(00,00)
 			timezone_aware_to_time = timezone.make_aware(datetime.datetime.combine(datetime.datetime.strptime(to_date, '%Y-%m-%d'), to_time))
@@ -894,14 +894,14 @@ class IncompleteAssessmentsListView(LoginRequiredMixin, ListView):
 			qs = qs.filter(Q(assessor__pk=assessor))
 		if from_date := get_request.get('from_date'):
 			if  from_time := get_request.get('from_time'):
-				from_time = datetime.time(from_time)
+				from_time = datetime.datetime.strptime(from_time, '%H:%M').time()
 			else:
 				from_time = datetime.time(00,00)
 			timezone_aware_from_time = timezone.make_aware(datetime.datetime.combine(datetime.datetime.strptime(from_date, '%Y-%m-%d'), from_time))
 			qs = qs.filter(created_at__gt=timezone_aware_from_time)
 		if to_date := get_request.get('to_date'):
 			if  to_time := get_request.get('to_time'):
-				to_time = datetime.time(to_time)
+				to_time = datetime.datetime.strptime(to_time, '%H:%M').time()
 			else:
 				to_time = datetime.time(00,00)
 			timezone_aware_to_time = timezone.make_aware(datetime.datetime.combine(datetime.datetime.strptime(to_date, '%Y-%m-%d'), to_time))
@@ -1231,14 +1231,14 @@ class ZonesViewList(LoginRequiredMixin, ListView):
 			qs = qs.filter(Q(assessor__pk=assessor))
 		if from_date := get_request.get('from_date'):
 			if  from_time := get_request.get('from_time'):
-				from_time = datetime.time(from_time)
+				from_time = datetime.datetime.strptime(from_time, '%H:%M').time()
 			else:
 				from_time = datetime.time(00,00)
 			timezone_aware_from_time = timezone.make_aware(datetime.datetime.combine(datetime.datetime.strptime(from_date, '%Y-%m-%d'), from_time))
 			qs = qs.filter(created_at__gt=timezone_aware_from_time)
 		if to_date := get_request.get('to_date'):
 			if  to_time := get_request.get('to_time'):
-				to_time = datetime.time(to_time)
+				to_time = datetime.datetime.strptime(to_time, '%H:%M').time()
 			else:
 				to_time = datetime.time(00,00)
 			timezone_aware_to_time = timezone.make_aware(datetime.datetime.combine(datetime.datetime.strptime(to_date, '%Y-%m-%d'), to_time))
@@ -1296,6 +1296,13 @@ class DeleteObject(LoginRequiredMixin, DeleteView):
 	def get_object(self, queryset = None):
 		
 		return super().get_object(queryset)
+	
+	def post(self, request, *args, **kwargs):
+		model = self.request.POST.get('model')
+		obj_pk = self.request.POST.get('pk')
+		obj = get_object_or_404(model, obj_pk)
+		obj.delete()
+		return redirect(self.get_success_url())
 	
 class ExportAssessmentReport(LoginRequiredMixin, AdminMixin, View):
 	def get(self, request):
