@@ -55,6 +55,14 @@ def send_error(request, exception):
     sender_mail = 'TP Assessment <webform@kise.ac.ke>'
     
     method = request.method
+    if method == 'POST':
+      data = []
+      fields = request.POST.keys()
+      for field in fields:
+        if not field.startswith('csrf'):
+          field_value = {field: request.POST[field]}
+          data.append(field_value)
+      data = data if data else 'No data submitted'
     html_content = f"""
     
     <strong>An error {exception} occured in the site</strong><br>
@@ -62,7 +70,7 @@ def send_error(request, exception):
      user: {request.user.full_name if request.user.is_authenticated else 'Anonymous'}<br>
      time: {timezone.localtime(timezone.now())}<br>
     The request was made using the {method} method.<br>
-    data: {request.POST if method == 'POST' else request.GET}<br>
+    data: {data}<br>
     """
     subject = 'Server Error'
     msg = EmailMultiAlternatives(subject=subject, from_email=sender_mail, to=admin_mail)
