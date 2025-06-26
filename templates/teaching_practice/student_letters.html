@@ -3,9 +3,17 @@
 {% block main %}
 <div class="grid w-full h-full place-self-start gap-1">
 	<div class="flex flex-col w-full gap-2">
-		<form class='' action='{% url "assessments-export" %}' method='get'>
-			<button class=''>Extract Report</button>
+		
+		{% if is_hod %}
+		<form class='place-self-end mr-4' action='{% url "assessments-export" %}' method='get'>
+			<button class='shadow-2xl p-2 rounded-2xl capitalize text-sm border'>Extract 
+			{% if specialization %}
+				{{ specialization.name }}
+			{% endif %}
+				Assessments Report</button>
 		</form>
+		{% endif %}
+			
 		{% include 'teaching_practice/filter_assessments.html' with filter_url='student_letters' %}
 		<table class="w-5/6 place-self-center border">
 			<caption class=''>Student Assessments</caption>
@@ -27,7 +35,7 @@
 			</thead>
 
 			{% if page_obj %}
-			<tbody class="capitalize">
+			<tbody class="">
 				{% for letter in page_obj %}
 
 				<tr

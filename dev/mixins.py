@@ -47,7 +47,7 @@ class HoDMixin:
   def has_permission(self):
     user = self.request.user
     hod = Hod.objects.filter(lecturer__user=user).first()
-    return True if hod else False
+    return True if user.is_superuser or hod else False
   
   def handle_no_permission(self):
     return redirect('no_permission')

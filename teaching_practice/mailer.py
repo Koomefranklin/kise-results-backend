@@ -76,7 +76,7 @@ def send_error(request, exception):
 def request_deletion(request, obj_id, path):
   try:
     user = request.user.full_name
-    url = request.build_absolute_uri()
+    url = request.build_absolute_uri(reverse_lazy('pending_deletion'))
     sender_mail = 'TP Assessment <webform@kise.ac.ke>'
     html_content = f"""
     A request for deletion of object {obj_id} from {url} was made by {user}<br>
@@ -86,7 +86,7 @@ def request_deletion(request, obj_id, path):
     msg = EmailMultiAlternatives(subject=subject, from_email=sender_mail, to=admin_mail)
     msg.mixed_subtype = 'related'
     msg.attach_alternative(html_content, 'text/html')
-    msg.send()
+    # msg.send()
     messages.success(request, f'Deletion request sent to {admin_mail}')
   except Exception as e:
     with open('error.log', '+a') as error_file:

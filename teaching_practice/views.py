@@ -12,7 +12,8 @@ from django.utils import timezone
 from django.views.generic.base import View
 from django.urls import reverse_lazy
 from dev.forms import CustomUserCreationForm
-from dev.models import User
+from dev.mixins import HoDMixin
+from dev.models import Hod, User
 from teaching_practice.mailer import request_deletion, send_student_report
 from teaching_practice.mixins import ActivePeriodMixin, AdminMixin
 from .forms import AspectFilterForm, CertificateStudentForm, FilterAssessmentsForm, NewAspect, NewCertificateStudentLetterForm, NewLocationForm, NewSection, NewStudentAspect, NewStudentForm, NewDiplomaStudentLetterForm, NewStudentSection, NewSubSection, PeriodForm, SearchForm, DiplomaStudentForm, StudentFilterForm, UpdateAspect, UpdateCertificateStudentLetter, UpdateSection, UpdateStudentAspect, UpdateDiplomaStudentLetter, UpdateStudentSection, StudentAspectFormSet, UpdateSubSection, ZonalLeaderForm
@@ -764,7 +765,7 @@ class PreviewStudentLetter(LoginRequiredMixin, DetailView):
 		context['assessment_type'] = student_letter.assessment_type
 		return context
 	
-class StudentLetterViewList(LoginRequiredMixin, ListView):
+class StudentAssessmentViewList(LoginRequiredMixin, ListView):
 	model = StudentLetter
 	template_name = 'teaching_practice/student_letters.html'
 	context_object_name = 'studentletters'
@@ -772,11 +773,17 @@ class StudentLetterViewList(LoginRequiredMixin, ListView):
 
 	def get_context_data(self, **kwargs):
 		user = self.request.user
+		hods = Hod.objects.all().values_list('lecturer__user', flat=True)
+		hod = None
+		if user.pk in hods:
+			hod = Hod.objects.get(lecturer__user=user)
 		context = super().get_context_data(**kwargs)
 		context['is_nav_enabled'] = True
 		context['title'] = 'Student Assessments'
 		context['search_query'] = SearchForm(self.request.GET)
 		context['filter_form'] = FilterAssessmentsForm(self.request.GET, user=self.request.user)
+		context['is_hod'] = True if user.is_superuser or user.pk in hods else False
+		context['specialization'] = hod.department if hod else 'All Specializations'
 		messages.info(self.request, 'These are the assessments that have been created. You can search for a specific assessment using the search bar below. If invalid, request for deletion.')
 		return context
 	
@@ -1304,11 +1311,19 @@ class DeleteObject(LoginRequiredMixin, DeleteView):
 		obj.delete()
 		return redirect(self.get_success_url())
 	
-class ExportAssessmentReport(LoginRequiredMixin, AdminMixin, View):
+class ExportAssessmentReport(LoginRequiredMixin, HoDMixin, View):
 	def get(self, request):
+		user = self.request.user
+		queryset = StudentLetter.objects.exclude(Q(comments=None) | Q(total_score=0) | Q(to_delete=True ) | Q(is_editable=True))
+		if user.pk in Hod.objects.all().values_list('lecturer__user', flat=True):
+			specialization = Hod.objects.get(lecturer__user=user).department
+			assessments = queryset.filter(student__specialization=specialization).order_by('created_at', 'zone')
+			name = f'{specialization.name} Assessments'
+		else:
+			assessments = queryset.order_by('created_at', 'zone')
+			name = 'All Specializations Assessments'
 		grouped = defaultdict(list)
-		assessments = StudentLetter.objects.exclude(Q(comments=None) | Q(total_score=0) | Q(to_delete=True ) | Q(is_editable=True)).order_by('created_at', 'zone')
-
+		
 		# Group values by name
 		for obj in assessments:
 			grouped[obj.student.full_name, obj.student.index, obj.zone].append(obj.total_score)
@@ -1321,7 +1336,7 @@ class ExportAssessmentReport(LoginRequiredMixin, AdminMixin, View):
 
 		# Prepare the response
 		response = HttpResponse(content_type='text/csv')
-		response['Content-Disposition'] = 'attachment; filename="export.csv"'
+		response['Content-Disposition'] = f'attachment; filename="{name}.csv"'
 		writer = csv.writer(response)
 		writer.writerow(headers)
 

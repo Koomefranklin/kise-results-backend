@@ -2,7 +2,7 @@
 <div class='flex flex-col place-self-center shadow-2xl gap-2 p-2 sticky'>
   <p class='text-center'>Filter (Leave Blank if not used)</p>
   <form action='{% url filter_url %}' method='get' class='shadow-2xl grid gap-2'>
-    <div class=' grid grid-cols-3 lg:grid lg:grid-rows-2 gap-2'>
+    <div class='flex flex-row flex-wrap gap-2'>
       <div class='flex flex-col'>
         <label class=''>Query</label>
         {{ search_query.search_query }}

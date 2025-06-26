@@ -10,7 +10,7 @@ class FirstLoginMiddleware:
   def __call__(self, request):
     if request.user.is_authenticated:
       if request.user.is_first_login:
-        if not request.path.startswith('/change-password/'):
+        if not request.path.startswith(('/change-password/', '/accounts/logout/')):
           return redirect(reverse_lazy('first_password_change', kwargs={'pk': request.user.pk}))
 
     return self.get_response(request)
