@@ -1399,13 +1399,15 @@ class ExportAssessmentReport(LoginRequiredMixin, View):
 		
 		# Group values by name
 		for obj in assessments:
-			grouped[obj.student.full_name, obj.student.index, obj.zone].append(obj.total_score)
+			grouped[obj.student.full_name, obj.student.index, obj.zone].append((obj.total_score, obj.assessment_type.name, obj.assessor.full_name, obj.created_at.astimezone().strftime('%Y-%m-%d %I:%M:%S %p')))
 
 		# Determine the max number of values per name to set column headers
 		max_items = max(len(values) for values in grouped.values())
 
 		# Column headers
-		headers = ['Name', 'Assessment No.', 'Zone'] + [f'Assessment_{i+1}' for i in range(max_items)]
+		headers = ['Name', 'Assessment No.', 'Zone']
+		for i in range(max_items):
+			headers.extend([f'Assessment {i+1}', f'Assessment {i+1} Type', f'Assessment {i+1} Assessor', f'Assessment {i+1} Date & Time'])
 
 		# Prepare the response
 		response = HttpResponse(content_type='text/csv')
@@ -1415,7 +1417,12 @@ class ExportAssessmentReport(LoginRequiredMixin, View):
 
 		# Write rows
 		for (name, index, zone), values in grouped.items():
-			row = [name, index, zone] + values + [''] * (max_items - len(values))
+			row = [name, index, zone]
+			for score, assessment_type, assessor, created_at in values:
+				row.extend([score, assessment_type, assessor, created_at])
+
+			missing = max_items - len(values)
+			row.extend(['', ''] * missing)
 			writer.writerow(row)
 
 		return response
