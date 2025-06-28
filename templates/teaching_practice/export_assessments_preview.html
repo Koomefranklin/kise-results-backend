@@ -4,7 +4,7 @@
 <div class="grid w-full h-full place-self-start gap-1">
 	<div class="flex flex-col w-full gap-2">
 		<form class='place-self-center mr-4' action='{% url "assessments-export" %}' method='get'>
-      <button class='shadow-2xl p-4 rounded-2xl font-bold border'>Proceed to export {{ name }} as CSV</button>
+      <button class='shadow-2xl p-4 rounded-2xl font-bold border'>Proceed to export CSV of {{ name }} as shown below</button>
     </form>
 		<table class="w-5/6 place-self-center border">
 			<caption class=''>{{ name }}</caption>
@@ -13,15 +13,14 @@
 					
 					<th class="px-2">Full Name</th>
 					<th class="px-2">Assessment Number</th>
-					<th class="px-2">School/ EARC</th>
 					<th class="px-2">Zone</th>
-					<th class="px-2">Department</th>
-					<th class="px-2">Date</th>
-					<th class='px-2'>Time</th>
-					<th class='px-2'>Assessor</th>
-					<th class='px-2'>Assessment Type</th>
-					<th class='px-2'>Score</th>
-					<th class="">Actions</th>
+					
+					{% for i in max_items %}
+						<th class="px-2">Assessment {{ forloop.counter }}</th>
+						<th class="px-2">Assessment {{ forloop.counter }} Type</th>
+						<th class="px-2">Assessment {{ forloop.counter }} Assessor</th>
+						<th class="px-2">Assessment {{ forloop.counter }} Date & Time</th>
+					{% endfor %}
 				</tr>
 			</thead>
 
@@ -31,30 +30,16 @@
 
 				<tr
 					class="{% cycle 'bg-gray-200 dark:text-black' 'bg-inherit' %} text-{% cycle 'bg-black' 'inherit' %} hover:bg-[#333] hover:text-white">
-					<td class="px-2">
-						<a href='{% url "edit_student_letter" letter.pk %}' class='w-full'>{{ letter.student.full_name }}</a>
-					</td>
-					<td class="px-2">{{ letter.student.index }}</td>
-					<td class="px-2">{% firstof letter.school letter.earc %}</td>
+					<td class="px-2">{{ letter.name }}</td>
+					<td class="px-2">{{ letter.index }}</td>
 					<td class="px-2">{{ letter.zone }}</td>
-					<td class="px-2">{{ letter.student.department }}</td>
-					<td class="px-2">{{ letter.created_at.date }}</td>
-					<td class="px-2">{{ letter.created_at|localtime|time }}</td>
-					<td class="px-2">{{ letter.assessor }}</td>
-					<td class="px-2">{{ letter.assessment_type.name }}</td>
-					<td class='px-2'>{{ letter.total_score }}</td>
-					<td class="flex justify-between">
-						<a href='{% url "edit_student_letter" letter.id %}' title='View'>View</a>
-							
-						{% if letter.assessor == user %}
-							<a href='{% url "edit_student_letter" letter.id %}' title='Edit'>Edit</a>
-							<form action='{% url "request_deletion" letter.pk request.build_absolute_uri %}' title='Request Deletion' method='post' id='request_deletion_form'>
-								{% csrf_token %}
-								<button type='submit'  class='font-bold'>Request Deletion</button>
-							</form>
-						{% endif %}
-							
-					</td>
+					
+					{% for total_score, assessment_type, assessor, created_at in letter.assessments %}
+						<td class="px-2">{{ total_score }}</td>
+						<td class="px-2">{{ assessment_type.name }}</td>
+						<td class="px-2">{{ assessor }}</td>
+						<td class="px-2">{{ created_at|localtime|date }} {{ created_at|localtime|time }}</td>
+					{% endfor %}
 				</tr>
 				{% endfor %}
 			</tbody>

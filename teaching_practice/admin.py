@@ -1,7 +1,7 @@
 from django.contrib import admin
 
 from teaching_practice.forms import AssessmentTypeForm
-from teaching_practice.models import Aspect, AssessmentType, Location, Section, Student, StudentAspect, StudentLetter, SubSection
+from teaching_practice.models import Aspect, AssessmentType, Location, Section, Student, StudentAspect, StudentLetter, SubSection, ZonalLeader, Zone
 
 # Register your models here.
 class StudentAspectAdmin(admin.ModelAdmin):
@@ -38,3 +38,5 @@ admin.site.register(SubSection)
 admin.site.register(Student, TpStudentAdmin)
 admin.site.register(StudentAspect, StudentAspectAdmin)
 admin.site.register(AssessmentType, AssessmentTypeAdmin)
+admin.site.register(Zone)
+admin.site.register(ZonalLeader)

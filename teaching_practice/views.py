@@ -1,4 +1,4 @@
-from collections import defaultdict
+from collections import defaultdict, namedtuple
 import csv
 import datetime
 from django.conf import settings
@@ -1316,7 +1316,9 @@ class DeleteObject(LoginRequiredMixin, DeleteView):
 class ExportAssessmentPreview(LoginRequiredMixin, ListView):
 	model = StudentLetter
 	template_name = 'teaching_practice/export_assessments_preview.html'
-	paginate_by = 50
+	paginate_by = 100
+
+	GroupedRow = namedtuple('GroupedRow', ['name', 'index', 'zone', 'assessments'])
 
 	def get_queryset(self):
 		user = self.request.user
@@ -1339,7 +1341,22 @@ class ExportAssessmentPreview(LoginRequiredMixin, ListView):
 		else:
 			assessments = queryset.filter(assessor=user).order_by('created_at', 'zone')
 
-		return assessments
+		grouped = defaultdict(list)
+		for obj in assessments:
+			key = (obj.student.full_name, obj.student.index, obj.zone)
+			grouped[key].append((obj.total_score, obj.assessment_type, obj.assessor, obj.created_at))
+
+		max_items = max((len(v) for v in grouped.values()), default=0)
+		self.max_items = max_items  # store for use in context
+
+		rows = []
+		for (name, index, zone), values in grouped.items():
+			padded = values + [('', '', '', '')] * (max_items - len(values))
+			rows.append(self.GroupedRow(name, index, zone, padded))
+		# for row in rows:
+		# 	print(row.assessments)
+		# 	break
+		return rows
 
 	def get_context_data(self, **kwargs) :
 		user = self.request.user
@@ -1347,6 +1364,7 @@ class ExportAssessmentPreview(LoginRequiredMixin, ListView):
 		admins = assessment_types.values_list('admins', flat=True)
 		zonal_leader = ZonalLeader.objects.filter(assessor=user).first()
 		hod = Hod.objects.filter(lecturer__user=user).first()
+		context = super().get_context_data(**kwargs)
 		if user.is_superuser:
 			name = 'All Specializations Assessments'
 		elif user.pk in admins:
@@ -1363,7 +1381,8 @@ class ExportAssessmentPreview(LoginRequiredMixin, ListView):
 			name = f'{specialization.name} Assessments'
 		else:
 			name = f'{(user.full_name).capitalize()} Assessments'
-		context = super().get_context_data(**kwargs)
+
+		context['max_items'] = [None] * getattr(self, 'max_items', 0)
 		context['is_nav_enabled'] = True
 		context['title'] = f'Export {name}'
 		context['name'] = name
@@ -1397,7 +1416,7 @@ class ExportAssessmentReport(LoginRequiredMixin, View):
 			name = f'{specialization.name} Assessments'
 		else:
 			assessments = queryset.filter(assessor=user).order_by('created_at', 'zone')
-			name = f'{(user.fullname).capitalize()} Assessments'
+			name = f'{(user.full_name).capitalize()} Assessments'
 		grouped = defaultdict(list)
 		
 		# Group values by name
