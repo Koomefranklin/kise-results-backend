@@ -69,8 +69,8 @@
 						<button type='button' class='text-[#4caf50] font-bold' onclick='getAssType("{{ student.pk }}", "{{ student.full_name }}")' title='New Assessment for {{ student.full_name }}'>New Assessment</button>
 						<button type='button' class='text-[#4caf50] font-bold'><a href='{% url "previous_assessments" student.pk %}' class='text-[#4caf50] font-bold'>Previous Assessments</a></button>
 						
+						<a href='{% url "edit_student_tp" student.pk %}'>Edit</a>
 						{% if user.is_superuser %}
-							<a href='{% url "edit_student_tp" student.pk %}'>Edit</a>
 							<form action='{% url "delete_student" student.pk %}' method='get'>
 								{% csrf_token %}
 								<button type='submit'>Delete</button>

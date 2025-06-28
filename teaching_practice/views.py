@@ -1314,6 +1314,7 @@ class DeleteObject(LoginRequiredMixin, DeleteView):
 		return redirect(self.get_success_url())
 	
 class ExportAssessmentPreview(LoginRequiredMixin, ListView):
+	model = StudentLetter
 	template_name = 'teaching_practice/export_assessments_preview.html'
 	paginate_by = 50
 
@@ -1360,9 +1361,11 @@ class ExportAssessmentPreview(LoginRequiredMixin, ListView):
 		elif hod:
 			specialization = hod.department
 			name = f'{specialization.name} Assessments'
+		else:
+			name = f'{(user.full_name).capitalize()} Assessments'
 		context = super().get_context_data(**kwargs)
 		context['is_nav_enabled'] = True
-		context['title'] = f'Export {name}',
+		context['title'] = f'Export {name}'
 		context['name'] = name
 		return context
 	
