@@ -45,5 +45,4 @@ urlpatterns = [
     path('assessments/to-delete/', views.PendingDeletionView.as_view(), name='pending_deletion'),
     path('cancel-deletion/<uuid:pk>/<path:path>/', views.CancelDeletionView.as_view(), name='cancel_deletion'),
     path('assessment/export/preview/', views.ExportAssessmentPreview.as_view(), name='assessments-export-preview'),
-    path('assessment/export/', views.ExportAssessmentReport.as_view(), name='assessments-export'),
 ]

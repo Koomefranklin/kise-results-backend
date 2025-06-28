@@ -3,7 +3,8 @@
 {% block main %}
 <div class="grid w-full h-full place-self-start gap-1">
 	<div class="flex flex-col w-full gap-2">
-		<form class='place-self-center mr-4' action='{% url "assessments-export" %}' method='get'>
+		<form class='place-self-center mr-4' action='{% url "assessments-export-preview" %}' method='post'>
+			
       <button class='shadow-2xl p-4 rounded-2xl font-bold border'>Proceed to export CSV of {{ name }} as shown below</button>
     </form>
 		<table class="w-5/6 place-self-center border">
@@ -45,7 +46,7 @@
 			</tbody>
 			<tfoot class="bg-gray-500 text-white font-bold">
 				<tr class="">
-					<td colspan='12' class=''>
+					<td colspan='15' class=''>
 						<p class='w-full grid grid-flow-col'>
 							<span class='text-left'>Showing {{ page_obj.object_list|length }} of {{ page_obj.paginator.count }} Student Assessments</span>
 							<span class='text-right'>
@@ -94,7 +95,7 @@
 			{% else %}
 			<tr class="">
 				<td
-					colspan="11"
+					colspan="14"
 					class="text-center">
 					No Student Assessments Found
 				</td>

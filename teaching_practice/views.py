@@ -1388,8 +1388,7 @@ class ExportAssessmentPreview(LoginRequiredMixin, ListView):
 		context['name'] = name
 		return context
 	
-class ExportAssessmentReport(LoginRequiredMixin, View):
-	def get(self, request):
+	def post(self, request):
 		user = self.request.user
 		queryset = StudentLetter.objects.exclude(Q(comments=None) | Q(total_score=0) | Q(to_delete=True ) | Q(is_editable=True))
 		assessment_types = AssessmentType.objects.all()
