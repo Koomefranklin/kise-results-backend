@@ -128,6 +128,15 @@
 					class='flex'>
 					<a href='{% url "pending_deletion" %}'>Assessments Submitted for Deletion</a></th>
 			</tr>
+
+			<tr class='py-6 h-10 border-b'>
+				<th
+					scope='row'
+					id='export'
+					class='flex'>
+					<a href='{% url "assessments-export-preview" %}'>Export Assessments</a>
+				</th>
+			</tr>
 			
 			{% if user.is_staff %}
 			<tr class='py-6 h-10 border-b'>

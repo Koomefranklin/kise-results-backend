@@ -3,10 +3,11 @@
 {% block main %}
 <div class="grid w-full h-full place-self-start gap-1">
 	<div class="flex flex-col w-full gap-2">
-			
-		{% include 'teaching_practice/filter_assessments.html' with filter_url='student_letters' %}
+		<form class='place-self-center mr-4' action='{% url "assessments-export" %}' method='get'>
+      <button class='shadow-2xl p-4 rounded-2xl font-bold border'>Proceed to export {{ name }} as CSV</button>
+    </form>
 		<table class="w-5/6 place-self-center border">
-			<caption class=''>Student Assessments</caption>
+			<caption class=''>{{ name }}</caption>
 			<thead class="border-b bg-gray-500 text-white p-2">
 				<tr class="">
 					
@@ -105,22 +106,6 @@
 					</td>
 				</tr>
 			</tfoot>
-			<script>
-				function confirmDeletionRequest() {
-					const confirmed = confirm('Are you sure you want to request deletion of this letter? The request will be sent to the administrator for approval.');
-				
-					if (!confirmed) {
-						event.preventDefault(); 
-					}
-				}
-				document.getElementById('request_deletion_form').addEventListener('submit', function(event) {
-					const confirmed = confirm('Are you sure you want to request deletion of this letter? The request will be sent to the administrator for approval.');
-				
-					if (!confirmed) {
-						event.preventDefault(); 
-					}
-				});
-			</script>
 			{% else %}
 			<tr class="">
 				<td

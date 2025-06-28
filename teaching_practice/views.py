@@ -15,8 +15,8 @@ from dev.forms import CustomUserCreationForm
 from dev.mixins import HoDMixin
 from dev.models import Hod, User
 from teaching_practice.mailer import request_deletion, send_student_report
-from teaching_practice.mixins import ActivePeriodMixin, AdminMixin
-from .forms import AspectFilterForm, CertificateStudentForm, FilterAssessmentsForm, NewAspect, NewCertificateStudentLetterForm, NewLocationForm, NewSection, NewStudentAspect, NewStudentForm, NewDiplomaStudentLetterForm, NewStudentSection, NewSubSection, PeriodForm, SearchForm, DiplomaStudentForm, StudentFilterForm, UpdateAspect, UpdateCertificateStudentLetter, UpdateSection, UpdateStudentAspect, UpdateDiplomaStudentLetter, UpdateStudentSection, StudentAspectFormSet, UpdateSubSection, ZonalLeaderForm
+from teaching_practice.mixins import ActivePeriodMixin, AdminHeadMixin, AdminMixin
+from .forms import AspectFilterForm, CertificateStudentForm, FilterAssessmentsForm, NewAspect, NewCertificateStudentLetterForm, NewLocationForm, NewSection, NewStudentAspect, NewStudentForm, NewDiplomaStudentLetterForm, NewStudentSection, NewSubSection, PeriodForm, SearchForm, DiplomaStudentForm, StudentFilterForm, UpdateAspect, UpdateCertificateStudentLetter, UpdateSection, UpdateStudentAspect, UpdateDiplomaStudentLetter, UpdateStudentForm, UpdateStudentSection, StudentAspectFormSet, UpdateSubSection, ZonalLeaderForm
 from .models import AssessmentType, Period, Student, Section, StudentAspect, StudentLetter, StudentSection, Aspect, Location, SubSection, ZonalLeader
 from django.views.generic import ListView, CreateView, FormView, UpdateView, DeleteView, DetailView
 from django.db.models import Q, Avg, F, Count, ExpressionWrapper, FloatField, Sum, Value
@@ -390,7 +390,7 @@ class NewStudentView(LoginRequiredMixin, ActivePeriodMixin, CreateView):
 	
 class EditStudentView(LoginRequiredMixin, ActivePeriodMixin, UpdateView):
 	model = Student
-	form_class = NewStudentForm
+	form_class = UpdateStudentForm
 	template_name = 'teaching_practice/base_form.html'
 	success_url = reverse_lazy('students_tp')
 
@@ -1018,7 +1018,10 @@ class EditStudentSectionView(LoginRequiredMixin, ActivePeriodMixin, UpdateView):
 		if student_letter.is_editable:
 			for section in student_sections:
 				score += section.score
-			student_letter.total_score = score
+			if student_letter.assessment_type.short_name == 'CFA':
+				student_letter.total_score = (score / 92) * 100
+			else:
+				student_letter.total_score = score
 			student_letter.save()
 
 			response = super().form_valid(form)
@@ -1086,7 +1089,6 @@ class EditStudentAspectView(LoginRequiredMixin, ActivePeriodMixin, View):
 		student_section_id = self.kwargs.get('pk')
 		student_section = get_object_or_404(StudentSection, pk=student_section_id)
 		student_letter = student_section.student_letter
-
 
 		queryset = StudentAspect.objects.filter(student_section=student_section)
 		formset = StudentAspectFormSet(request.POST, queryset=queryset)
@@ -1203,7 +1205,7 @@ class GeneratePDF(LoginRequiredMixin, WeasyTemplateResponseMixin, DetailView):
 
 		return response
 	
-class ZonesViewList(LoginRequiredMixin, ListView):
+class ZonesViewList(LoginRequiredMixin, AdminHeadMixin, ListView):
 	model = StudentLetter
 	template_name = 'teaching_practice/zonal_leader.html'
 	context_object_name = 'studentletters'
@@ -1213,7 +1215,7 @@ class ZonesViewList(LoginRequiredMixin, ListView):
 		get_request = self.request.GET
 		user = self.request.user
 		zonal_leaders = ZonalLeader.objects.all().values_list('assessor__pk', flat=True)
-		qs = StudentLetter.objects.filter(to_delete=False)
+		qs = StudentLetter.objects.filter(Q(to_delete=False) | Q(is_editable=True))
 		assessment_types = AssessmentType.objects.all()
 		admins = assessment_types.values_list('admins', flat=True)
 		if user.is_superuser:
@@ -1311,17 +1313,88 @@ class DeleteObject(LoginRequiredMixin, DeleteView):
 		obj.delete()
 		return redirect(self.get_success_url())
 	
-class ExportAssessmentReport(LoginRequiredMixin, HoDMixin, View):
+class ExportAssessmentPreview(LoginRequiredMixin, ListView):
+	template_name = 'teaching_practice/export_assessments_preview.html'
+	paginate_by = 50
+
+	def get_queryset(self):
+		user = self.request.user
+		queryset = StudentLetter.objects.exclude(Q(comments=None) | Q(total_score=0) | Q(to_delete=True ) | Q(is_editable=True))
+		assessment_types = AssessmentType.objects.all()
+		admins = assessment_types.values_list('admins', flat=True)
+		zonal_leader = ZonalLeader.objects.filter(assessor=user).first()
+		hod = Hod.objects.filter(lecturer__user=user).first()
+		if user.is_superuser:
+			assessments = queryset.order_by('created_at', 'zone')
+		elif user.pk in admins:
+			admin_assessment_types = assessment_types.filter(admins=user)
+			assessments = queryset.filter(assessment_type__in=admin_assessment_types)
+		elif zonal_leader:
+			zone = zonal_leader.zone_name
+			assessments = queryset.filter(zone=zone).order_by('created_at')
+		elif hod:
+			specialization = hod.department
+			assessments = queryset.filter(student__specialization=specialization).order_by('created_at', 'zone')
+		else:
+			assessments = queryset.filter(assessor=user).order_by('created_at', 'zone')
+
+		return assessments
+
+	def get_context_data(self, **kwargs) :
+		user = self.request.user
+		assessment_types = AssessmentType.objects.all()
+		admins = assessment_types.values_list('admins', flat=True)
+		zonal_leader = ZonalLeader.objects.filter(assessor=user).first()
+		hod = Hod.objects.filter(lecturer__user=user).first()
+		if user.is_superuser:
+			name = 'All Specializations Assessments'
+		elif user.pk in admins:
+			admin_assessment_types = assessment_types.filter(admins=user)
+			names = ''
+			for assessment in admin_assessment_types:
+				names += f'{str(assessment.short_name)}, '
+			name = f'{names.strip()} Assessments'
+		elif zonal_leader:
+			zone = zonal_leader.zone_name
+			name = f'{zone} Assessments'
+		elif hod:
+			specialization = hod.department
+			name = f'{specialization.name} Assessments'
+		context = super().get_context_data(**kwargs)
+		context['is_nav_enabled'] = True
+		context['title'] = f'Export {name}',
+		context['name'] = name
+		return context
+	
+class ExportAssessmentReport(LoginRequiredMixin, View):
 	def get(self, request):
 		user = self.request.user
 		queryset = StudentLetter.objects.exclude(Q(comments=None) | Q(total_score=0) | Q(to_delete=True ) | Q(is_editable=True))
-		if user.pk in Hod.objects.all().values_list('lecturer__user', flat=True):
-			specialization = Hod.objects.get(lecturer__user=user).department
+		assessment_types = AssessmentType.objects.all()
+		admins = assessment_types.values_list('admins', flat=True)
+		zonal_leader = ZonalLeader.objects.filter(assessor=user).first()
+		hod = Hod.objects.filter(lecturer__user=user).first()
+		if user.is_superuser:
+			assessments = queryset.order_by('created_at', 'zone')
+			name = 'All Specializations Assessments'
+		elif user.pk in admins:
+			admin_assessment_types = assessment_types.filter(admins=user)
+			assessments = queryset.filter(assessment_type__in=admin_assessment_types)
+			names = ''
+			for assessment in assessment_types:
+				names += f'{str(assessment.short_name)} '
+			name = f'{names.strip()} Assessments'
+		elif zonal_leader:
+			zone = zonal_leader.zone_name
+			assessments = queryset.filter(zone=zone).order_by('created_at')
+			name = f'{zone} Assessments'
+		elif hod:
+			specialization = hod.department
 			assessments = queryset.filter(student__specialization=specialization).order_by('created_at', 'zone')
 			name = f'{specialization.name} Assessments'
 		else:
-			assessments = queryset.order_by('created_at', 'zone')
-			name = 'All Specializations Assessments'
+			assessments = queryset.filter(assessor=user).order_by('created_at', 'zone')
+			name = f'{(user.fullname).capitalize()} Assessments'
 		grouped = defaultdict(list)
 		
 		# Group values by name

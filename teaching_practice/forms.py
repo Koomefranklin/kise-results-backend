@@ -126,6 +126,30 @@ class NewStudentForm(forms.ModelForm):
     else:
       raise forms.ValidationError('The Assessment number is not valid. Formats Diploma: "TA700000000" CFA: "CFA/0000/00"')
     
+class UpdateStudentForm(forms.ModelForm):
+  class Meta:
+    model = Student
+    fields = ['full_name', 'sex', 'email', 'department', 'specialization', 'index']
+  
+  def __init__(self, *args, **kwargs):
+    super(UpdateStudentForm, self).__init__(*args, **kwargs)
+    self.fields['index'].required = True
+    self.fields['specialization'].required = True
+    self.fields['specialization'].queryset = Specialization.objects.exclude(code=9101)
+    for fieldname, field in self.fields.items():
+      if fieldname not in ['email', 'sex']:
+        self.fields[fieldname].widget.attrs['class'] = 'rounded border-2 w-full grid p-2 uppercase'
+      else:
+        self.fields[fieldname].widget.attrs['class'] = 'rounded border-2 w-full grid p-2'
+
+  def clean_index(self):
+    index = self.cleaned_data.get('index')
+    cleaned_index = str(index).upper().replace(' ', '')
+    if len(cleaned_index) == 11 and cleaned_index.startswith(('TA', 'CFA')):
+      return cleaned_index
+    else:
+      raise forms.ValidationError('The Assessment number is not valid. Formats Diploma: "TA700000000" CFA: "CFA/0000/00"')
+    
   def clean_full_name(self):
     full_name = self.cleaned_data.get('full_name')
     cleaned_full_name = str(full_name).strip()

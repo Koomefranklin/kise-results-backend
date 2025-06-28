@@ -1,5 +1,5 @@
 {% block filter %}
-<div class='flex flex-col place-self-center shadow-2xl gap-2 p-2 sticky'>
+<div class='flex flex-col place-self-center shadow-2xl gap-2 p-2 w-5/6 sticky'>
   <p class='text-center'>Filter (Leave Blank if not used)</p>
   <form action='{% url filter_url %}' method='get' class='shadow-2xl grid gap-2'>
     <div class='flex flex-row flex-wrap gap-2'>
@@ -48,8 +48,8 @@
           {{ filter_form.assessor }}
         </div>
       {% endif %}
+      <button type='submit' class='rounded-md p-2 border flex place-self-end'>Filter</button>
     </div>
-    <button type='submit' class='rounded-md p-2 border'>Filter</button>
     
   </form>
 </div>
