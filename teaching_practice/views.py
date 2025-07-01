@@ -1437,8 +1437,8 @@ class ExportAssessmentPreview(LoginRequiredMixin, ListView):
 		writer.writerow(headers)
 
 		# Write rows
-		for (name, index, zone), values in grouped.items():
-			row = [name, index, zone]
+		for (full_name, index, zone), values in grouped.items():
+			row = [full_name, index, zone]
 			for score, assessment_type, assessor, created_at in values:
 				row.extend([score, assessment_type, assessor, created_at])
 
@@ -1446,7 +1446,7 @@ class ExportAssessmentPreview(LoginRequiredMixin, ListView):
 			row.extend(['', ''] * missing)
 			writer.writerow(row)
 
-		with open('log.txt', 'a') as log_file:
+		with open('./log.txt', 'a') as log_file:
 			log_file.write(f'{user.full_name} exported {name} on {timezone.now().strftime("%Y-%m-%d %H:%M:%S")}\n')
 
 		return response
