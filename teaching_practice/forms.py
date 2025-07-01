@@ -390,11 +390,11 @@ class ZonalLeaderForm(forms.ModelForm):
   class Meta:
     model = ZonalLeader
     fields = ['zone_name', 'assessor']
-    # widgets = {
-		# 	'assessor': autocomplete.ModelSelect2(url='lecturer-autocomplete',attrs={
-    #     'data-placeholder': 'Search ...',
-    #   })
-    # }
+    widgets = {
+			'assessor': autocomplete.ModelSelect2(url='lecturer-autocomplete',attrs={
+        'data-placeholder': 'Search ...',
+      })
+    }
 
   def __init__(self, *args, **kwargs):
     super(ZonalLeaderForm, self).__init__(*args, **kwargs)

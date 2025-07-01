@@ -1446,4 +1446,7 @@ class ExportAssessmentPreview(LoginRequiredMixin, ListView):
 			row.extend(['', ''] * missing)
 			writer.writerow(row)
 
+		with open('log.txt', 'a') as log_file:
+			log_file.write(f'{user.full_name} exported {name} on {timezone.now().strftime("%Y-%m-%d %H:%M:%S")}\n')
+
 		return response
