@@ -4,7 +4,7 @@
 <div class="grid w-full h-full place-self-start gap-1">
 	<div class="flex flex-col w-full gap-2">
 		<form class='place-self-center mr-4' action='{% url "assessments-export-preview" %}' method='post'>
-			
+			{% csrf_token %}
       <button class='shadow-2xl p-4 rounded-2xl font-bold border'>Proceed to export CSV of {{ name }} as shown below</button>
     </form>
 		<table class="w-5/6 place-self-center border">
