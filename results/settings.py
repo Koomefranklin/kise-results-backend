@@ -14,9 +14,11 @@ from pathlib import Path
 import environ
 import os
 
+from parso.cache import LOG
 
-GDAL_LIBRARY_PATH = r'C:\OSGeo4W\bin\gdal310.dll'
-NPM_BIN_PATH = r'C:\Program Files\nodejs\npm.cmd'
+
+# GDAL_LIBRARY_PATH = r'C:\OSGeo4W\bin\gdal310.dll'
+# NPM_BIN_PATH = r'C:\Program Files\nodejs\npm.cmd'
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -199,7 +201,7 @@ DEFAULT_FROM_EMAIL = env('EMAIL_HOST_USER')
 # Session Settings
 
 # Lifetime of the session cookie in seconds
-# SESSION_COOKIE_AGE = 36000
+SESSION_COOKIE_AGE = 36000
 
 # Whether to expire session when the browser is closed
 SESSION_EXPIRE_AT_BROWSER_CLOSE = True
@@ -212,3 +214,5 @@ SESSION_COOKIE_SECURE = False
 
 # HttpOnly flag for session cookie
 SESSION_COOKIE_HTTPONLY = True  # Ensures session cookie is not accessible via JavaScript
+
+LOG_DIR = env('LOG_DIR', default=os.path.join(BASE_DIR, 'logs'))

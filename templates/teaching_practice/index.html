@@ -1,28 +1,39 @@
 {% extends "teaching_practice/base_site.html" %} {% block main %}
 {% load static %}
-<div class="grid w-full h-full">
+<div class="grid place-self-centerh-full">
 	<div
-		class="w-full grid lg:grid-cols-3 md:grid-cols-2 gap-6 place-self-center font-bold px-4 lg:px-48 text-left">
-		<a href='{% url "students_tp" %}' class='grid gap-2 rounded-lg text-xl drop-shadow-lg shadow-xl w-full place-content-center min-h-40'>
-			<div class='flex gap-2 w-full justify-start'>All Students: <span class='font-bolder'>{{ students }}</span></div>
+		class="place-self-centergrid grid grid-cols-2 lg:grid-cols-3 gap-6 place-self-center place-content-center font-bold px-4 text-left">
+		<a href='{% url "students_tp" %}' class='grid gap-2 p-2 rounded-lg text-xl drop-shadow-lg shadow-xl place-self-centerplace-content-center min-h-40 grid-rows-2'>
+			<div class='flex gap-2 place-self-center'>All Students: </div>
+			<span class='font-bolder text-center'>{{ students }}</span>
 		</a>
-		<a href='{% url "student_letters" %}' class='grid gap-2 rounded-lg text-xl drop-shadow-lg shadow-xl w-full place-content-center min-h-40'>
-			<div class='flex gap-2 w-full justify-start'>Assessed Students: <span class='font-bolder'>{{ letters }}</span></div>
+		<a href='{% url "students_tp" %}' class='grid gap-2 p-2 rounded-lg text-xl drop-shadow-lg shadow-xl place-self-centerplace-content-center min-h-40 grid-rows-2'>
+			<div class='flex gap-2 place-self-center'>Current Period Students: </div>
+			<span class='grid font-bolder text-center'>{{ active_students }}</span>
 		</a>
-		<a href='{% url "student_letters" %}' class='grid gap-2 rounded-lg text-xl drop-shadow-lg shadow-xl w-full place-content-center min-h-40'>
-			<div class='flex gap-2 w-full justify-start'>All initiated Assessments: <span class='font-bolder'>{{ initiated_assessments }}</span></div>
+		<a href='{% url "student_letters" %}' class='grid gap-2 p-2 rounded-lg text-xl drop-shadow-lg shadow-xl place-self-centerplace-content-center min-h-40 grid-rows-2'>
+			<div class='flex gap-2 place-self-center'>Assessed Students: </div>
+			<span class='font-bolder text-center'>{{ letters }}</span>
 		</a>
-		<a href='{% url "student_letters" %}' class='grid gap-2 rounded-lg text-xl drop-shadow-lg shadow-xl w-full place-content-center min-h-40'>
-			<div class='flex gap-2 w-full justify-start'>Completed Assessments: <span class='font-bolder'>{{ completed_assessments }}</span></div>
+		<a href='{% url "student_letters" %}' class='grid gap-2 p-2 rounded-lg text-xl drop-shadow-lg shadow-xl place-self-centerplace-content-center min-h-40 grid-rows-2'>
+			<div class='flex gap-2 place-self-center'>All initiated Assessments: </div>
+			<span class='font-bolder text-center'>{{ initiated_assessments }}</span>
 		</a>
-		<a href='{% url "incomplete_assessments" %}' class='grid gap-2 rounded-lg text-xl drop-shadow-lg shadow-xl w-full place-content-center min-h-40'>
-			<div class='flex gap-2 w-full justify-start'>Incomplete Assessments: <span class='font-bolder'>{{ pending_assessments }}</span></div>
+		<a href='{% url "student_letters" %}' class='grid gap-2 p-2 rounded-lg text-xl drop-shadow-lg shadow-xl place-self-centerplace-content-center min-h-40 grid-rows-2'>
+			<div class='flex gap-2 place-self-center'>Completed Assessments: </div>
+			<span class='font-bolder text-center'>{{ completed_assessments }}</span>
 		</a>
-		<a href='{% url "sections" %}' class='grid gap-2 rounded-lg text-xl drop-shadow-lg shadow-xl w-full place-content-center min-h-40'>
-			<div class='flex gap-2 w-full justify-start'>All Sections: <span class='font-bolder'>{{ sections }}</span></div>
+		<a href='{% url "incomplete_assessments" %}' class='grid gap-2 p-2 rounded-lg text-xl drop-shadow-lg shadow-xl place-self-centerplace-content-center min-h-40 grid-rows-2'>
+			<div class='flex gap-2 place-self-center'>Incomplete Assessments: </div>
+			<span class='font-bolder text-center'>{{ pending_assessments }}</span>
 		</a>
-		<a href='{% url "aspects" %}' class='grid gap-2 rounded-lg text-xl drop-shadow-lg shadow-xl w-full place-content-center min-h-40'>
-			<div class='flex gap-2 w-full justify-start'>All Aspects: <span class='font-bolder'>{{ aspects }}</span></div>
+		<a href='{% url "sections" %}' class='grid gap-2 p-2 rounded-lg text-xl drop-shadow-lg shadow-xl place-self-centerplace-content-center min-h-40 grid-rows-2'>
+			<div class='flex gap-2 place-self-center'>All Sections: </div>
+			<span class='font-bolder text-center'>{{ sections }}</span>
+		</a>
+		<a href='{% url "aspects" %}' class='grid gap-2 p-2 rounded-lg text-xl drop-shadow-lg shadow-xl place-self-centerplace-content-center min-h-40 grid-rows-2'>
+			<div class='flex gap-2 place-self-center'>All Aspects: </div>
+			<span class='font-bolder text-center'>{{ aspects }}</span>
 		</a>
 	</div>
 </div>

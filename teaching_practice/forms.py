@@ -15,11 +15,12 @@ from django.db.models import Q
 class PeriodForm(forms.ModelForm):
   class Meta:
     model = Period
-    fields = ['period', 'is_active']
+    fields = ['start', 'end', 'is_active']
 
   def __init__(self, *args, **kwargs):
     super(PeriodForm, self).__init__(*args, **kwargs)
-    self.fields['period'].widget = forms.DateInput(attrs={'class': 'rounded border-2 w-5/6 grid', 'type': 'date'})
+    self.fields['start'].widget = forms.DateInput(attrs={'class': 'rounded border-2 w-5/6 grid', 'type': 'date'})
+    self.fields['end'].widget = forms.DateInput(attrs={'class': 'rounded border-2 w-5/6 grid', 'type': 'date'})
 
 class AssessmentTypeForm(forms.ModelForm):
   class Meta:
@@ -384,12 +385,14 @@ class FilterAssessmentsForm(forms.Form):
       self.fields[fieldname].required = False
       if fieldname in ['from_time', 'from_date', 'to_date', 'to_time']:
         self.fields[fieldname].label = ''
-      self.fields[fieldname].widget.attrs['class'] = 'rounded-md border p-2'
+        self.fields[fieldname].widget.attrs['class'] = 'p-2'
+      else:
+        self.fields[fieldname].widget.attrs['class'] = 'rounded-md border p-2'
 
 class ZonalLeaderForm(forms.ModelForm):
   class Meta:
     model = ZonalLeader
-    fields = ['zone_name', 'assessor']
+    fields = ['zone_name', 'assessor', 'period']
     widgets = {
 			'assessor': autocomplete.ModelSelect2(url='lecturer-autocomplete',attrs={
         'data-placeholder': 'Search ...',
@@ -401,7 +404,8 @@ class ZonalLeaderForm(forms.ModelForm):
     self.fields['assessor'].queryset = User.objects.filter(Q(role='lecturer') & Q(is_active=True))
     self.fields['assessor'].label = 'Zonal Leader'
     for fieldname, field in self.fields.items():
-      self.fields[fieldname].widget.attrs['class'] = 'rounded border-2 p-2 m2 grid'
+      if fieldname != 'assessor':
+        self.fields[fieldname].widget.attrs['class'] = 'rounded border-2 p-2 grid'
       
 StudentAspectFormSet = forms.modelformset_factory(
   StudentAspect,

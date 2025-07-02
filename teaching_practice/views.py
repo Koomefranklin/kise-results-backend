@@ -95,7 +95,7 @@ class EditPeriodView(LoginRequiredMixin, AdminMixin, UpdateView):
 		periods = Period.objects.all()
 		current_period = Period.objects.get(pk=self.kwargs.get('pk'))
 		context = super().get_context_data(**kwargs)
-		context['title'] = f'Edit Period {current_period.period}'
+		context['title'] = f'Edit Period {current_period.start}'
 		context['is_nav_enabled'] = True
 		context['periods'] = periods
 		return context
@@ -107,7 +107,7 @@ class EditPeriodView(LoginRequiredMixin, AdminMixin, UpdateView):
 			instance.updated_by = self.request.user
 			instance.save()
 			log_custom_action(self.request.user, instance, CHANGE)
-			messages.success(self.request, f'Period {instance.period} updated successfuly')
+			messages.success(self.request, f'Period {instance.start} updated successfuly')
 			self.object = instance
 			return HttpResponseRedirect(self.get_success_url())
 		else:
@@ -158,7 +158,7 @@ class IndexPage(LoginRequiredMixin, ListView):
 			else:
 				initiated_assessments = all_assessments.filter(assessor=user)
 
-		period_students = students
+		period_students = students.filter(period__is_active=True)
 		letters = initiated_assessments.distinct('student')
 		completed_assessments = initiated_assessments.exclude(comments=None)
 		pending_assessments = initiated_assessments.filter(comments=None)
@@ -171,6 +171,7 @@ class IndexPage(LoginRequiredMixin, ListView):
 		context['letters'] = letters.count()
 		context['initiated_assessments'] = initiated_assessments.count()
 		context['students'] = students.count()
+		context['active_students'] = period_students.count()
 		context['sections'] = sections.count()
 		context['aspects'] = aspects.count()
 		context['completed_assessments'] = completed_assessments.count()
@@ -1296,6 +1297,18 @@ class ZonalLeaderViewList(LoginRequiredMixin, CreateView):
 		context['is_nav_enabled'] = True
 		context['title'] = 'Zonal Leaders'
 		return context
+	
+class EditZonalLeaderView(LoginRequiredMixin, UpdateView):
+	model = ZonalLeader
+	template_name = 'teaching_practice/zonal_leaders.html'
+	form_class = ZonalLeaderForm
+	success_url = reverse_lazy('zonal_leaders')
+
+	def get_context_data(self, **kwargs):
+		context = super().get_context_data(**kwargs)
+		context['is_nav_enabled'] = True
+		context['title'] = 'Edit Zonal Leader'
+		return context
 
 class DeleteObject(LoginRequiredMixin, DeleteView):
 	model = Aspect
@@ -1446,7 +1459,8 @@ class ExportAssessmentPreview(LoginRequiredMixin, ListView):
 			row.extend(['', ''] * missing)
 			writer.writerow(row)
 
-		with open('./log.txt', 'a') as log_file:
+		log_dir = settings.LOG_DIR
+		with open(f'{log_dir}export.txt', 'a') as log_file:
 			log_file.write(f'{user.full_name} exported {name} on {timezone.now().strftime("%Y-%m-%d %H:%M:%S")}\n')
 
 		return response

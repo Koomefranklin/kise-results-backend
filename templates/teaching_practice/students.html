@@ -62,10 +62,10 @@
 					<td class=''>
 						{{ student.index }}
 					</td>
-					<td class=''>{{ student.period.period|date:"F Y" }}</td>
+					<td class=''>{{ student.period.start|date:"F" }} - {{ student.period.end|date:"F Y" }}</td>
 					<td class=''>{{ student.department }}</td>
 					<td class=''>{{ student.specialization }}</td>
-					<td class="flex justify-around">
+					<td class="flex justify-around gap-2">
 						<button type='button' class='text-[#4caf50] font-bold' onclick='getAssType("{{ student.pk }}", "{{ student.full_name }}")' title='New Assessment for {{ student.full_name }}'>New Assessment</button>
 						<button type='button' class='text-[#4caf50] font-bold'><a href='{% url "previous_assessments" student.pk %}' class='text-[#4caf50] font-bold'>Previous Assessments</a></button>
 						

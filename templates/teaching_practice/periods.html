@@ -19,7 +19,8 @@
 			<thead class="border-b bg-gray-500 text-white p-2">
 				<tr class="">
 					
-					<th class="px-2">Period</th>
+					<th class="px-2">Period Start</th>
+					<th class="px-2">Period End</th>
 					<th class="px-2">Is Active</th>
           <th class='px-2'>Created by</th>
           <th class='px-2'>Created at</th>
@@ -34,8 +35,9 @@
 				{% for period in periods %}
 
 				<tr
-					class="{% if 'period.is_active' %} bg-[#4caf50]{% endif %} {% cycle 'bg-gray-200 dark:text-black' 'bg-inherit' %} text-{% cycle 'bg-black' 'inherit' %} hover:bg-[#333] hover:text-white">
-					<td class="px-2">{{ period.period|date:"F Y" }}</td>
+					class="{% cycle 'bg-gray-200 dark:text-black' 'bg-inherit' %} text-{% cycle 'bg-black' 'inherit' %} {% if 'period.is_active' %} bg-[#4caf50]{% endif %} hover:bg-[#333] hover:text-white">
+					<td class="px-2">{{ period.start|date:"F Y" }}</td>
+					<td class="px-2">{{ period.end|date:"F Y" }}</td>
 					<td class="px-2">{{ period.is_active }}</td>
           <td class='px-2'>{{ period.created_by }}</td>
           <td class='px-2'>{{ period.created_at }}</td>

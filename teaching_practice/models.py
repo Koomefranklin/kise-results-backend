@@ -10,6 +10,30 @@ from django.utils.translation import gettext_lazy as _
 
 # Create your models here.
 
+class Period(models.Model):
+  id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+  start = models.DateField()
+  end = models.DateField()
+  is_active = models.BooleanField(default=False)
+  created_by = models.ForeignKey(User, on_delete=models.PROTECT, related_name='creator')
+  created_at = models.DateTimeField(auto_now_add=True)
+  updated_by = models.ForeignKey(User, on_delete=models.PROTECT, related_name='updator', null=True, blank=True)
+  updated_at = models.DateTimeField(auto_now=True)
+
+  def __str__(self):
+    return f'{self.start} {self.is_active}'
+  
+  def save(self, *args, **kwargs):
+    periods = Period.objects.exclude(pk=self.id)
+    if self.is_active:
+      for period in periods:
+        period.is_active = False
+        period.save()
+    super().save(*args, **kwargs)
+  
+  class Meta:
+    ordering = ['-is_active', 'start']
+
 class Zone(models.Model):
   id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
   name = models.CharField(max_length=200, unique=True)
@@ -30,35 +54,13 @@ class ZonalLeader(models.Model):
   id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
   zone_name = models.CharField(max_length=200, choices=ZONES.choices)
   assessor = models.ForeignKey(User, on_delete=models.CASCADE, related_name='zonal_leader')
+  period = models.ForeignKey(Period, on_delete=models.CASCADE, related_name='zonal_leader_period')
   created_at = models.DateTimeField(auto_now_add=True)
   updated_at = models.DateTimeField(auto_now=True)
 
   def __str__(self):
     return self.zone_name
   
-class Period(models.Model):
-  id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
-  period = models.DateField()
-  is_active = models.BooleanField(default=False)
-  created_by = models.ForeignKey(User, on_delete=models.PROTECT, related_name='creator')
-  created_at = models.DateTimeField(auto_now_add=True)
-  updated_by = models.ForeignKey(User, on_delete=models.PROTECT, related_name='updator', null=True, blank=True)
-  updated_at = models.DateTimeField(auto_now=True)
-
-  def __str__(self):
-    return f'{self.period} {self.is_active}'
-  
-  def save(self, *args, **kwargs):
-    periods = Period.objects.exclude(pk=self.id)
-    if self.is_active:
-      for period in periods:
-        period.is_active = False
-        period.save()
-    super().save(*args, **kwargs)
-  
-  class Meta:
-    ordering = ['-is_active', 'period']
-
 class AssessmentType(models.Model):
   id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
   course = models.ForeignKey(Course, on_delete=models.CASCADE, related_name='course_assessment_types')

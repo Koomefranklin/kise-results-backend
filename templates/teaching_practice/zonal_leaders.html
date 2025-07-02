@@ -1,5 +1,45 @@
 {% extends 'teaching_practice/base_site.html' %} 
+{% load static %}
 {% block main %}
+
+{% block extrastyle %}
+	<style>
+		.select2-container--default {
+			padding: calc(var(--spacing) * 1) !important;
+			display: grid !important;
+			border-style: var(--tw-border-style) !important;
+			border-width: 1px !important;
+			border-radius: 0.25rem !important;
+		}
+
+		.select2-container--default .select2-selection--single {
+			background-color: inherit !important;
+			border: none !important;
+    }
+
+    .select2-container--default .select2-selection--single .select2-selection__rendered {
+			color: #eee !important;
+			padding: 0 !important;
+    }
+
+    .select2-container--default .select2-dropdown {
+			background-color: #1e1e1e !important;
+			color: #eee;
+    }
+
+    .select2-container--default .select2-results__option {
+			padding: 8px 10px;
+			color: #eee;
+    }
+
+    .select2-container--default .select2-results__option--highlighted[aria-selected] {
+			background-color: #333 !important;
+			color: #00ffff !important;
+    }
+
+	</style>
+{% endblock extrastyle %}
+	
 <div class="grid w-full h-full place-self-start gap-1">
 	<div class="flex flex-col w-full gap-2">
 		
@@ -9,8 +49,21 @@
       </div>
       <form method="post" class='flex gap-2 place-content-center'> 
         {% csrf_token %} 
-          {{ form.as_div }}
-          <button type="submit" class='rounded-md border px-2'>Submit</button>
+				{{ form.form_management }}
+				{{ form.form_errors }}
+				<div class='grid gap-2'>
+					{{ form.zone_name.label }}
+					{{ form.zone_name }}
+				</div>
+					<div class='grid gap-2'>
+					{{ form.assessor.label }}
+					{{ form.assessor }}
+				</div>
+				<div class='grid gap-2'>
+					{{ form.period.label }}
+					{{ form.period }}
+					</div>
+				<button type="submit" class='rounded-md border p-2 place-self-end'>Submit</button>
       </form>
     {% endif %}
       
@@ -19,9 +72,10 @@
 			<thead class="border-b bg-gray-500 text-white p-2">
 				<tr class="">
 					
-					<th class="px-2">Leader</th>
+					<th class="px-2">Leader Name</th>
 					<th class="px-2">Zone Name</th>
-					<!-- <th class="">Actions</th> -->
+					<th class="px-2">Period</th>
+					<th class="">Actions</th>
 				</tr>
 			</thead>
 
@@ -33,9 +87,11 @@
 					class="{% cycle 'bg-gray-200 dark:text-black' 'bg-inherit' %} text-{% cycle 'bg-black' 'inherit' %} hover:bg-[#333] hover:text-white">
 					<td class="px-2">{{ leader.assessor.full_name }}</td>
 					<td class="px-2">{{ leader.zone_name }}</td>
-					<!-- <td class="flex justify-between">
-						<a href='#' title='View'>View</a>
-					</td> -->
+					<td class="px-2">{{ leader.period.start|date:"F" }} - {{ leader.period.end|date:"F Y" }}</td>
+					<td class="flex justify-between">
+						<a href='#' title='View'>Edit</a>
+						<a href='#' title='delete'>Delete</a>
+					</td>
 				</tr>
 				{% endfor %}
 			</tbody>
@@ -52,4 +108,6 @@
 		</table>
 	</div>
 </div>
+<script type="text/javascript" src="{% static 'admin/js/vendor/jquery/jquery.js' %}"></script>
+  {{ form.media }}
 {% endblock main %}
