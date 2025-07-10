@@ -1,57 +1,73 @@
 {% block filter %}
-<div class='flex flex-col place-self-center shadow-2xl gap-2 p-2 w-5/6 sticky'>
-  <p class='text-center'>Filter (Leave Blank if not used)</p>
-  <form action='{% url filter_url %}' method='get' class='shadow-2xl grid gap-2'>
-    <div class='flex flex-row flex-wrap gap-2'>
-      <div class='flex flex-col'>
-        <label class=''>Query</label>
-        {{ search_query.search_query }}
-      </div>
-      {% if filter_form %}
-        
-        {% if filter_form.errors %}
-          {{ filter_form.errors }}
-        {% endif %}
+<div class='flex flex-col gap-2 rounded-2xl shadow-2xl border w-5/6 place-self-center'>
+  <div class='flex w-full justify-around gap-2 border rounded-2xl p-2' id='search-bar'>
+    <button class='w-full text-center'>Search</button>
+    <button class='w-full text-center'><i class="fa-solid fa-caret-down" id='search-icon'></i></button>
+  </div>
+  <div class='flex flex-col place-self-center shadow-2xl gap-2 p-2 w-5/6' id='search-form' hidden>
+    <p class='text-center'>Filter (Leave Blank if not used)</p>
+    <form action='{% url filter_url %}' method='get' class='shadow-2xl grid gap-2'>
+      <div class='flex flex-row flex-wrap gap-2'>
+        <div class='flex flex-col'>
+          <label class=''>Query</label>
+          {{ search_query.search_query }}
+        </div>
+        {% if filter_form %}
           
-        <div class='flex flex-col'>
-          {{ filter_form.department.label }}
-          {{ filter_form.department }}
-        </div>
-        <div class='flex flex-col'>
-          {{ filter_form.specialization.label }}
-          {{ filter_form.specialization }}
-        </div>
-        <div class='flex flex-col'>
-          {{ filter_form.zone.label }}
-          {{ filter_form.zone }}
-        </div>
-        <div class='flex flex-col'>
-          From:
-          <div class='flex flex-row gap-1 rounded-md border'>
-            {{ filter_form.from_date }}
-            {{ filter_form.from_time }}
+          {% if filter_form.errors %}
+            {{ filter_form.errors }}
+          {% endif %}
+            
+          <div class='flex flex-col'>
+            {{ filter_form.department.label }}
+            {{ filter_form.department }}
           </div>
-        </div>
-        <div class='flex flex-col'>
-          To:
-          <div class='flex flex-row gap-1  rounded-md border'>
-            {{ filter_form.to_date }}
-            {{ filter_form.to_time }}
+          <div class='flex flex-col'>
+            {{ filter_form.specialization.label }}
+            {{ filter_form.specialization }}
           </div>
-        </div>
-        <div class='flex flex-col'>
-          {{ filter_form.assessment_type.label }}
-          {{ filter_form.assessment_type }}
-        </div>
-        <div class='flex flex-col'>
-          {{ filter_form.assessor.label }}
-          {{ filter_form.assessor }}
-        </div>
-      {% endif %}
-      <button type='submit' class='rounded-md p-2 border flex place-self-end'>Filter</button>
-    </div>
-    
-  </form>
+          <div class='flex flex-col'>
+            {{ filter_form.zone.label }}
+            {{ filter_form.zone }}
+          </div>
+          <div class='flex flex-col'>
+            From:
+            <div class='flex flex-row gap-1 rounded-md border'>
+              {{ filter_form.from_date }}
+              {{ filter_form.from_time }}
+            </div>
+          </div>
+          <div class='flex flex-col'>
+            To:
+            <div class='flex flex-row gap-1  rounded-md border'>
+              {{ filter_form.to_date }}
+              {{ filter_form.to_time }}
+            </div>
+          </div>
+          <div class='flex flex-col'>
+            {{ filter_form.assessment_type.label }}
+            {{ filter_form.assessment_type }}
+          </div>
+          <div class='flex flex-col'>
+            {{ filter_form.assessor.label }}
+            {{ filter_form.assessor }}
+          </div>
+        {% endif %}
+        <button type='submit' class='rounded-md p-2 border flex place-self-end'>Filter</button>
+      </div>
+      
+    </form>
+  </div>
 </div>
+<script>
+  const searchBar = document.getElementById('search-bar');
+  const searchForm = document.getElementById('search-form');
+  const searchIcon = document.getElementById('search-icon');
+  searchBar.addEventListener('click', () => {
+    searchForm.hidden = !searchForm.hidden;
+    searchIcon.classList.toggle('fa-caret-down');
+    searchIcon.classList.toggle('fa-caret-up');
+  });
+</script>
 {% endblock filter %}
   
